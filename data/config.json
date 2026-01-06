@@ -1,0 +1,16 @@
+{
+  "shiftActiveLow": true,
+  "shiftDebounceMs": 30,
+  "relayPolarityHighToCut": true,
+  "ppr": 1,
+  "rpmScaleFactor": 1.0,
+  "modeAuto": true,
+  "cutTimeFixed": 50,
+  "autoMap": [50,50,45,40,35,30,25,20],
+  "backfireMode": false,
+  "backfireAddMs": 10,
+  "backfireRpmThreshold": 6000,
+  "apTimeoutMs": 120000,
+  "apPassword": "",
+  "minRpm": 1500
+}

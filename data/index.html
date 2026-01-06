@@ -1,0 +1,1657 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quickshifter TỰ LÀM ĐIỆN TỬ  Console</title>
+  <style>
+    :root {
+      --bg:#03060b;
+      --panel:#0f1620;
+      --panel-alt:#121b27;
+      --border:#1e2a38;
+      --accent:#46c4ba;
+      --text:#f8fbff;
+      --text-dim:#8aa0b7;
+      --mono:"SFMono-Regular","Consolas","Liberation Mono",monospace;
+      --danger:#f87171;
+      --success:#4ade80;
+      --warn:#facc15;
+    }
+
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"Inter","Segoe UI","Roboto",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:30px 18px 120px}
+    .shell{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:20px 22px;box-shadow:0 20px 45px rgba(3,6,11,.4)}
+    .hero{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center}
+    .hero h1{margin:0 0 6px;font-size:26px}
+    .hero p{margin:0;color:var(--text-dim)}
+    .hero-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    button{border:none;border-radius:10px;padding:10px 18px;font-size:15px;font-weight:600;cursor:pointer;color:#03141a;background:var(--accent);transition:transform .15s ease, opacity .2s ease}
+    button.secondary{background:#1a2230;color:var(--text);border:1px solid var(--border)}
+    button.ghost{background:transparent;color:var(--text-dim);border:1px dashed var(--border)}
+    button.warn{background:var(--warn);color:#03141a}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    button:hover:not(:disabled){transform:translateY(-1px)}
+    .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-dim)}
+    .chip.dirty{display:none;background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:var(--danger)}
+    .chip.dirty.visible{display:inline-flex}
+    .chip.online{color:var(--success);border-color:rgba(74,222,128,.4)}
+    .chip.warn{color:var(--warn);border-color:rgba(250,204,21,.45)}
+    .chip.offline{color:var(--danger);border-color:rgba(248,113,113,.45)}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab-btn{padding:9px 16px;border-radius:999px;border:1px solid var(--border);background:#101522;color:var(--text-dim);cursor:pointer;font-weight:600}
+    .tab-btn.active{background:var(--accent);color:#03141a;border-color:var(--accent)}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+    .metric{background:var(--panel-alt);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .metric h3{margin:0;font-size:13px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase}
+    .metric .value{margin-top:8px;font-size:34px;font-weight:700;font-family:var(--mono)}
+    .metric .meta{color:var(--text-dim);font-size:13px;margin-top:4px}
+    label.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-dim);margin-bottom:12px}
+    input[type="number"],input[type="text"],select{background:#0c121c;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px;width:100%}
+    .toggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:10px 14px;border-radius:12px;background:var(--panel-alt);border:1px solid var(--border)}
+    .toggle-row span{color:var(--text-dim);font-size:14px}
+    .toggle-row.compact{padding:8px 12px;margin-bottom:6px}
+    .toggle-row.compact span{font-size:13px}
+    .switch{width:48px;height:24px;appearance:none;background:#1a2230;border-radius:999px;position:relative;cursor:pointer;border:1px solid #111}
+    .switch:after{content:"";width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:1px;left:1px;transition:transform .18s ease}
+    .switch:checked{background:var(--accent)}
+    .switch:checked:after{transform:translateX(22px)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+    .auto-map-list{display:flex;flex-direction:column;gap:14px}
+    .map-row{padding:14px;border-radius:14px;background:var(--panel-alt);border:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
+    .map-row-top{display:flex;gap:12px;flex-wrap:wrap}
+    .map-row-top label{flex:1}
+    .map-row-top button{align-self:flex-end}
+    .map-slider{width:100%}
+    .map-label{font-weight:600;color:var(--accent)}
+    .log-list{border:1px solid var(--border);border-radius:12px;padding:12px;background:#050a12;font-family:var(--mono);font-size:13px;max-height:320px;overflow-y:auto}
+    .log-entry{padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .log-entry:last-child{border-bottom:none}
+    .log-line{display:grid;grid-template-columns:70px 80px 80px 1fr 60px;gap:8px;padding-bottom:4px}
+    .log-line .cut{color:var(--danger);font-weight:600}
+    .log-event{white-space:pre-wrap;font-size:12px;color:var(--text);line-height:1.35}
+    .log-event .event-label{font-weight:600;color:var(--accent)}
+    .log-event .changes{margin-top:2px;color:var(--text-dim)}
+    .log-empty{color:var(--text-dim);text-align:center;padding:40px 0}
+    .lock-pass-feed{border:1px solid var(--border);border-radius:12px;background:#050a12;padding:10px 12px;margin-top:10px;font-family:var(--mono);font-size:13px;max-height:220px;overflow-y:auto}
+    .lock-pass-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);gap:12px}
+    .lock-pass-item:last-child{border-bottom:none}
+    .lock-pass-main{display:flex;flex-direction:column;gap:2px;color:var(--text)}
+    .lock-pass-buffer{font-size:16px;font-weight:600;letter-spacing:.12em}
+    .lock-pass-meta{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--text-dim);text-align:right}
+    .config-summary{display:flex;flex-direction:column;gap:18px}
+    .config-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+    .config-row{background:var(--panel-alt);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;justify-content:space-between;gap:12px;font-size:14px}
+    .config-row strong{font-family:var(--mono);color:var(--text)}
+    .config-section h3{margin:0 0 10px;font-size:15px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em}
+    .config-section table{width:100%;border-collapse:collapse;font-size:14px}
+    .config-section th,.config-section td{border-bottom:1px solid rgba(255,255,255,.08);padding:6px 4px;text-align:left}
+    .config-section tr:last-child th,.config-section tr:last-child td{border-bottom:none}
+    .toast{position:fixed;right:24px;bottom:28px;background:#111b26;border:1px solid var(--border);border-radius:12px;padding:12px 18px;font-weight:600;opacity:0;transform:translateY(12px);transition:opacity .24s ease,transform .24s ease}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .toast.success{border-color:rgba(74,222,128,.5);color:var(--success)}
+    .toast.error{border-color:rgba(248,113,113,.5);color:var(--danger)}
+    .ticker{position:fixed;left:0;right:0;bottom:0;background:rgba(5,9,16,.88);backdrop-filter:blur(12px);border-top:1px solid rgba(70,196,186,.15);display:flex;flex-wrap:wrap;gap:14px;padding:12px 18px;font-size:13px;z-index:900}
+    .ticker-item{display:flex;flex-direction:column;min-width:100px}
+    .ticker-item strong{color:var(--text-dim);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+    .ticker-value{font-family:var(--mono);font-size:16px;color:var(--text)}
+    .ticker-value.shift-active{color:var(--accent)}
+    .ticker-value.cut-active{color:var(--danger)}
+    @media(max-width:720px){body{padding:22px 12px 140px}.log-line{grid-template-columns:56px 60px 60px 1fr 45px;font-size:12px}}
+    .log-event details{margin-top:6px}
+    .log-event summary{cursor:pointer;color:var(--accent)}
+    .log-event pre{background:#050a12;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:var(--mono);font-size:12px;max-height:220px;overflow:auto}
+    .ota-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:18px 0 10px}
+    .ota-box{border:1px dashed rgba(70,196,186,.5);border-radius:14px;padding:14px;background:rgba(70,196,186,.05);display:flex;flex-direction:column;gap:10px}
+    .ota-box strong{font-size:16px}
+    .ota-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .ota-status{font-size:13px;color:var(--text-dim);min-height:18px}
+    .progress{width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
+    .progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .2s ease}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card hero">
+      <div>
+        <p class="chip" id="configMeta">Đang khởi động...</p>
+        <h1>Quickshifter TỰ LÀM ĐIỆN TỬ </h1>
+        <p>Quản lý Auto Map, test cut, log realtime & OTA ngay trên Wi-Fi AP.</p>
+      </div>
+      <div class="hero-controls">
+        <span class="chip offline" id="streamStatus">Stream offline</span>
+        <span class="chip dirty" id="dirtyBadge">Chưa lưu</span>
+        <button id="saveBtn">Lưu cấu hình</button>
+        <button class="secondary" id="reloadBtn">Tải lại</button>
+      </div>
+    </div>
+
+    <div class="card tabs">
+      <button class="tab-btn active" data-tab="live">Live</button>
+      <button class="tab-btn" data-tab="shift">Shift & Cut</button>
+      <button class="tab-btn" data-tab="map">Auto Map</button>
+      <button class="tab-btn" data-tab="test">Test bench</button>
+      <button class="tab-btn" data-tab="tools">Tools & Log</button>
+       <button class="tab-btn" data-tab="config">Config</button>
+    </div>
+
+    <section class="card tab-panel active" id="tab-live">
+      <div class="metrics">
+        <div class="metric">
+          <h3>RPM</h3>
+          <div class="value" id="rpmValue">0</div>
+          <div class="meta" id="rpmMeta">Đợi stream</div>
+        </div>
+        <div class="metric">
+          <h3>Cut state</h3>
+          <div class="value" id="cutState">Standby</div>
+          <div class="meta" id="cutHint">IGN+INJ</div>
+        </div>
+        <div class="metric">
+          <h3>Shift</h3>
+          <div class="value" id="shiftState">---</div>
+          <div class="meta" id="bucketMeta">Band: --</div>
+        </div>
+        <div class="metric">
+          <h3>Logs</h3>
+          <div class="value" id="logCount">0</div>
+          <div class="meta" id="logSummary">waiting...</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tab-panel" id="tab-shift">
+      <div class="grid">
+        <div>
+          <div class="toggle-row"><span>Auto map mode</span><input type="checkbox" id="modeAuto" class="switch"></div>
+          <div class="toggle-row"><span>Shift active LOW (GND)</span><input type="checkbox" id="shiftActiveLow" class="switch"></div>
+          <div class="toggle-row"><span>Relay HIGH = cut</span><input type="checkbox" id="relayPolarityHighToCut" class="switch"></div>
+          <div class="toggle-row"><span>Cắt IGN</span><input type="checkbox" id="cutIgnEnabled" class="switch"></div>
+          <div class="toggle-row"><span>Cắt INJ</span><input type="checkbox" id="cutInjEnabled" class="switch"></div>
+        </div>
+        <div>
+          <label class="field">Fixed cut (ms)
+            <input type="number" id="cutTimeFixed" min="5" max="250" step="1" value="50">
+          </label>
+          <label class="field">Shift debounce (ms)
+            <input type="number" id="shiftDebounceMs" min="0" max="200" step="1" value="30">
+          </label>
+          <label class="field">Min RPM to cut
+            <input type="number" id="minRpm" min="0" max="20000" step="50" value="1500">
+          </label>
+          <label class="field">PPR (PC817)
+            <input type="number" id="ppr" min="0.1" max="6" step="0.1" value="1">
+          </label>
+          <label class="field">RPM scale factor
+            <input type="number" id="rpmScaleFactor" min="0.1" max="5" step="0.01" value="1">
+          </label>
+        </div>
+        <div>
+          <div class="toggle-row"><span>Backfire assist</span><input type="checkbox" id="backfireMode" class="switch"></div>
+          <label class="field">Backfire profile
+            <select id="backfireProfile">
+              <option value="0">Basic threshold</option>
+              <option value="1">Staged theo band</option>
+              <option value="2">Burst combo</option>
+              <option value="3">Blend dual-cut</option>
+              <option value="4">Decel IGN pops</option>
+            </select>
+          </label>
+          <label class="field">Backfire threshold (RPM)
+            <input type="number" id="backfireRpmThreshold" min="0" max="20000" step="100" value="6000">
+          </label>
+          <label class="field">Extra cut (ms)
+            <input type="number" id="backfireAddMs" min="0" max="100" step="1" value="10">
+          </label>
+          <label class="field" id="bfCooldownField">Cooldown (ms)
+            <input type="number" id="backfireCooldownMs" min="0" max="5000" step="50" value="600">
+          </label>
+          <label class="field bf-field" data-profile="2">Burst window (ms)
+            <input type="number" id="backfireBurstWindowMs" min="0" max="5000" step="50" value="1200">
+          </label>
+          <label class="field bf-field" data-profile="2">Burst bonus mỗi lần (+ms)
+            <input type="number" id="backfireBurstExtraMs" min="0" max="50" step="1" value="4">
+          </label>
+          <label class="field bf-field" data-profile="2">Burst tối đa (combo)
+            <input type="number" id="backfireBurstMax" min="1" max="5" step="1" value="3">
+          </label>
+          <label class="field bf-field" data-profile="3">Blend IGN +ms
+            <input type="number" id="backfireIgnExtraMs" min="0" max="50" step="1" value="6">
+          </label>
+          <label class="field bf-field" data-profile="4">Decel high RPM
+            <input type="number" id="backfireDecelHighRpm" min="0" max="20000" step="100" value="7000">
+          </label>
+          <label class="field bf-field" data-profile="4">RPM drop cần (Δ rpm)
+            <input type="number" id="backfireDecelDropRpm" min="100" max="8000" step="50" value="1500">
+          </label>
+          <label class="field bf-field" data-profile="4">Pulse IGN on (ms)
+            <input type="number" id="backfireDecelPulseMs" min="5" max="200" step="1" value="35">
+          </label>
+          <label class="field bf-field" data-profile="4">Pulse off (ms)
+            <input type="number" id="backfireDecelOffMs" min="0" max="500" step="5" value="45">
+          </label>
+          <label class="field bf-field" data-profile="4">Số pulse IGN
+            <input type="number" id="backfireDecelPulseCount" min="1" max="8" step="1" value="3">
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tab-panel" id="tab-map">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <strong>Auto Map</strong>
+          <div style="color:var(--text-dim);font-size:13px">Thêm band, chỉnh ngưỡng RPM ngay trên từng hàng.</div>
+        </div>
+        <button class="ghost" id="addMapBtn">+ Thêm band</button>
+      </div>
+      <div class="auto-map-list" id="autoMapList"></div>
+    </section>
+
+    <section class="card tab-panel" id="tab-test">
+      <div class="grid">
+        <div>
+          <h3>Test Cut</h3>
+          <label class="field">Thời gian ms
+            <input type="number" id="testCutMs" min="5" max="250" step="1" value="60">
+          </label>
+          <button class="secondary" id="testCutBtn">Kích cut theo cài đặt</button>
+          <p style="color:var(--text-dim);font-size:13px;margin-top:8px">Cut sẽ tôn trọng lựa chọn IGN / INJ bên tab Shift.</p>
+        </div>
+        <div>
+          <h3>Test RPM PWM</h3>
+          <label class="field">Target RPM
+            <input type="number" id="testRpmInput" min="0" max="15000" step="100" value="6000">
+          </label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="secondary" id="testRpmBtn">Start PWM</button>
+            <button class="ghost" id="stopRpmBtn">Stop PWM</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card tab-panel" id="tab-tools">
+      <div class="grid">
+        <div>
+          <h3>Import / Export</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="secondary" id="exportBtn">Export JSON</button>
+            <button class="secondary" id="importBtn">Import JSON</button>
+            <input type="file" id="importInput" hidden accept="application/json">
+          </div>
+          <h3 style="margin-top:20px">Calibrate RPM</h3>
+          <label class="field">Target RPM
+            <input type="number" id="calTarget" placeholder="VD: 5000">
+          </label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <label class="field" style="flex:1">Samples
+              <input type="number" id="calSamples" min="3" max="40" value="12">
+            </label>
+            <label class="field" style="flex:1">Interval (ms)
+              <input type="number" id="calInterval" min="50" max="500" value="150">
+            </label>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button class="secondary" id="sampleRpmBtn">Sample current RPM</button>
+            <button id="calibrateBtn">Calibrate (auto)</button>
+          </div>
+          <div id="calStatus" style="color:var(--text-dim);margin-top:8px"></div>
+          <h3 style="margin-top:24px">Wi-Fi Access Point</h3>
+          <p style="color:var(--text-dim);font-size:13px;margin-top:0">Đổi mật khẩu AP và thời gian tự tắt.</p>
+          <label class="field">AP timeout (ms)
+            <input type="number" id="apTimeoutMs" min="1000" max="600000" step="1000" value="120000">
+          </label>
+          <label class="field">Mật khẩu Wi-Fi (>=8 ký tự, để trống = mở)
+            <input type="password" id="apPassword" maxlength="63" placeholder="vd: quickshift">
+          </label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+            <button class="secondary" id="wifiSaveBtn">Lưu Wi-Fi</button>
+            <button class="ghost" id="wifiToggleBtn" type="button">Hiện mật khẩu</button>
+          </div>
+          <p id="wifiStatus" style="color:var(--text-dim);font-size:13px;margin:2px 0 0">AP đang mở.</p>
+        </div>
+        <div>
+          <h3>Realtime Log</h3>
+          <div class="log-list" id="logList">
+            <div class="log-empty">Chưa có log</div>
+          </div>
+        </div>
+        <div>
+          <h3>Lock Mode</h3>
+          <div class="toggle-row"><span>Bật Lock Mode</span><input type="checkbox" id="lockEnabledToggle" class="switch"></div>
+          <label class="field">PASS (4 ký tự 0/1)
+            <input type="text" id="lockPassInput" maxlength="4" pattern="[01]{4}" placeholder="vd: 1001">
+          </label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px">
+            <button class="secondary" id="lockSaveBtn">Lưu Lock Mode</button>
+            <button class="ghost" id="lockRefreshBtn">Refresh trạng thái</button>
+          </div>
+          <div class="lock-guide" style="background:rgba(255,255,255,.02);border:1px dashed var(--border);border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;line-height:1.5">
+            <strong>Cách nhập PASS MOS:</strong>
+            <ol style="margin:8px 0 0 18px;padding:0">
+              <li>Bật Lock Mode để cưỡng bức relay.</li>
+              <li>Giữ SHIFT_SW ngắn (≤ ngưỡng "Nhấn ngắn") để nhập bit <code>0</code>.</li>
+              <li>Giữ SHIFT_SW dài (≥ ngưỡng "Nhấn dài") để nhập bit <code>1</code>.</li>
+              <li>Thả tay tự nhiên giữa các bit rồi tiếp tục nhập cho đủ 4 bit PASS.</li>
+              <li>Cần nhập lại? Giữ SHIFT_SW lâu hơn "Giữ để xóa" để xoá bộ đệm và bắt đầu lại.</li>
+            </ol>
+          </div>
+          <label class="field">Nhấn ngắn tối đa (ms)
+            <input type="number" id="lockShortMax" min="120" max="600" step="10" placeholder="vd: 280">
+          </label>
+          <label class="field">Nhấn dài tối thiểu (ms)
+            <input type="number" id="lockLongMin" min="350" max="2000" step="10" placeholder="vd: 550">
+          </label>
+          <label class="field">Giữ để xóa (ms)
+            <input type="number" id="lockResetHold" min="1000" max="6000" step="50" placeholder="vd: 2000">
+          </label>
+          <button class="ghost" id="lockTimingBtn" style="margin-bottom:10px">Cài đặt thời gian nhấn</button>
+          <p id="lockStatusLabel" style="color:var(--text);font-weight:600;margin:6px 0">Trạng thái: --</p>
+          <p id="lockHint" style="color:var(--text-dim);font-size:13px;margin:4px 0 0">Đang tải...</p>
+          <p style="color:var(--text-dim);font-size:12px;margin:12px 0 4px;text-transform:uppercase;letter-spacing:.08em">Pass gần nhất</p>
+          <div class="lock-pass-feed" id="lockPassFeed">
+            <div class="log-empty" style="padding:20px 0">Chưa có dữ liệu</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+      <section class="card tab-panel" id="tab-config">
+        <h2>Firmware &amp; LittleFS OTA</h2>
+        <p style="color:var(--text-dim);margin-top:0">Chỉ tải file .bin đã build bằng PlatformIO. Thiết bị sẽ tự reboot sau khi nạp thành công.</p>
+        <div class="ota-panel">
+          <div class="ota-box">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>Firmware (.bin)</strong>
+              <span style="font-size:12px;color:var(--text-dim);text-transform:uppercase">OTA slot</span>
+            </div>
+            <p style="color:var(--text-dim);margin:0">Nạp file firmware để cập nhật chương trình chính.</p>
+            <input type="file" id="fwFileInput" hidden accept=".bin">
+            <div class="ota-actions">
+              <button class="secondary" id="fwPickBtn" type="button">Chọn file</button>
+              <button id="fwUploadBtn" type="button" disabled>Upload firmware</button>
+            </div>
+            <div class="progress"><span id="fwProgressBar"></span></div>
+            <div class="ota-status" id="fwStatus">Chưa chọn file.</div>
+          </div>
+          <div class="ota-box">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <strong>LittleFS image</strong>
+              <span style="font-size:12px;color:var(--text-dim);text-transform:uppercase">FS slot</span>
+            </div>
+            <p style="color:var(--text-dim);margin:0">Upload image tạo bằng <code>LittleFS Upload</code> để thay UI.</p>
+            <input type="file" id="fsFileInput" hidden accept=".bin">
+            <div class="ota-actions">
+              <button class="secondary" id="fsPickBtn" type="button">Chọn file</button>
+              <button id="fsUploadBtn" type="button" disabled>Upload LittleFS</button>
+            </div>
+            <div class="progress"><span id="fsProgressBar"></span></div>
+            <div class="ota-status" id="fsStatus">Chưa chọn file.</div>
+          </div>
+        </div>
+        <p style="color:var(--warn);font-size:13px;margin-top:0">Lưu ý: không rút nguồn khi đang upload. Sau khi flash LittleFS thiết bị luôn reboot để mount image mới.</p>
+        <h2>Config snapshot</h2>
+        <p style="color:var(--text-dim);margin-top:0">Danh sách tất cả tham số đã lưu gần nhất.</p>
+        <div id="configSummary" class="config-summary">
+          <div class="log-empty">Chưa có dữ liệu</div>
+        </div>
+      </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="ticker" id="liveTicker">
+    <div class="ticker-item">
+      <strong>Shift</strong>
+      <span class="ticker-value" id="tickerShift">---</span>
+    </div>
+    <div class="ticker-item">
+      <strong>Cut</strong>
+      <span class="ticker-value" id="tickerCut">Standby</span>
+    </div>
+    <div class="ticker-item">
+      <strong>RPM</strong>
+      <span class="ticker-value" id="tickerRpm">0</span>
+    </div>
+    <div class="ticker-item" style="flex:1;min-width:180px">
+      <strong>Event</strong>
+      <span class="ticker-value" id="tickerEvent">Đang đợi dữ liệu...</span>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      "use strict";
+      const MAX_MAP = 12;
+      const state = {
+        config:null,
+        autoMap:[],
+        logs:[],
+        stream:null,
+        liveRpm:0,
+        collecting:false,
+        lock:null,
+        lockFeed:[],
+        ota:{
+          firmware:{file:null, uploading:false, progress:0, status:"Chưa chọn file."},
+          littlefs:{file:null, uploading:false, progress:0, status:"Chưa chọn file."}
+        }
+      };
+      let otaControls = null;
+      const logLimit = 180;
+      const lockFeedLimit = 8;
+      let hydrating = false;
+      let dirty = false;
+      let lockHydrating = false;
+      let lockSaving = false;
+      let wifiSaving = false;
+      let wifiPasswordVisible = false;
+      const $ = (id) => document.getElementById(id);
+      const tickerRefs = {
+        shift: $("tickerShift"),
+        cut: $("tickerCut"),
+        rpm: $("tickerRpm"),
+        event: $("tickerEvent")
+      };
+
+      document.addEventListener("DOMContentLoaded", init);
+
+      function logUiAction(eventName, meta){
+        if (!eventName) return;
+        const payload = {event:eventName, source:"webui"};
+        const cleanMeta = sanitizeMeta(meta);
+        if (cleanMeta) payload.meta = cleanMeta;
+        fetch("/log/ui", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify(payload)
+        }).catch(()=>{});
+      }
+
+      function sanitizeMeta(meta){
+        if (!meta || typeof meta !== "object") return null;
+        const clean = {};
+        let has = false;
+        Object.entries(meta).forEach(([key,value])=>{
+          if (value === undefined) return;
+          clean[key] = value;
+          has = true;
+        });
+        return has ? clean : null;
+      }
+
+      function computeCutOutputs(){
+        const ign = $("cutIgnEnabled")?.checked;
+        const inj = $("cutInjEnabled")?.checked;
+        if (ign && inj) return "IGN+INJ";
+        if (ign) return "IGN only";
+        if (inj) return "INJ only";
+        return "Disabled";
+      }
+
+      function updateCutHint(){
+        const label = computeCutOutputs();
+        $("cutHint").textContent = label;
+      }
+
+      function renderConfigSnapshot(cfg){
+        const wrap = $("configSummary");
+        if (!wrap) return;
+        if (!cfg) {
+          wrap.innerHTML = '<div class="log-empty">Chưa có dữ liệu</div>';
+          return;
+        }
+        const rows = [
+          {label:"Auto map mode", value:formatBool(cfg.modeAuto)},
+          {label:"Shift active LOW (GND)", value:formatBool(cfg.shiftActiveLow)},
+          {label:"Relay HIGH = cut", value:formatBool(cfg.relayPolarityHighToCut)},
+          {label:"Cắt IGN", value:formatBool(cfg.cutIgnEnabled)},
+          {label:"Cắt INJ", value:formatBool(cfg.cutInjEnabled)},
+          {label:"Cut Manual (ms)", value:cfg.cutTimeFixed},
+          {label:"Shift debounce (ms)", value:cfg.shiftDebounceMs},
+          {label:"Min RPM", value:cfg.minRpm},
+          {label:"PPR", value:cfg.ppr},
+          {label:"RPM scale factor", value:cfg.rpmScaleFactor},
+          {label:"Backfire mode", value:formatBool(cfg.backfireMode)},
+          {label:"Backfire profile", value:formatBackfireProfile(cfg.backfireProfile)},
+          {label:"Backfire +ms", value:cfg.backfireAddMs},
+          {label:"Backfire RPM threshold", value:cfg.backfireRpmThreshold},
+          {label:"Backfire cooldown (ms)", value:cfg.backfireCooldownMs},
+          {label:"Burst window (ms)", value:cfg.backfireBurstWindowMs},
+          {label:"Burst bonus +ms", value:cfg.backfireBurstExtraMs},
+          {label:"Burst max combo", value:cfg.backfireBurstMax},
+          {label:"Blend IGN +ms", value:cfg.backfireIgnExtraMs},
+          {label:"Decel high rpm", value:cfg.backfireDecelHighRpm},
+          {label:"Decel drop rpm", value:cfg.backfireDecelDropRpm},
+          {label:"Decel pulse on (ms)", value:cfg.backfireDecelPulseMs},
+          {label:"Decel pulse off (ms)", value:cfg.backfireDecelOffMs},
+          {label:"Decel pulses", value:cfg.backfireDecelPulseCount},
+          {label:"AP timeout (ms)", value:cfg.apTimeoutMs},
+          {label:"Wi-Fi password", value:cfg.apPassword ? `Đã đặt (${cfg.apPassword.length} ký tự)` : "Không đặt"},
+          {label:"Auto map entries", value:cfg.autoMap?.length ?? 0}
+        ];
+        const grid = rows.map(row=>`
+          <div class="config-row">
+            <span>${row.label}</span>
+            <strong>${formatValue(row.value)}</strong>
+          </div>
+        `).join("");
+        wrap.innerHTML = `
+          <div class="config-grid">${grid}</div>
+          ${renderAutoMapSnapshot(cfg.autoMap)}
+        `;
+      }
+
+      function renderAutoMapSnapshot(list){
+        if (!Array.isArray(list) || !list.length) {
+          return '<div class="config-section"><h3>Auto map</h3><div class="log-empty" style="padding:20px 0">Chưa cấu hình</div></div>';
+        }
+        const rows = list.map((entry, idx)=>`
+          <tr>
+            <td>#${idx+1}</td>
+            <td>${entry.min} → ${entry.max} rpm</td>
+            <td>${entry.cut} ms</td>
+            <td>${entry.bfEnabled && entry.bf ? `${entry.bf} ms` : "off"}</td>
+          </tr>
+        `).join("");
+        return `
+          <div class="config-section">
+            <h3>Auto map</h3>
+            <table>
+              <thead><tr><th>Band</th><th>Khoảng RPM</th><th>Cut</th><th>Backfire</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      function formatBool(val){ return val ? "true" : "false"; }
+      function formatBackfireProfile(val){
+        switch(Number(val)){
+          case 1: return "Staged";
+          case 2: return "Burst";
+          case 3: return "Blend";
+          case 4: return "Decel";
+          default: return "Basic";
+        }
+      }
+      function formatValue(val){
+        if (typeof val === "boolean") return formatBool(val);
+        if (val === undefined || val === null || Number.isNaN(val)) return "-";
+        return val;
+      }
+      function updateBackfireProfileUi(){
+        const select = $("backfireProfile");
+        if (!select) return;
+        const profile = Number(select.value) || 0;
+        document.querySelectorAll(".bf-field").forEach(el=>{
+          const profiles = (el.dataset.profile || "")
+            .split(",")
+            .map(token=>Number(token.trim()))
+            .filter(num=>Number.isFinite(num));
+          if (!profiles.length) {
+            el.hidden = false;
+            return;
+          }
+          el.hidden = !profiles.includes(profile);
+        });
+      }
+      function formatBytes(bytes){
+        const num = Number(bytes);
+        if (!Number.isFinite(num) || num <= 0) return "0 B";
+        const units = ["B","KB","MB"];
+        let value = num;
+        let unit = 0;
+        while (value >= 1024 && unit < units.length - 1) {
+          value /= 1024;
+          unit++;
+        }
+        const precision = unit === 0 ? 0 : 1;
+        return `${value.toFixed(precision)} ${units[unit]}`;
+      }
+
+      function init(){
+        wireTabs();
+        wireUi();
+        setupOta();
+        loadConfig();
+        loadLockStatus();
+        renderLockPassFeed();
+        initStream();
+        window.addEventListener("beforeunload", (evt)=>{ if (dirty){ evt.preventDefault(); evt.returnValue=""; }});
+      }
+
+      function wireTabs(){
+        document.querySelectorAll(".tab-btn").forEach(btn=>{
+          btn.addEventListener("click",()=>{
+            document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+            document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+            btn.classList.add("active");
+            $("tab-"+btn.dataset.tab).classList.add("active");
+          });
+        });
+      }
+
+      function wireUi(){
+        $("saveBtn").addEventListener("click", ()=>{
+          logUiAction("UI_SAVE_CLICK", {dirty});
+          saveConfig();
+        });
+        $("reloadBtn").addEventListener("click", ()=>{
+          logUiAction("UI_RELOAD_CLICK");
+          loadConfig();
+        });
+        $("addMapBtn").addEventListener("click", ()=>{
+          addAutoMapEntry();
+          renderAutoMap();
+          markDirty();
+        });
+        $("testCutBtn").addEventListener("click", runTestCut);
+        $("testRpmBtn").addEventListener("click", runTestRpm);
+        $("stopRpmBtn").addEventListener("click", stopTestRpm);
+        $("backfireProfile").addEventListener("change", ()=>{
+          updateBackfireProfileUi();
+        });
+        $("exportBtn").addEventListener("click", ()=>{
+          logUiAction("UI_EXPORT");
+          downloadConfig();
+        });
+        $("importBtn").addEventListener("click", ()=>{
+          logUiAction("UI_IMPORT_PICK");
+          $("importInput").click();
+        });
+        $("importInput").addEventListener("change", handleImport);
+        $("sampleRpmBtn").addEventListener("click", ()=>{
+          logUiAction("UI_SAMPLE_RPM", {rpm: state.liveRpm});
+          sampleCurrentRpm();
+        });
+        $("calibrateBtn").addEventListener("click", calibrateAutoSample);
+        $("lockSaveBtn").addEventListener("click", saveLockSettings);
+        $("lockRefreshBtn").addEventListener("click", ()=>{
+          logUiAction("UI_LOCK_REFRESH");
+          loadLockStatus();
+        });
+        $("lockEnabledToggle").addEventListener("change", ()=>{
+          if (lockHydrating) return;
+          logUiAction("UI_LOCK_TOGGLE", {value: $("lockEnabledToggle").checked});
+          saveLockSettings({auto:true});
+        });
+        $("lockPassInput").addEventListener("input", (evt)=>{
+          evt.target.value = (evt.target.value || "").replace(/[^01]/g, "").slice(0,4);
+        });
+        $("lockPassInput").addEventListener("change", ()=>{
+          if (lockHydrating) return;
+          logUiAction("UI_LOCK_PASS_EDIT", {value: $("lockPassInput").value});
+        });
+        $("lockTimingBtn").addEventListener("click", ()=>{
+          logUiAction("UI_LOCK_TIMING_BTN", {short: $("lockShortMax").value, long: $("lockLongMin").value});
+          saveLockSettings({timingOnly:true, requireTiming:true});
+        });
+        $("wifiSaveBtn").addEventListener("click", ()=>{
+          logUiAction("UI_WIFI_SAVE");
+          saveWifiSettings();
+        });
+        $("wifiToggleBtn").addEventListener("click", ()=>{
+          logUiAction("UI_WIFI_TOGGLE");
+          toggleWifiVisibility();
+        });
+        $("apPassword").addEventListener("input", ()=>{
+          updateWifiStatus();
+        });
+        document.addEventListener("input", evt=>{
+          if (hydrating) return;
+          if (evt.target.closest("#autoMapList")) return;
+          if (evt.target.matches("input, select")) {
+            markDirty();
+            if (evt.target.id === "cutIgnEnabled" || evt.target.id === "cutInjEnabled") updateCutHint();
+          }
+        });
+        document.addEventListener("change", captureConfigInteraction);
+      }
+
+      function setupOta(){
+        otaControls = {
+          firmware:{
+            input: $("fwFileInput"),
+            pick: $("fwPickBtn"),
+            upload: $("fwUploadBtn"),
+            status: $("fwStatus"),
+            bar: $("fwProgressBar")
+          },
+          littlefs:{
+            input: $("fsFileInput"),
+            pick: $("fsPickBtn"),
+            upload: $("fsUploadBtn"),
+            status: $("fsStatus"),
+            bar: $("fsProgressBar")
+          }
+        };
+        Object.entries(otaControls).forEach(([kind, refs])=>{
+          if (refs.pick && refs.input) {
+            refs.pick.addEventListener("click", ()=>refs.input.click());
+          }
+          if (refs.input) {
+            refs.input.addEventListener("change", ()=>handleOtaFileSelected(kind));
+          }
+          if (refs.upload) {
+            refs.upload.addEventListener("click", ()=>startOtaUpload(kind));
+          }
+        });
+        updateOtaUi("firmware");
+        updateOtaUi("littlefs");
+      }
+
+      function handleOtaFileSelected(kind){
+        const slot = state.ota[kind];
+        const refs = otaControls?.[kind];
+        if (!slot || !refs) return;
+        slot.file = refs.input?.files?.[0] || null;
+        slot.status = slot.file ? `${slot.file.name} (${formatBytes(slot.file.size)})` : "Chưa chọn file.";
+        slot.progress = 0;
+        updateOtaUi(kind);
+      }
+
+      function updateOtaUi(kind){
+        const slot = state.ota[kind];
+        const refs = otaControls?.[kind];
+        if (!slot || !refs) return;
+        if (refs.status) refs.status.textContent = slot.status || "";
+        if (refs.bar) refs.bar.style.width = `${Math.round((slot.progress || 0) * 100)}%`;
+        const disableInputs = !!slot.uploading;
+        if (refs.pick) refs.pick.disabled = disableInputs;
+        if (refs.input) refs.input.disabled = disableInputs;
+        if (refs.upload) refs.upload.disabled = disableInputs || !slot.file;
+      }
+
+      function setOtaStatus(kind, text){
+        const slot = state.ota[kind];
+        if (!slot) return;
+        slot.status = text;
+        updateOtaUi(kind);
+      }
+
+      function setOtaProgress(kind, ratio){
+        const slot = state.ota[kind];
+        if (!slot) return;
+        slot.progress = Math.max(0, Math.min(1, ratio || 0));
+        updateOtaUi(kind);
+      }
+
+      function setOtaUploading(kind, uploading){
+        const slot = state.ota[kind];
+        if (!slot) return;
+        slot.uploading = uploading;
+        updateOtaUi(kind);
+      }
+
+      function clearOtaFile(kind, resetStatus = true){
+        const slot = state.ota[kind];
+        const refs = otaControls?.[kind];
+        if (!slot || !refs) return;
+        slot.file = null;
+        if (resetStatus) {
+          slot.progress = 0;
+          slot.status = "Chưa chọn file.";
+        }
+        if (refs.input) refs.input.value = "";
+        updateOtaUi(kind);
+      }
+
+      async function startOtaUpload(kind){
+        const slot = state.ota[kind];
+        if (!slot || slot.uploading) return;
+        if (!slot.file) {
+          toast("Chưa chọn file", "error");
+          return;
+        }
+        const endpoint = kind === "firmware" ? "/ota/firmware" : "/ota/fs";
+        const label = kind === "firmware" ? "Firmware" : "LittleFS";
+        logUiAction("UI_OTA_UPLOAD", {kind, name: slot.file.name || "", size: slot.file.size || 0});
+        setOtaUploading(kind, true);
+        setOtaStatus(kind, "Đang upload...");
+        setOtaProgress(kind, 0);
+        let shouldClear = false;
+        try {
+          const res = await uploadBinary(endpoint, slot.file, (loaded, total)=>{
+            if (total) {
+              setOtaProgress(kind, loaded / total);
+            }
+          });
+          if (!res || res.ok !== true) {
+            throw new Error(res && res.message ? res.message : "Upload lỗi");
+          }
+          shouldClear = true;
+          setOtaProgress(kind, 1);
+          const successMsg = kind === "firmware" ? "Đã upload firmware, thiết bị sẽ reboot." : "Đã upload LittleFS, thiết bị sẽ reboot.";
+          setOtaStatus(kind, successMsg);
+          toast(successMsg, "success");
+        } catch(err){
+          const msg = err && err.message ? err.message : "Upload lỗi";
+          setOtaStatus(kind, msg);
+          toast(`${label}: ${msg}`, "error");
+        } finally {
+          setOtaUploading(kind, false);
+          if (shouldClear) {
+            clearOtaFile(kind, false);
+          }
+        }
+      }
+
+      function markDirty(){ if (dirty) return; dirty = true; $("dirtyBadge").classList.add("visible"); }
+      function clearDirty(){ dirty = false; $("dirtyBadge").classList.remove("visible"); }
+
+      function captureConfigInteraction(evt){
+        if (hydrating) return;
+        const target = evt.target;
+        if (!target || !target.matches("input, select")) return;
+        if (target.closest("#autoMapList")) return;
+        const type = (target.getAttribute("type") || "").toLowerCase();
+        const tag = (target.tagName || "").toLowerCase();
+        const field = target.id || target.name || target.dataset.field || "unknown";
+        let eventName = "";
+        let value;
+        if (type === "checkbox") {
+          eventName = "UI_TOGGLE";
+          value = target.checked;
+        } else if (type === "number") {
+          eventName = "UI_NUMBER";
+          value = target.value;
+        } else if (tag === "select") {
+          eventName = "UI_SELECT";
+          value = target.value;
+        }
+        if (eventName) logUiAction(eventName, {field, value});
+        if (field === "cutIgnEnabled" || field === "cutInjEnabled") updateCutHint();
+      }
+
+      async function loadConfig(opts = {}){
+        const {silent = false} = opts;
+        const btn = $("reloadBtn");
+        btn.disabled = true;
+        setMeta("Đang tải config...");
+        try {
+          const res = await fetch("/config/get");
+          if (!res.ok) throw new Error(res.statusText);
+          const cfg = await res.json();
+          sanitizeConfig(cfg);
+          state.config = cfg;
+          state.autoMap = cfg.autoMap.map(entry=>({...entry}));
+          hydrating = true;
+          hydrateForm(cfg);
+          hydrating = false;
+          renderAutoMap();
+          renderConfigSnapshot(state.config);
+          clearDirty();
+          setMeta("Đã tải lúc " + new Date().toLocaleTimeString());
+          if (!silent) toast("Config synced","success");
+        } catch(err){
+          console.error(err);
+          toast("Không tải được config","error");
+          setMeta("Tải lỗi");
+          renderConfigSnapshot(null);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function loadLockStatus(){
+        try {
+          const res = await fetch("/lock");
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          state.lock = data;
+          renderLockStatus();
+        } catch(err){
+          console.error(err);
+          $("lockHint").textContent = "Không lấy được trạng thái";
+        }
+      }
+
+      function renderLockStatus(opts = {}){
+        if (!state.lock) return;
+        const skipPass = !!opts.skipPass;
+        const skipTiming = !!opts.skipTiming;
+        lockHydrating = true;
+        $("lockEnabledToggle").checked = !!state.lock.enabled;
+        if (!skipPass) $("lockPassInput").value = state.lock.pass || "";
+        if (!skipTiming) {
+          if (state.lock.shortMaxMs) $("lockShortMax").value = state.lock.shortMaxMs;
+          if (state.lock.longMinMs) $("lockLongMin").value = state.lock.longMinMs;
+          if (state.lock.resetHoldMs) $("lockResetHold").value = state.lock.resetHoldMs;
+        }
+        lockHydrating = false;
+        const label = state.lock.engaged ? "Đang khóa (cần PASS)" : state.lock.enabled ? "Chế độ khóa bật" : "Đang mở";
+        const tag = state.lock.engaged ? "var(--danger)" : state.lock.enabled ? "var(--warn)" : "var(--success)";
+        $("lockStatusLabel").textContent = `Trạng thái: ${label}`;
+        $("lockStatusLabel").style.color = tag;
+        const messages = [];
+        if (state.lock.engaged) messages.push("Giữ SHIFT_SW để nhập pass MOS");
+        if (state.lock.retryHold) messages.push(`Chờ ${Math.ceil((state.lock.retryMs||0)/1000)}s để nhập lại`);
+        if (state.lock.spamHold) messages.push(`Bị khóa spam ${Math.ceil((state.lock.spamMs||0)/1000)}s`);
+        if (!messages.length) messages.push(state.lock.enabled ? "Có thể khóa lại tại đây" : "Xe đang mở");
+        $("lockHint").textContent = messages.join(" · ");
+      }
+
+      function recordLockPass(entry){
+        if (!entry || !entry.changes) return;
+        const type = entry.event;
+        if (type !== "PASS_BUF" && type !== "PASS_RESET") return;
+        const meta = entry.changes;
+        const fallback = typeof meta.note === "string" ? meta.note : "";
+        const buffer = typeof meta.buffer === "string" ? meta.buffer : fallback;
+        const bit = typeof meta.bit === "string" ? meta.bit : (typeof meta.bit === "number" ? String(meta.bit) : "");
+        const hold = Number(meta.holdMs) || 0;
+        const threshold = Number(meta.thresholdMs) || null;
+        const stamp = typeof entry.t === "number" ? entry.t : Date.now();
+        state.lockFeed.push({buffer, bit, holdMs: hold, t: stamp, type, threshold});
+        if (state.lockFeed.length > lockFeedLimit) state.lockFeed.shift();
+        renderLockPassFeed();
+      }
+
+      function renderLockPassFeed(){
+        const wrap = $("lockPassFeed");
+        if (!wrap) return;
+        if (!state.lockFeed.length) {
+          wrap.innerHTML = '<div class="log-empty" style="padding:20px 0">Chưa có dữ liệu</div>';
+          return;
+        }
+        wrap.innerHTML = state.lockFeed.slice().reverse().map(item=>{
+          const passLabel = formatPassBuffer(item.buffer);
+          const typeLabel = item.type === "PASS_RESET" ? "Reset" : (item.bit ? `Bit ${escapeHtml(item.bit)}` : "Bit ?");
+          const holdLabel = item.holdMs ? `${item.holdMs} ms` : "--";
+          const extraLabel = item.type === "PASS_RESET" && item.threshold ? `>= ${item.threshold} ms` : "";
+          const timeLabel = typeof item.t === "number" ? `${(item.t/1000).toFixed(1)}s` : "-";
+          const metaLine = extraLabel ? `${holdLabel} · ${extraLabel}` : holdLabel;
+          return `<div class="lock-pass-item"><div class="lock-pass-main"><span class="lock-pass-buffer">${escapeHtml(passLabel)}</span><span>${typeLabel}</span></div><div class="lock-pass-meta"><span>${metaLine}</span><span>${timeLabel}</span></div></div>`;
+        }).join("");
+      }
+
+      function formatPassBuffer(str){
+        if (typeof str !== "string") return "----";
+        return (str + "----").slice(0,4);
+      }
+
+      function collectLockTiming(options = {}){
+        const strict = !!options.strict;
+        const shortVal = parseInt($("lockShortMax").value,10);
+        const longVal = parseInt($("lockLongMin").value,10);
+        const resetVal = parseInt($("lockResetHold").value,10);
+        const result = {
+          short: Number.isFinite(shortVal) ? shortVal : null,
+          long: Number.isFinite(longVal) ? longVal : null,
+          reset: Number.isFinite(resetVal) ? resetVal : null
+        };
+        if (strict && (result.short === null || result.long === null || result.reset === null)) {
+          result.error = "Nhập đủ Nhấn ngắn / Nhấn dài / Giữ để xóa";
+          return result;
+        }
+        if (result.short !== null && result.long !== null && result.short + 50 >= result.long) {
+          result.error = "Nhấn dài phải lớn hơn nhấn ngắn ít nhất 50ms";
+          return result;
+        }
+        if (result.long !== null && result.reset !== null && result.reset <= result.long + 100) {
+          result.error = "Giữ để xóa phải lớn hơn Nhấn dài ít nhất 100ms";
+        }
+        return result;
+      }
+
+      function collectWifiSettings(){
+        const timeoutVal = parseInt($("apTimeoutMs").value,10);
+        const passRaw = ($("apPassword").value || "").trim();
+        const result = {
+          timeout: Number.isFinite(timeoutVal) ? timeoutVal : null,
+          pass: passRaw
+        };
+        if (result.timeout === null || result.timeout < 1000 || result.timeout > 600000) {
+          result.error = "AP timeout phải trong 1.000-600.000 ms";
+          return result;
+        }
+        if (passRaw && (passRaw.length < 8 || passRaw.length > 63)) {
+          result.error = "Mật khẩu phải 8-63 ký tự hoặc để trống";
+          return result;
+        }
+        return result;
+      }
+
+      function updateWifiStatus(){
+        const passRaw = ($("apPassword").value || "").trim();
+        const label = passRaw ? `AP đang bảo vệ (${passRaw.length} ký tự)` : "AP đang mở (không mật khẩu)";
+        const el = $("wifiStatus");
+        if (el) el.textContent = label;
+      }
+
+      function toggleWifiVisibility(){
+        const input = $("apPassword");
+        const btn = $("wifiToggleBtn");
+        if (!input || !btn) return;
+        wifiPasswordVisible = !wifiPasswordVisible;
+        input.type = wifiPasswordVisible ? "text" : "password";
+        btn.textContent = wifiPasswordVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu";
+      }
+
+      async function saveWifiSettings(){
+        if (wifiSaving) return;
+        const wifi = collectWifiSettings();
+        if (wifi.error){ toast(wifi.error,"error"); return; }
+        const btn = $("wifiSaveBtn");
+        if (btn) btn.disabled = true;
+        wifiSaving = true;
+        try {
+          const payload = { apTimeoutMs: wifi.timeout, apPassword: wifi.pass };
+          const res = await fetch("/config/set", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(await res.text());
+          toast("Đã lưu Wi-Fi (AP sẽ khởi động lại)","success");
+          await loadConfig({silent:true});
+        } catch(err){
+          console.error(err);
+          toast("Lưu Wi-Fi lỗi","error");
+        } finally {
+          wifiSaving = false;
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      async function saveLockSettings(opts = {}){
+        if (lockSaving) return;
+        const enabled = $("lockEnabledToggle").checked;
+        const pass = ($("lockPassInput").value || "").trim();
+        if (pass && pass.length !== 4){ toast("Pass phải đủ 4 bit","error"); return; }
+        if (pass && /[^01]/.test(pass)){ toast("Chỉ dùng 0 hoặc 1","error"); return; }
+        const timing = collectLockTiming({strict: !!opts.requireTiming});
+        if (timing.error){ toast(timing.error,"error"); return; }
+        const payload = { enabled };
+        if (pass) payload.pass = pass;
+        if (timing.short !== null) payload.shortMaxMs = timing.short;
+        if (timing.long !== null) payload.longMinMs = timing.long;
+        if (timing.reset !== null) payload.resetHoldMs = timing.reset;
+        const btn = $("lockSaveBtn");
+        if (btn) btn.disabled = true;
+        lockSaving = true;
+        try {
+          const res = await fetch("/lock", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          state.lock = data;
+          renderLockStatus();
+          if (!opts.auto) toast("Đã cập nhật lock","success");
+        } catch(err){
+          console.error(err);
+          toast("Cập nhật lock lỗi","error");
+        } finally {
+          lockSaving = false;
+          if (btn) btn.disabled = false;
+        }
+      }
+
+      function sanitizeConfig(cfg){
+        if (!Array.isArray(cfg.autoMap)) cfg.autoMap = [];
+        cfg.autoMap = cfg.autoMap.map((entry, idx)=>{
+          const min = ensureNumber(entry.min, idx*1000);
+          const max = ensureNumber(entry.max, idx*1000+999);
+          const cut = ensureNumber(entry.cut, 50);
+          const bfVal = ensureNumber(entry.bf ?? entry.backfireAddMs, 0);
+          const bfEnabled = !!entry.bfEnabled && bfVal > 0;
+          return {min, max, cut, bf: bfVal, bfEnabled};
+        });
+        if (!cfg.autoMap.length){
+          for (let i=0;i<8;i++) cfg.autoMap.push({min:i*1000,max:i*1000+999,cut:50,bf:0,bfEnabled:false});
+        }
+        normalizeAutoMapList(cfg.autoMap);
+        if (typeof cfg.apPassword !== "string") cfg.apPassword = "";
+        cfg.backfireProfile = ensureNumber(cfg.backfireProfile, 0);
+        if (cfg.backfireProfile < 0 || cfg.backfireProfile > 4) cfg.backfireProfile = 0;
+        cfg.backfireCooldownMs = ensureNumber(cfg.backfireCooldownMs, 600);
+        cfg.backfireBurstWindowMs = ensureNumber(cfg.backfireBurstWindowMs, 1200);
+        cfg.backfireBurstExtraMs = ensureNumber(cfg.backfireBurstExtraMs, 4);
+        cfg.backfireBurstMax = ensureNumber(cfg.backfireBurstMax, 3);
+        if (cfg.backfireBurstMax < 1) cfg.backfireBurstMax = 1;
+        cfg.backfireIgnExtraMs = ensureNumber(cfg.backfireIgnExtraMs, 6);
+        cfg.backfireDecelHighRpm = ensureNumber(cfg.backfireDecelHighRpm, 7000);
+        if (cfg.backfireDecelHighRpm < 0) cfg.backfireDecelHighRpm = 0;
+        if (cfg.backfireDecelHighRpm > 20000) cfg.backfireDecelHighRpm = 20000;
+        cfg.backfireDecelDropRpm = ensureNumber(cfg.backfireDecelDropRpm, 1500);
+        if (cfg.backfireDecelDropRpm < 0) cfg.backfireDecelDropRpm = 0;
+        if (cfg.backfireDecelDropRpm > 8000) cfg.backfireDecelDropRpm = 8000;
+        cfg.backfireDecelPulseMs = ensureNumber(cfg.backfireDecelPulseMs, 35);
+        if (cfg.backfireDecelPulseMs < 5) cfg.backfireDecelPulseMs = 5;
+        if (cfg.backfireDecelPulseMs > 200) cfg.backfireDecelPulseMs = 200;
+        cfg.backfireDecelOffMs = ensureNumber(cfg.backfireDecelOffMs, 45);
+        if (cfg.backfireDecelOffMs < 0) cfg.backfireDecelOffMs = 0;
+        if (cfg.backfireDecelOffMs > 500) cfg.backfireDecelOffMs = 500;
+        cfg.backfireDecelPulseCount = ensureNumber(cfg.backfireDecelPulseCount, 3);
+        if (cfg.backfireDecelPulseCount < 1) cfg.backfireDecelPulseCount = 1;
+        if (cfg.backfireDecelPulseCount > 8) cfg.backfireDecelPulseCount = 8;
+      }
+
+      function ensureNumber(val, fallback){ const num = Number(val); return Number.isFinite(num) ? num : fallback; }
+
+      function normalizeAutoMapList(list){
+        list.sort((a,b)=>a.min-b.min);
+        for (let i=0;i<list.length;i++){
+          const prev = list[i-1];
+          if (list[i].min < 0) list[i].min = 0;
+          if (prev && list[i].min <= prev.max) list[i].min = prev.max + 1;
+          if (list[i].max <= list[i].min) list[i].max = list[i].min + 50;
+          if (list[i].cut < 5) list[i].cut = 5;
+          if (list[i].cut > 200) list[i].cut = 200;
+          const bfVal = ensureNumber(list[i].bf, 0);
+          list[i].bf = Math.max(0, Math.min(80, bfVal));
+          list[i].bfEnabled = !!list[i].bfEnabled && list[i].bf > 0;
+        }
+        if (list.length > MAX_MAP) list.length = MAX_MAP;
+      }
+
+      function hydrateForm(cfg){
+        $("modeAuto").checked = !!cfg.modeAuto;
+        $("shiftActiveLow").checked = !!cfg.shiftActiveLow;
+        $("relayPolarityHighToCut").checked = !!cfg.relayPolarityHighToCut;
+        $("cutIgnEnabled").checked = !!cfg.cutIgnEnabled;
+        $("cutInjEnabled").checked = !!cfg.cutInjEnabled;
+        $("cutTimeFixed").value = cfg.cutTimeFixed ?? 50;
+        $("shiftDebounceMs").value = cfg.shiftDebounceMs ?? 30;
+        $("minRpm").value = cfg.minRpm ?? 1500;
+        $("ppr").value = cfg.ppr ?? 1;
+        $("rpmScaleFactor").value = cfg.rpmScaleFactor ?? 1;
+        $("backfireMode").checked = !!cfg.backfireMode;
+        $("backfireProfile").value = cfg.backfireProfile ?? 0;
+        $("backfireRpmThreshold").value = cfg.backfireRpmThreshold ?? 6000;
+        $("backfireAddMs").value = cfg.backfireAddMs ?? 10;
+        $("backfireCooldownMs").value = cfg.backfireCooldownMs ?? 600;
+        $("backfireBurstWindowMs").value = cfg.backfireBurstWindowMs ?? 1200;
+        $("backfireBurstExtraMs").value = cfg.backfireBurstExtraMs ?? 4;
+        $("backfireBurstMax").value = cfg.backfireBurstMax ?? 3;
+        $("backfireIgnExtraMs").value = cfg.backfireIgnExtraMs ?? 6;
+        $("backfireDecelHighRpm").value = cfg.backfireDecelHighRpm ?? 7000;
+        $("backfireDecelDropRpm").value = cfg.backfireDecelDropRpm ?? 1500;
+        $("backfireDecelPulseMs").value = cfg.backfireDecelPulseMs ?? 35;
+        $("backfireDecelOffMs").value = cfg.backfireDecelOffMs ?? 45;
+        $("backfireDecelPulseCount").value = cfg.backfireDecelPulseCount ?? 3;
+        updateBackfireProfileUi();
+        $("apTimeoutMs").value = cfg.apTimeoutMs ?? 120000;
+        $("apPassword").value = cfg.apPassword ?? "";
+        wifiPasswordVisible = false;
+        $("apPassword").type = "password";
+        const wifiToggle = $("wifiToggleBtn");
+        if (wifiToggle) wifiToggle.textContent = "Hiện mật khẩu";
+        updateWifiStatus();
+        updateCutHint();
+      }
+
+      function renderAutoMap(){
+        const container = $("autoMapList");
+        container.innerHTML = "";
+        if (!state.autoMap.length) return;
+        state.autoMap.forEach((entry, idx)=>{
+          const row = document.createElement("div");
+          row.className = "map-row";
+          const bfLabel = entry.bfEnabled && entry.bf ? ` | BF ${entry.bf} ms` : "";
+          row.innerHTML = `
+            <div class="map-row-top">
+              <label class="field">Min RPM
+                <input type="number" data-idx="${idx}" data-field="min" value="${entry.min}" min="0" step="50">
+              </label>
+              <label class="field">Max RPM
+                <input type="number" data-idx="${idx}" data-field="max" value="${entry.max}" min="0" step="50">
+              </label>
+              <label class="field">Cut (ms)
+                <input type="number" data-idx="${idx}" data-field="cut" value="${entry.cut}" min="5" max="200">
+              </label>
+              <button class="ghost" data-remove="${idx}">Remove</button>
+            </div>
+            <label class="field">Band preview
+              <input type="range" class="map-slider" data-idx="${idx}" min="5" max="200" value="${entry.cut}">
+            </label>
+            <div class="map-label">${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfLabel}</div>
+            <div class="map-row-bottom" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+              <label class="field">Backfire +ms
+                <input type="number" data-idx="${idx}" data-field="bf" value="${entry.bf ?? 0}" min="0" max="80">
+              </label>
+              <div class="toggle-row compact"><span>Kích backfire cho band</span><input type="checkbox" data-idx="${idx}" data-field="bfEnabled" class="switch" ${entry.bfEnabled ? "checked" : ""}></div>
+            </div>
+          `;
+          container.appendChild(row);
+        });
+        container.querySelectorAll("input[data-field]").forEach(input=>{
+          input.addEventListener("input", mapFieldChanged);
+          if (input.type === "checkbox") {
+            input.addEventListener("change", mapFieldChanged);
+          }
+        });
+        container.querySelectorAll(".map-slider").forEach(slider=>{
+          slider.addEventListener("input", mapSliderChanged);
+        });
+        container.querySelectorAll("button[data-remove]").forEach(btn=>{
+          btn.addEventListener("click",()=>{
+            const idx = Number(btn.dataset.remove);
+            const removed = state.autoMap[idx];
+            state.autoMap.splice(idx,1);
+            const meta = removed ? {index: idx, min: removed.min, max: removed.max} : {index: idx};
+            logUiAction("UI_MAP_REMOVE", meta);
+            normalizeAutoMapList(state.autoMap);
+            renderAutoMap();
+            markDirty();
+          });
+        });
+      }
+
+      function mapFieldChanged(evt){
+        const idx = Number(evt.target.dataset.idx);
+        const field = evt.target.dataset.field;
+        if (!Number.isFinite(idx) || idx < 0 || !field) return;
+        const type = (evt.target.getAttribute("type") || "").toLowerCase();
+        let value;
+        if (type === "checkbox") {
+          value = evt.target.checked;
+        } else {
+          value = Number(evt.target.value);
+          if (!Number.isFinite(value)) return;
+          if (field === "bf" && value < 0) value = 0;
+        }
+        state.autoMap[idx][field] = value;
+        logUiAction("UI_MAP_FIELD", {index: idx, field, value});
+        normalizeAutoMapList(state.autoMap);
+        renderAutoMap();
+        markDirty();
+      }
+
+      function mapSliderChanged(evt){
+        const idx = Number(evt.target.dataset.idx);
+        const value = Number(evt.target.value);
+        if (!Number.isFinite(value)) return;
+        state.autoMap[idx].cut = value;
+        logUiAction("UI_MAP_SLIDER", {index: idx, value});
+        renderAutoMap();
+        markDirty();
+      }
+
+      function addAutoMapEntry(){
+        const last = state.autoMap[state.autoMap.length-1];
+        const start = last ? last.max + 1 : 0;
+        const entry = {min:start,max:start+999,cut:last?last.cut:50,bf:0,bfEnabled:false};
+        state.autoMap.push(entry);
+        logUiAction("UI_MAP_ADD", {index: state.autoMap.length-1, min: entry.min, max: entry.max, cut: entry.cut});
+        normalizeAutoMapList(state.autoMap);
+      }
+
+      function gatherConfig(){
+        return {
+          modeAuto: $("modeAuto").checked,
+          shiftActiveLow: $("shiftActiveLow").checked,
+          relayPolarityHighToCut: $("relayPolarityHighToCut").checked,
+          cutIgnEnabled: $("cutIgnEnabled").checked,
+          cutInjEnabled: $("cutInjEnabled").checked,
+          cutTimeFixed: parseInt($("cutTimeFixed").value,10) || 50,
+          shiftDebounceMs: parseInt($("shiftDebounceMs").value,10) || 30,
+          minRpm: parseInt($("minRpm").value,10) || 0,
+          ppr: parseFloat($("ppr").value) || 1,
+          rpmScaleFactor: parseFloat($("rpmScaleFactor").value) || 1,
+          backfireMode: $("backfireMode").checked,
+          backfireProfile: parseInt($("backfireProfile").value,10) || 0,
+          backfireRpmThreshold: parseInt($("backfireRpmThreshold").value,10) || 0,
+          backfireAddMs: parseInt($("backfireAddMs").value,10) || 0,
+          backfireCooldownMs: parseInt($("backfireCooldownMs").value,10) || 0,
+          backfireBurstWindowMs: parseInt($("backfireBurstWindowMs").value,10) || 0,
+          backfireBurstExtraMs: parseInt($("backfireBurstExtraMs").value,10) || 0,
+          backfireBurstMax: parseInt($("backfireBurstMax").value,10) || 0,
+          backfireIgnExtraMs: parseInt($("backfireIgnExtraMs").value,10) || 0,
+          backfireDecelHighRpm: parseInt($("backfireDecelHighRpm").value,10) || 0,
+          backfireDecelDropRpm: parseInt($("backfireDecelDropRpm").value,10) || 0,
+          backfireDecelPulseMs: parseInt($("backfireDecelPulseMs").value,10) || 0,
+          backfireDecelOffMs: parseInt($("backfireDecelOffMs").value,10) || 0,
+          backfireDecelPulseCount: parseInt($("backfireDecelPulseCount").value,10) || 0,
+          apTimeoutMs: parseInt($("apTimeoutMs").value,10) || 0,
+          apPassword: ($("apPassword").value || "").trim(),
+          autoMap: state.autoMap.map(entry=>({...entry}))
+        };
+      }
+
+      async function saveConfig(){
+        const btn = $("saveBtn");
+        btn.disabled = true;
+        try {
+          const payload = gatherConfig();
+          const res = await fetch("/config/set", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error(res.statusText);
+          toast("Đã lưu config","success");
+          await loadConfig({silent:true});
+        } catch(err){
+          console.error(err);
+          toast("Lưu thất bại","error");
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function runTestCut(){
+        const ms = parseInt($("testCutMs").value,10) || 50;
+        logUiAction("UI_TEST_CUT", {ms});
+        try {
+          const res = await fetch(`/test/cut?ms=${ms}`);
+          if (!res.ok) throw new Error();
+          toast("Đã kích cut","success");
+        } catch(err){ toast("Test cut lỗi","error"); }
+      }
+
+      async function runTestRpm(){
+        const rpm = parseInt($("testRpmInput").value,10) || 0;
+        logUiAction("UI_TEST_RPM", {rpm});
+        try {
+          const res = await fetch(`/test/rpm?rpm=${rpm}`);
+          if (!res.ok) throw new Error();
+          toast("PWM đang chạy","success");
+        } catch(err){ toast("PWM lỗi","error"); }
+      }
+
+      async function stopTestRpm(){
+        logUiAction("UI_STOP_RPM");
+        try {
+          const res = await fetch("/test/rpm/stop", {method:"POST"});
+          if (!res.ok) throw new Error();
+          toast("Đã stop PWM","success");
+        } catch(err){ toast("Stop PWM lỗi","error"); }
+      }
+
+      async function downloadConfig(){
+        logUiAction("UI_EXPORT_DOWNLOAD");
+        try {
+          const res = await fetch("/export");
+          if (!res.ok) throw new Error();
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "quickshifter-config.json";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          toast("Đã export","success");
+        } catch(err){ toast("Export lỗi","error"); }
+      }
+
+      async function handleImport(evt){
+        const file = evt.target.files && evt.target.files[0];
+        if (!file) return;
+        logUiAction("UI_IMPORT", {name:file.name || "", size:file.size || 0});
+        try {
+          const text = await file.text();
+          const res = await fetch("/import", {method:"POST",headers:{"Content-Type":"application/json"},body:text});
+          if (!res.ok) throw new Error();
+          toast("Đã import","success");
+          loadConfig();
+        } catch(err){
+          toast("Import lỗi","error");
+        } finally {
+          evt.target.value="";
+        }
+      }
+
+      function sampleCurrentRpm(){
+        if (!state.liveRpm){ toast("Chưa có RPM","warn"); return; }
+        $("calTarget").value = state.liveRpm;
+        $("calStatus").textContent = `Sample: ${state.liveRpm} RPM`;
+      }
+
+      async function calibrateAutoSample(){
+        if (state.collecting) return;
+        const target = parseFloat($("calTarget").value);
+        const samples = parseInt($("calSamples").value,10) || 12;
+        const interval = parseInt($("calInterval").value,10) || 150;
+        if (!target || target <= 0){ toast("Nhập target hợp lệ","error"); return; }
+        logUiAction("UI_CALIBRATE", {target, samples, interval});
+        state.collecting = true;
+        const readings = [];
+        $("calStatus").textContent = "Đang lấy mẫu...";
+        for (let i=0;i<samples;i++){
+          readings.push(state.liveRpm || 0);
+          $("calStatus").textContent = `Samples ${i+1}/${samples}: ${state.liveRpm || 0} RPM`;
+          await wait(interval);
+        }
+        try {
+          const res = await fetch("/calibrate", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({targetRpm:target, measuredSamples:readings})
+          });
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} avg=${Number(data.avgMeasured).toFixed(1)} std=${Number(data.stdDev).toFixed(2)}`;
+          toast("Calibrate xong","success");
+          loadConfig();
+        } catch(err){
+          console.error(err);
+          toast("Calibrate lỗi","error");
+          $("calStatus").textContent = "Calibrate thất bại";
+        } finally {
+          state.collecting = false;
+        }
+      }
+
+      function wait(ms){ return new Promise(res=>setTimeout(res, ms)); }
+
+      function uploadBinary(url, file, onProgress){
+        return new Promise((resolve, reject)=>{
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", url, true);
+          xhr.responseType = "json";
+          if (xhr.upload && typeof onProgress === "function") {
+            xhr.upload.onprogress = (evt)=>{
+              const total = evt.lengthComputable ? evt.total : (file && file.size) || 0;
+              if (total) {
+                onProgress(evt.loaded, total);
+              }
+            };
+          }
+          xhr.onerror = ()=>reject(new Error("Mạng lỗi"));
+          xhr.onload = ()=>{
+            const body = xhr.response || tryParseJson(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(body || {});
+            } else {
+              const msg = body && body.message ? body.message : (xhr.responseText || xhr.statusText || `HTTP ${xhr.status}`);
+              reject(new Error(msg));
+            }
+          };
+          xhr.send(file);
+        });
+      }
+
+      function tryParseJson(text){
+        if (!text) return null;
+        try { return JSON.parse(text); }
+        catch(_){ return null; }
+      }
+
+      function initStream(){
+        if (state.stream) state.stream.close();
+        const source = new EventSource("/log/stream");
+        state.stream = source;
+        source.addEventListener("log", evt=>{
+          try { handleLog(JSON.parse(evt.data)); }
+          catch(err){ console.warn("bad log", err); }
+        });
+        source.addEventListener("telemetry", evt=>{
+          try { handleTelemetry(JSON.parse(evt.data)); }
+          catch(err){ console.warn("bad telemetry", err); }
+        });
+        source.onopen = ()=>setStreamStatus("Stream online","online");
+        source.onerror = ()=>setStreamStatus("Reconnecting...","warn");
+      }
+
+      function handleLog(entry){
+        state.logs.push(entry);
+        if (state.logs.length > logLimit) state.logs.shift();
+        recordLockPass(entry);
+        $("logCount").textContent = state.logs.length;
+        const metaLabel = typeof entry.t === "number" ? `t=${(entry.t/1000).toFixed(1)}s` : "log";
+        applyLiveMetrics({
+          rpm: entry.rpm,
+          cut: entry.cut,
+          shift: entry.shift,
+          event: entry.event,
+          metaLabel
+        });
+        renderLogs();
+      }
+
+      function handleTelemetry(entry){
+        applyLiveMetrics({
+          rpm: entry.rpm,
+          cut: entry.cut,
+          shift: entry.shift,
+          event: entry.event,
+          metaLabel: `Live @ ${new Date().toLocaleTimeString()}`,
+          lock: entry.lock
+        });
+      }
+
+      function applyLiveMetrics(payload){
+        const rpm = Number.isFinite(payload.rpm) ? payload.rpm : 0;
+        state.liveRpm = rpm;
+        $("rpmValue").textContent = rpm;
+        if (payload.metaLabel) $("rpmMeta").textContent = payload.metaLabel;
+        const cutActive = !!payload.cut;
+        $("cutState").textContent = cutActive ? "CUT" : "Standby";
+        $("cutState").style.color = cutActive ? "var(--danger)" : "var(--text)";
+        updateCutHint();
+        const shiftLabel = normalizeShift(payload.shift);
+        $("shiftState").textContent = shiftLabel;
+        updateBucketMeta(rpm);
+        updateTicker({
+          shift: shiftLabel,
+          cut: cutActive,
+          rpm,
+          event: payload.event
+        });
+        if (payload.lock) applyLockTelemetry(payload.lock);
+      }
+
+      function applyLockTelemetry(mode){
+        if (!mode) return;
+        if (!state.lock) state.lock = {pass: ""};
+        state.lock.engaged = mode === "LOCKED";
+        state.lock.enabled = mode !== "OFF";
+        state.lock.unlocked = mode === "OFF";
+        renderLockStatus({skipPass:true, skipTiming:true});
+      }
+
+      function normalizeShift(value){
+        if (typeof value === "string" && value.length) return value;
+        if (typeof value === "boolean") return value ? "PRESSED" : "RELEASED";
+        return "-";
+      }
+
+      function updateBucketMeta(rpm){
+        if (!state.autoMap.length){ $("bucketMeta").textContent = "Band: --"; return; }
+        const band = state.autoMap.find(b => rpm >= b.min && rpm <= b.max);
+        if (!band) {
+          $("bucketMeta").textContent = "Band: ngoài map";
+          return;
+        }
+        const bfText = band.bfEnabled && band.bf ? ` | BF ${band.bf} ms` : "";
+        $("bucketMeta").textContent = `Band: ${band.min}-${band.max} rpm (${band.cut} ms${bfText})`;
+      }
+
+      function renderLogs(){
+        const wrap = $("logList");
+        if (!state.logs.length){ wrap.innerHTML = '<div class="log-empty">Chưa có log</div>'; $("logSummary").textContent = "0 log"; return; }
+        wrap.innerHTML = state.logs.slice(-80).reverse().map(e=>{
+          const rpm = e.rpm ?? 0;
+          const cut = e.cut ? "CUT" : "";
+          const event = escapeHtml(e.event || "");
+          const shiftState = escapeHtml(e.shift || "-");
+          const timeLabel = typeof e.t === "number" ? (e.t/1000).toFixed(1)+"s" : "-";
+          const details = buildLogDetails(e);
+          return `<div class="log-entry"><div class="log-line"><span>${timeLabel}</span><span>${shiftState}</span><span>${rpm}rpm</span><span>${event}</span><span class="cut">${cut}</span></div>${details}</div>`;
+        }).join("");
+        $("logSummary").textContent = `${state.logs.length} entries`;
+      }
+
+      function buildLogDetails(entry){
+        const sections = [];
+        if (hasKeys(entry.changes)) sections.push(detailBlock("Chi tiết", entry.changes, true));
+        if (hasKeys(entry.config)) sections.push(detailBlock("Config snapshot", entry.config, false));
+        return sections.join("");
+      }
+
+      function hasKeys(obj){
+        if (!obj || typeof obj !== "object") return false;
+        return Object.keys(obj).length > 0;
+      }
+
+      function detailBlock(label, data, expanded){
+        const payload = formatJson(data);
+        if (!payload) return "";
+        const openAttr = expanded ? " open" : "";
+        return `<div class="log-event"><details${openAttr}><summary class="event-label">${label}</summary><pre>${payload}</pre></details></div>`;
+      }
+
+      function formatJson(data){
+        try {
+          return escapeHtml(JSON.stringify(data, null, 2));
+        } catch(err){
+          return "";
+        }
+      }
+
+      function escapeHtml(str){
+        if (str === null || str === undefined) return "";
+        return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      }
+
+      function updateTicker(entry){
+        if (!tickerRefs.shift) return;
+        const shiftLabel = entry.shift || "-";
+        tickerRefs.shift.textContent = shiftLabel;
+        tickerRefs.shift.classList.toggle("shift-active", shiftLabel === "PRESSED");
+
+        tickerRefs.cut.textContent = entry.cut ? "CUT" : "Standby";
+        tickerRefs.cut.classList.toggle("cut-active", !!entry.cut);
+
+        const rpmVal = typeof entry.rpm === "number" ? entry.rpm : 0;
+        tickerRefs.rpm.textContent = rpmVal;
+
+        const eventLabel = entry.event || "";
+        tickerRefs.event.textContent = eventLabel ? `${eventLabel}` : `${shiftLabel} | ${rpmVal} rpm`;
+      }
+
+      function setStreamStatus(text, mode){
+        const chip = $("streamStatus");
+        chip.textContent = text;
+        chip.classList.remove("online","warn","offline");
+        chip.classList.add(mode === "online" ? "online" : mode === "warn" ? "warn" : "offline");
+      }
+
+      function setMeta(text){ $("configMeta").textContent = text; }
+      function toast(msg, tone){
+        const el = $("toast");
+        el.textContent = msg;
+        el.classList.remove("success","error","show");
+        if (tone === "success") el.classList.add("success");
+        if (tone === "error") el.classList.add("error");
+        requestAnimationFrame(()=>{
+          el.classList.add("show");
+          clearTimeout(el._timer);
+          el._timer = setTimeout(()=>el.classList.remove("show"), 2600);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
