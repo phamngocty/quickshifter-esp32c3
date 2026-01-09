@@ -10,6 +10,7 @@ static shift_state_callback_t state_cb = nullptr;
 static bool stableState = false;
 static bool lastRawState = false;
 static unsigned long lastChangeMs = 0;
+static unsigned long pressStartMs = 0;  // Thời điểm nhấn xuống
 
 static void configure_pin_mode() {
   pinMode(shiftPin, activeLow ? INPUT_PULLUP : INPUT_PULLDOWN);
@@ -50,12 +51,20 @@ void shift_update() {
   if (now - lastChangeMs >= (unsigned long)dbMs) {
     if (raw != stableState) {
       stableState = raw;
+      if (stableState) {
+        pressStartMs = now;  // Lưu thời điểm nhấn
+      }
       if (state_cb) state_cb(stableState);
       if (stableState && press_cb) {
         press_cb();
       }
     }
   }
+}
+
+unsigned long shift_get_press_duration() {
+  if (!stableState) return 0;
+  return millis() - pressStartMs;
 }
 
 void shift_set_state_callback(shift_state_callback_t cb) {

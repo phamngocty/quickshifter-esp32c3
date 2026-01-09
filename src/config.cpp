@@ -99,6 +99,17 @@ void setDefaults() {
 
   cfg.cutIgnEnabled = true;
   cfg.cutInjEnabled = true;
+
+  // Manual Backfire defaults
+  cfg.manualBackfireEnabled = false;
+  cfg.manualBackfireHoldMs = 3000;
+  cfg.manualBackfireMode = 1;
+  cfg.manualPulseCutMs = 200;
+  cfg.manualPulseFireMs = 50;
+  cfg.manualPulseOffMs = 200;
+  cfg.manualPulseRepeat = 3;
+  cfg.manualMinRpm = 4000;
+  cfg.manualIgnOnly = true;
 }
 
 bool ensureDefaultConfig() {
@@ -195,6 +206,18 @@ bool loadConfig() {
   cfg.minRpm = doc["minRpm"] | 1500;
   cfg.cutIgnEnabled = doc["cutIgnEnabled"] | true;
   cfg.cutInjEnabled = doc["cutInjEnabled"] | true;
+
+  // Load manual backfire config
+  cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | false;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 3000;
+  cfg.manualBackfireMode = doc["manualBackfireMode"] | 1;
+  cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 200;
+  cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 50;
+  cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 200;
+  cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 3;
+  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
+  cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
+
   if (cfg.backfireProfile > BACKFIRE_PROFILE_DECEL) cfg.backfireProfile = BACKFIRE_PROFILE_BASIC;
   if (cfg.backfireCooldownMs < 0) cfg.backfireCooldownMs = 0;
   if (cfg.backfireBurstWindowMs < 0) cfg.backfireBurstWindowMs = 0;
@@ -268,6 +291,17 @@ bool saveConfig() {
   doc["minRpm"] = cfg.minRpm;
   doc["cutIgnEnabled"] = cfg.cutIgnEnabled;
   doc["cutInjEnabled"] = cfg.cutInjEnabled;
+
+  // Save manual backfire config
+  doc["manualBackfireEnabled"] = cfg.manualBackfireEnabled;
+  doc["manualBackfireHoldMs"] = cfg.manualBackfireHoldMs;
+  doc["manualBackfireMode"] = cfg.manualBackfireMode;
+  doc["manualPulseCutMs"] = cfg.manualPulseCutMs;
+  doc["manualPulseFireMs"] = cfg.manualPulseFireMs;
+  doc["manualPulseOffMs"] = cfg.manualPulseOffMs;
+  doc["manualPulseRepeat"] = cfg.manualPulseRepeat;
+  doc["manualMinRpm"] = cfg.manualMinRpm;
+  doc["manualIgnOnly"] = cfg.manualIgnOnly;
 
   bool res = (serializeJson(doc, f) > 0);
   f.close();

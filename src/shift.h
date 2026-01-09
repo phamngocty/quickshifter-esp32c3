@@ -9,3 +9,4 @@ void shift_configure(bool activeLow, int debounceMs);
 void shift_update();
 void shift_set_state_callback(shift_state_callback_t cb);
 bool shift_is_pressed();
+unsigned long shift_get_press_duration();  // Lấy thời gian giữ hiện tại (ms)

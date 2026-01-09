@@ -20,6 +20,25 @@ static const uint8_t TEST_PWM = 8;
 static bool shiftPressed = false;
 static bool shiftCutLatched = false;
 
+// Manual Backfire State Machine
+enum ShiftState {
+  SHIFT_IDLE,
+  SHIFT_QUICKCUT_ACTIVE,
+  SHIFT_WAIT_RELEASE,
+  SHIFT_MANUAL_MODE1,
+  SHIFT_MANUAL_MODE2
+};
+
+struct ManualBackfireRuntime {
+  ShiftState state;
+  unsigned long cutStartMs;
+  unsigned long lastToggleMs;
+  uint8_t pulseCount;
+  bool relayOn;
+};
+
+static ManualBackfireRuntime manualBF = {SHIFT_IDLE, 0, 0, 0, false};
+
 struct BackfireRuntime {
   unsigned long lastShiftMs = 0;
   unsigned long lastBackfireMs = 0;
@@ -180,11 +199,159 @@ static void handle_decel_backfire(int currentRpm, const QSConfig &cfg) {
   }
 }
 
+// Xử lý Manual Backfire (gọi trong loop)
+static void handle_manual_backfire(int currentRpm, const QSConfig &cfg) {
+  if (!cfg.manualBackfireEnabled) {
+    manualBF.state = SHIFT_IDLE;
+    return;
+  }
+  
+  unsigned long now = millis();
+  unsigned long pressDuration = shift_get_press_duration();
+  
+  // Kiểm tra điều kiện kích hoạt manual backfire
+  auto canActivate = [&]() {
+    return cfg.manualBackfireEnabled
+        && !lock_is_locked()
+        && currentRpm >= cfg.manualMinRpm
+        && !shiftCutLatched
+        && cfg.manualBackfireMode > 0;
+  };
+  
+  // State machine
+  switch (manualBF.state) {
+    case SHIFT_IDLE:
+      // Không làm gì
+      break;
+      
+    case SHIFT_QUICKCUT_ACTIVE:
+      // Sau khi quickshift kết thúc, chờ xem có giữ lâu không
+      if (!cut_is_active() && shift_is_pressed()) {
+        manualBF.state = SHIFT_WAIT_RELEASE;
+      } else if (!shift_is_pressed()) {
+        manualBF.state = SHIFT_IDLE;
+      }
+      break;
+      
+    case SHIFT_WAIT_RELEASE:
+      if (!shift_is_pressed()) {
+        manualBF.state = SHIFT_IDLE;
+        break;
+      }
+      
+      // Kiểm tra đã giữ đủ lâu chưa
+      if (pressDuration >= cfg.manualBackfireHoldMs && canActivate()) {
+        // Kích hoạt manual backfire
+        if (cfg.manualBackfireMode == 1) {
+          manualBF.state = SHIFT_MANUAL_MODE1;
+        } else if (cfg.manualBackfireMode == 2) {
+          manualBF.state = SHIFT_MANUAL_MODE2;
+          manualBF.pulseCount = 0;
+          manualBF.relayOn = false;
+        }
+        manualBF.cutStartMs = now;
+        manualBF.lastToggleMs = now;
+        
+        DynamicJsonDocument meta(192);
+        meta["source"] = "manual_backfire";
+        meta["mode"] = cfg.manualBackfireMode;
+        meta["holdMs"] = pressDuration;
+        meta["rpm"] = currentRpm;
+        log_push(currentRpm, false, "ACTIVATED", "MANUAL_BF_START", &meta, nullptr);
+      }
+      break;
+      
+    case SHIFT_MANUAL_MODE1:
+      // Mode 1: Cắt liên tục cho đến khi nhả
+      if (shift_is_pressed() && canActivate()) {
+        // Trigger cut liên tục
+        if (cfg.manualIgnOnly) {
+          cut_trigger_dual(999999, 0, currentRpm);  // Chỉ IGN
+        } else {
+          cut_trigger_dual(999999, 999999, currentRpm);  // Cả 2
+        }
+      } else {
+        // Nhả hoặc không còn điều kiện
+        cut_trigger_dual(0, 0, currentRpm);
+        manualBF.state = SHIFT_IDLE;
+      }
+      break;
+      
+    case SHIFT_MANUAL_MODE2:
+      // Mode 2: Pulse pattern A-B-C x D lần
+      if (!shift_is_pressed() || !canActivate()) {
+        // Nhả giữa chừng hoặc mất điều kiện
+        cut_trigger_dual(0, 0, currentRpm);
+        manualBF.state = SHIFT_IDLE;
+        DynamicJsonDocument meta(96);
+        meta["source"] = "manual_backfire";
+        meta["interrupted"] = true;
+        log_push(currentRpm, false, "INTERRUPTED", "MANUAL_BF_MODE2_STOP", &meta, nullptr);
+        break;
+      }
+      
+      // Chu kỳ: CUT(A) -> FIRE(B) -> OFF(C)
+      unsigned long elapsed = now - manualBF.lastToggleMs;
+      
+      if (!manualBF.relayOn) {
+        // Đang trong phase CUT (A)
+        if (elapsed >= cfg.manualPulseCutMs) {
+          // Chuyển sang FIRE (B)
+          cut_trigger_dual(0, 0, currentRpm);  // Tắt cut = bật lửa
+          manualBF.relayOn = true;
+          manualBF.lastToggleMs = now;
+        } else {
+          // Tiếp tục cut
+          if (cfg.manualIgnOnly) {
+            cut_trigger_dual(cfg.manualPulseCutMs, 0, currentRpm);
+          } else {
+            cut_trigger_dual(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
+          }
+        }
+      } else {
+        // Đang trong phase FIRE (B)
+        if (elapsed >= cfg.manualPulseFireMs) {
+          // Chuyển sang OFF (C) hoặc lặp lại
+          manualBF.pulseCount++;
+          
+          if (manualBF.pulseCount >= cfg.manualPulseRepeat) {
+            // Hoàn thành D chu kỳ, reset về CUT
+            manualBF.pulseCount = 0;
+            manualBF.relayOn = false;
+            manualBF.lastToggleMs = now;
+          } else {
+            // Tiếp tục OFF (C) trước khi lặp
+            if (cfg.manualPulseOffMs > 0) {
+              // Có phase OFF
+              manualBF.relayOn = false;
+              manualBF.lastToggleMs = now;
+            } else {
+              // Không có OFF, quay lại CUT ngay
+              manualBF.relayOn = false;
+              manualBF.lastToggleMs = now;
+            }
+          }
+        }
+      }
+      break;
+  }
+}
+
 void onShiftStateChanged(bool pressed) {
   lock_handle_shift(pressed);
   shiftPressed = pressed;
   if (!pressed) {
     shiftCutLatched = false;
+    // Reset manual backfire state khi nhả
+    if (manualBF.state != SHIFT_IDLE) {
+      manualBF.state = SHIFT_IDLE;
+      manualBF.relayOn = false;
+      cut_trigger_dual(0, 0, rpm_get());  // Tắt relay
+      DynamicJsonDocument meta(96);
+      meta["source"] = "manual_backfire";
+      meta["event"] = "released";
+      log_push(rpm_get(), false, "RELEASED", "MANUAL_BF_END", &meta, nullptr);
+    }
   }
   log_push(rpm_get(), cut_is_active(), pressed ? "PRESSED" : "RELEASED", "SHIFT");
 }
@@ -193,38 +360,53 @@ void onShiftPressed(){
   if (lock_is_engaged()) return;
   if (shiftCutLatched) return;
   if (cut_is_active()) return;
+  
+  // Trigger quickshift ngay lập tức
   int currentRpm = rpm_get();
   const QSConfig &cfg = getConfig();
   unsigned long baseCut = cfg.modeAuto ? config_resolve_cut_ms(currentRpm) : cfg.cutTimeFixed;
   unsigned long ignCut = baseCut;
   unsigned long injCut = baseCut;
-  BackfireResult bf = resolve_backfire(currentRpm, cfg);
-  if (bf.applied) {
-    ignCut += bf.ignExtra;
-    injCut += bf.injExtra;
-  }
-  cut_trigger_dual(ignCut, injCut, currentRpm);
-  char eventLabel[64];
-  const char *modeLabel = cfg.modeAuto ? "CUT_AUTO" : "CUT_MAN";
-  if (cfg.cutIgnEnabled && cfg.cutInjEnabled && ignCut != injCut) {
-    snprintf(eventLabel, sizeof(eventLabel), "%s IGN%lums INJ%lums", modeLabel, ignCut, injCut);
+  
+  // Không áp dụng backfire tự động nếu manual backfire enabled
+  // (sẽ xử lý sau khi giữ lâu)
+  if (!cfg.manualBackfireEnabled) {
+    BackfireResult bf = resolve_backfire(currentRpm, cfg);
+    if (bf.applied) {
+      ignCut += bf.ignExtra;
+      injCut += bf.injExtra;
+    }
+    DynamicJsonDocument metaDoc(192);
+    JsonDocument *metaPtr = nullptr;
+    if (bf.applied) {
+      JsonObject meta = metaDoc.to<JsonObject>();
+      meta["source"] = "backfire";
+      meta["profile"] = cfg.backfireProfile;
+      meta["ignExtra"] = bf.ignExtra;
+      if (bf.injExtra) meta["injExtra"] = bf.injExtra;
+      if (bf.burstIndex) meta["burst"] = bf.burstIndex;
+      if (bf.bandIndex >= 0) meta["band"] = bf.bandIndex;
+      metaPtr = &metaDoc;
+    }
+    char eventLabel[64];
+    const char *modeLabel = cfg.modeAuto ? "CUT_AUTO" : "CUT_MAN";
+    if (cfg.cutIgnEnabled && cfg.cutInjEnabled && ignCut != injCut) {
+      snprintf(eventLabel, sizeof(eventLabel), "%s IGN%lums INJ%lums", modeLabel, ignCut, injCut);
+    } else {
+      snprintf(eventLabel, sizeof(eventLabel), "%s %lums", modeLabel, ignCut);
+    }
+    log_push(currentRpm, cut_is_active(), shiftPressed ? "PRESSED" : "RELEASED", eventLabel, metaPtr, nullptr);
   } else {
-    snprintf(eventLabel, sizeof(eventLabel), "%s %lums", modeLabel, ignCut);
+    // Manual backfire enabled - chỉ quickshift đơn giản
+    char eventLabel[64];
+    const char *modeLabel = cfg.modeAuto ? "CUT_AUTO" : "CUT_MAN";
+    snprintf(eventLabel, sizeof(eventLabel), "%s %lums (MBF_ARMED)", modeLabel, ignCut);
+    log_push(currentRpm, cut_is_active(), shiftPressed ? "PRESSED" : "RELEASED", eventLabel, nullptr, nullptr);
   }
-  DynamicJsonDocument metaDoc(192);
-  JsonDocument *metaPtr = nullptr;
-  if (bf.applied) {
-    JsonObject meta = metaDoc.to<JsonObject>();
-    meta["source"] = "backfire";
-    meta["profile"] = cfg.backfireProfile;
-    meta["ignExtra"] = bf.ignExtra;
-    if (bf.injExtra) meta["injExtra"] = bf.injExtra;
-    if (bf.burstIndex) meta["burst"] = bf.burstIndex;
-    if (bf.bandIndex >= 0) meta["band"] = bf.bandIndex;
-    metaPtr = &metaDoc;
-  }
-  log_push(currentRpm, cut_is_active(), shiftPressed ? "PRESSED" : "RELEASED", eventLabel, metaPtr, nullptr);
+  
+  cut_trigger_dual(ignCut, injCut, currentRpm);
   shiftCutLatched = cut_is_active();
+  manualBF.state = SHIFT_QUICKCUT_ACTIVE;
 }
 
 void setup() {
@@ -269,6 +451,7 @@ void loop() {
   rpm_update();
   int loopRpm = rpm_get();
   handle_decel_backfire(loopRpm, getConfig());
+  handle_manual_backfire(loopRpm, getConfig());  // Thêm xử lý manual backfire
   shift_update();
   cut_poll();
   lock_loop();

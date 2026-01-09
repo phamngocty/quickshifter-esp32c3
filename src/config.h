@@ -54,6 +54,17 @@ struct QSConfig {
 
   bool cutIgnEnabled;
   bool cutInjEnabled;
+
+  // Manual Backfire Config
+  bool manualBackfireEnabled;
+  uint32_t manualBackfireHoldMs;
+  uint8_t manualBackfireMode;       // 0=Off, 1=Continuous, 2=Pulse
+  uint32_t manualPulseCutMs;        // A: thời gian ngắt (tích xăng)
+  uint32_t manualPulseFireMs;       // B: thời gian bật lại (đốt)
+  uint32_t manualPulseOffMs;        // C: thời gian ngắt tiếp
+  uint8_t manualPulseRepeat;        // D: số lần lặp chu kỳ
+  int manualMinRpm;                 // RPM tối thiểu để kích
+  bool manualIgnOnly;               // Chỉ cắt IGN (không cắt INJ)
 };
 
 const QSConfig &getConfig();
