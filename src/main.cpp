@@ -210,9 +210,9 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg) {
   unsigned long pressDuration = shift_get_press_duration();
   
   // Kiểm tra điều kiện kích hoạt manual backfire
-  auto canActivate = [&]() {
+  auto canActivate = [&]() -> bool {
     return cfg.manualBackfireEnabled
-        && !lock_is_locked()
+        && lock_is_unlocked()
         && currentRpm >= cfg.manualMinRpm
         && !shiftCutLatched
         && cfg.manualBackfireMode > 0;

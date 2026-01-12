@@ -111,6 +111,21 @@
     .ota-status{font-size:13px;color:var(--text-dim);min-height:18px}
     .progress{width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.12);overflow:hidden}
     .progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .2s ease}
+    .tooltip-icon{cursor:help;margin-left:6px;opacity:.7;font-size:14px;color:var(--text-dim);transition:opacity .2s ease}
+    .tooltip-icon:hover{opacity:1;color:var(--accent)}
+    .field-hint{display:block;font-size:12px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+    .field-hint.warn{color:var(--warn)}
+    .field-hint.error{color:var(--danger)}
+    .bf-section-divider{margin:24px 0;border:none;height:1px;background:linear-gradient(90deg,transparent,var(--border) 20%,var(--border) 80%,transparent)}
+    .bf-section-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .bf-section-header h3{margin:0;font-size:16px;font-weight:700;color:var(--text)}
+    .bf-section-header .icon{font-size:20px}
+    .bf-section-desc{color:var(--text-dim);font-size:13px;margin:0 0 14px;line-height:1.5}
+    .manual-bf-fields{display:none}
+    .manual-bf-fields.visible{display:block}
+    #manualPulseCycleInfo{display:none;padding:10px 14px;border-radius:10px;background:rgba(70,196,186,.1);border:1px solid rgba(70,196,186,.3);font-size:13px;margin-top:8px}
+    #manualPulseCycleInfo.visible{display:block}
+    #manualPulseCycleInfo.warn{background:rgba(250,204,21,.1);border-color:rgba(250,204,21,.4)}
   </style>
 </head>
 <body>
@@ -189,53 +204,199 @@
             <input type="number" id="rpmScaleFactor" min="0.1" max="5" step="0.01" value="1">
           </label>
         </div>
-        <div>
-          <div class="toggle-row"><span>Backfire assist</span><input type="checkbox" id="backfireMode" class="switch"></div>
-          <label class="field">Backfire profile
-            <select id="backfireProfile">
-              <option value="0">Basic threshold</option>
-              <option value="1">Staged theo band</option>
-              <option value="2">Burst combo</option>
-              <option value="3">Blend dual-cut</option>
-              <option value="4">Decel IGN pops</option>
-            </select>
-          </label>
-          <label class="field">Backfire threshold (RPM)
-            <input type="number" id="backfireRpmThreshold" min="0" max="20000" step="100" value="6000">
-          </label>
-          <label class="field">Extra cut (ms)
-            <input type="number" id="backfireAddMs" min="0" max="100" step="1" value="10">
-          </label>
-          <label class="field" id="bfCooldownField">Cooldown (ms)
-            <input type="number" id="backfireCooldownMs" min="0" max="5000" step="50" value="600">
-          </label>
-          <label class="field bf-field" data-profile="2">Burst window (ms)
-            <input type="number" id="backfireBurstWindowMs" min="0" max="5000" step="50" value="1200">
-          </label>
-          <label class="field bf-field" data-profile="2">Burst bonus mỗi lần (+ms)
-            <input type="number" id="backfireBurstExtraMs" min="0" max="50" step="1" value="4">
-          </label>
-          <label class="field bf-field" data-profile="2">Burst tối đa (combo)
-            <input type="number" id="backfireBurstMax" min="1" max="5" step="1" value="3">
-          </label>
-          <label class="field bf-field" data-profile="3">Blend IGN +ms
-            <input type="number" id="backfireIgnExtraMs" min="0" max="50" step="1" value="6">
-          </label>
-          <label class="field bf-field" data-profile="4">Decel high RPM
-            <input type="number" id="backfireDecelHighRpm" min="0" max="20000" step="100" value="7000">
-          </label>
-          <label class="field bf-field" data-profile="4">RPM drop cần (Δ rpm)
-            <input type="number" id="backfireDecelDropRpm" min="100" max="8000" step="50" value="1500">
-          </label>
-          <label class="field bf-field" data-profile="4">Pulse IGN on (ms)
-            <input type="number" id="backfireDecelPulseMs" min="5" max="200" step="1" value="35">
-          </label>
-          <label class="field bf-field" data-profile="4">Pulse off (ms)
-            <input type="number" id="backfireDecelOffMs" min="0" max="500" step="5" value="45">
-          </label>
-          <label class="field bf-field" data-profile="4">Số pulse IGN
-            <input type="number" id="backfireDecelPulseCount" min="1" max="8" step="1" value="3">
-          </label>
+        <div id="backfireSection">
+          <div class="bf-section-header">
+            <span class="icon">🔥</span>
+            <h3>Automatic Backfire</h3>
+          </div>
+          <p class="bf-section-desc">Tự động kích backfire khi quickshift ở RPM cao theo profile đã chọn</p>
+          
+          <div class="toggle-row">
+            <span>Backfire assist <span class="tooltip-icon" title="Bật để tự động thêm thời gian cắt khi RPM cao tạo backfire">ⓘ</span></span>
+            <input type="checkbox" id="backfireMode" class="switch">
+          </div>
+          
+          <div id="autoBackfireFields" style="display:none">
+            <label class="field">
+              Backfire profile <span class="tooltip-icon" title="Chọn thuật toán backfire: Basic=đơn giản, Staged=theo band RPM, Burst=combo nhiều lần, Blend=cắt IGN/INJ khác nhau, Decel=kích khi giảm ga">ⓘ</span>
+              <select id="backfireProfile">
+                <option value="0">Basic threshold</option>
+                <option value="1">Staged theo band</option>
+                <option value="2">Burst combo</option>
+                <option value="3">Blend dual-cut</option>
+                <option value="4">Decel IGN pops</option>
+              </select>
+            </label>
+            
+            <div id="profileDescription" style="padding:10px 14px;border-radius:10px;background:rgba(70,196,186,.08);border:1px solid rgba(70,196,186,.2);font-size:13px;line-height:1.5;margin-bottom:12px;color:var(--text-dim)">
+              <strong style="color:var(--accent)">ℹ️ Basic:</strong> Cộng thêm cut time khi RPM ≥ threshold
+            </div>
+            
+            <div id="autoBackfireCommonFields">
+              <label class="field">
+                Backfire threshold (RPM) <span class="tooltip-icon" title="RPM tối thiểu để kích backfire, dưới ngưỡng này không cộng thêm cut time">ⓘ</span>
+                <input type="number" id="backfireRpmThreshold" min="0" max="20000" step="100" value="6000">
+                <small class="field-hint">Ví dụ: 6000 RPM - chỉ backfire khi RPM ≥ 6000</small>
+              </label>
+              
+              <label class="field bf-common-field">
+                Extra cut (ms) <span class="tooltip-icon" title="Thời gian cắt thêm (ms) để tạo backfire. Giá trị cao hơn = backfire mạnh hơn nhưng có thể gây giật">ⓘ</span>
+                <input type="number" id="backfireAddMs" min="0" max="100" step="1" value="10">
+                <small class="field-hint">10-20ms: nhẹ nhàng | 30-50ms: trung bình | 60+ms: mạnh (cẩn thận)</small>
+              </label>
+              
+              <label class="field bf-common-field" id="bfCooldownField">
+                Cooldown (ms) <span class="tooltip-icon" title="Thời gian chờ giữa các lần backfire để tránh cắt liên tục. Relay cơ nên ≥500ms">ⓘ</span>
+                <input type="number" id="backfireCooldownMs" min="0" max="5000" step="50" value="600">
+                <small class="field-hint">Relay cơ: ≥500ms | SSR: có thể thấp hơn</small>
+              </label>
+            </div>
+            
+            <div class="bf-field" data-profile="2" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
+              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">⚡ Burst Combo Settings</p>
+              
+              <label class="field">
+                Burst window (ms) <span class="tooltip-icon" title="Cửa sổ thời gian để đếm combo. Nếu quickshift nhiều lần trong window này sẽ tăng cut time">ⓘ</span>
+                <input type="number" id="backfireBurstWindowMs" min="0" max="5000" step="50" value="1200">
+                <small class="field-hint">1200ms = 1.2s - thời gian để xây dựng combo</small>
+              </label>
+              
+              <label class="field">
+                Burst bonus mỗi lần (+ms) <span class="tooltip-icon" title="Cộng thêm bao nhiêu ms cho mỗi shift trong combo">ⓘ</span>
+                <input type="number" id="backfireBurstExtraMs" min="0" max="50" step="1" value="4">
+                <small class="field-hint">Ví dụ: 4ms × 3 combo = +12ms extra cut</small>
+              </label>
+              
+              <label class="field">
+                Burst tối đa (combo) <span class="tooltip-icon" title="Số shift tối đa để tính combo. Vượt quá sẽ không tăng thêm">ⓘ</span>
+                <input type="number" id="backfireBurstMax" min="1" max="5" step="1" value="3">
+                <small class="field-hint">3 combo = shift 3 lần liên tiếp trong window</small>
+              </label>
+            </div>
+            
+            <div class="bf-field" data-profile="3" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
+              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">🔀 Blend Dual-Cut Settings</p>
+              
+              <label class="field">
+                Blend IGN +ms <span class="tooltip-icon" title="Cắt IGN thêm bao nhiêu ms so với INJ (để backfire mạnh hơn)">ⓘ</span>
+                <input type="number" id="backfireIgnExtraMs" min="0" max="50" step="1" value="6">
+                <small class="field-hint">IGN cắt lâu hơn INJ để tạo nhiều xăng chưa cháy</small>
+              </label>
+            </div>
+            
+            <div class="bf-field" data-profile="4" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
+              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">📉 Decel IGN Pops Settings</p>
+              
+              <label class="field">
+                Decel high RPM <span class="tooltip-icon" title="RPM cao cần đạt trước khi giảm ga. Chỉ kích nếu RPM từng ở mức này">ⓘ</span>
+                <input type="number" id="backfireDecelHighRpm" min="0" max="20000" step="100" value="7000">
+                <small class="field-hint">Phát hiện giảm ga từ RPM cao (vd: 7000 → 5500)</small>
+              </label>
+              
+              <label class="field">
+                RPM drop cần (Δ rpm) <span class="tooltip-icon" title="RPM phải giảm ít nhất bao nhiêu để coi là giảm ga mạnh">ⓘ</span>
+                <input type="number" id="backfireDecelDropRpm" min="100" max="8000" step="50" value="1500">
+                <small class="field-hint">1500 RPM = chênh lệch cần để kích backfire</small>
+              </label>
+              
+              <label class="field">
+                Pulse IGN on (ms) <span class="tooltip-icon" title="Thời gian cắt IGN cho mỗi pulse (tạo 1 tiếng pop)">ⓘ</span>
+                <input type="number" id="backfireDecelPulseMs" min="5" max="200" step="1" value="35">
+                <small class="field-hint">35ms = 1 pulse ngắn, âm thanh sắc</small>
+              </label>
+              
+              <label class="field">
+                Pulse off (ms) <span class="tooltip-icon" title="Thời gian nghỉ giữa các pulse (để phân biệt tiếng pop)">ⓘ</span>
+                <input type="number" id="backfireDecelOffMs" min="0" max="500" step="5" value="45">
+                <small class="field-hint">45ms = khoảng cách giữa các tiếng pop</small>
+              </label>
+              
+              <label class="field">
+                Số pulse IGN <span class="tooltip-icon" title="Số lần chớp IGN (số tiếng pop khi giảm ga)">ⓘ</span>
+                <input type="number" id="backfireDecelPulseCount" min="1" max="8" step="1" value="3">
+                <small class="field-hint">3 pulse = pop-pop-pop (3 tiếng)</small>
+              </label>
+            </div>
+          </div>
+          
+          <hr class="bf-section-divider">
+        </div>
+        
+        <div id="manualBackfireSection">
+          <div class="bf-section-header">
+            <span class="icon">🎯</span>
+            <h3>Manual Backfire</h3>
+          </div>
+          <p class="bf-section-desc">Kích backfire thủ công bằng cách giữ nút Shift lâu (mặc định ≥3s)</p>
+          
+          <div class="toggle-row">
+            <span>Manual Backfire <span class="tooltip-icon" title="Bật để có thể tạo backfire bằng cách giữ nút Shift > 3 giây. Quickshift bình thường vẫn hoạt động nếu nhấn nhanh">ⓘ</span></span>
+            <input type="checkbox" id="manualBackfireEnabled" class="switch">
+          </div>
+          
+          <div id="manualBackfireFields" class="manual-bf-fields">
+            <label class="field">
+              Mode <span class="tooltip-icon" title="Continuous=cắt liên tục khi giữ (relay cơ OK) | Pulse=băm xung theo chu kỳ A-B-C (khuyến cáo SSR)">ⓘ</span>
+              <select id="manualBackfireMode">
+                <option value="0">Off (tắt)</option>
+                <option value="1">Continuous - Cắt liên tục</option>
+                <option value="2">Pulse - Băm xung A-B-C</option>
+              </select>
+              <small class="field-hint">Mode 1: An toàn cho relay cơ | Mode 2: Cần SSR/MOSFET</small>
+            </label>
+            
+            <label class="field">
+              Hold time (ms) <span class="tooltip-icon" title="Thời gian cần giữ nút Shift để kích Manual Backfire. Nhấn nhanh hơn = quickshift bình thường">ⓘ</span>
+              <input type="number" id="manualBackfireHoldMs" min="1000" max="10000" step="100" value="3000">
+              <small class="field-hint">3000ms = 3 giây. Nhấn &lt; 3s = quickshift, giữ ≥ 3s = manual backfire</small>
+            </label>
+            
+            <label class="field">
+              Min RPM <span class="tooltip-icon" title="RPM tối thiểu để kích Manual Backfire (tránh chết máy ở RPM thấp)">ⓘ</span>
+              <input type="number" id="manualMinRpm" min="0" max="10000" step="100" value="4000">
+              <small class="field-hint warn">RPM &lt; 4000: nguy cơ chết máy. Khuyến cáo ≥ 4000</small>
+            </label>
+            
+            <div class="toggle-row compact">
+              <span>IGN only <span class="tooltip-icon" title="Chỉ cắt lửa (IGN), không cắt xăng (INJ). An toàn hơn cho relay cơ và tạo backfire hiệu quả">ⓘ</span></span>
+              <input type="checkbox" id="manualIgnOnly" class="switch" checked>
+            </div>
+            <small class="field-hint">✅ Khuyến cáo bật: Chỉ cắt lửa để tạo backfire an toàn</small>
+            
+            <div id="manualPulseFields" style="display:none">
+              <hr style="margin:16px 0;border:none;border-top:1px dashed var(--border)">
+              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">⚙️ Pulse Pattern Settings (Mode 2)</p>
+              
+              <label class="field">
+                Cut time A (ms) <span class="tooltip-icon" title="Thời gian cắt điện (xăng tích trong ống xả)">ⓘ</span>
+                <input type="number" id="manualPulseCutMs" min="50" max="1000" step="10" value="200">
+                <small class="field-hint">200ms: Đủ xăng tích trong ống xả</small>
+              </label>
+              
+              <label class="field">
+                Fire time B (ms) <span class="tooltip-icon" title="Thời gian bật lửa trở lại (đốt xăng = backfire)">ⓘ</span>
+                <input type="number" id="manualPulseFireMs" min="20" max="500" step="10" value="50">
+                <small class="field-hint">50ms: Đốt nhanh tạo tiếng nổ</small>
+              </label>
+              
+              <label class="field">
+                Off time C (ms) <span class="tooltip-icon" title="Thời gian nghỉ trước chu kỳ tiếp theo">ⓘ</span>
+                <input type="number" id="manualPulseOffMs" min="50" max="1000" step="10" value="200">
+                <small class="field-hint">200ms: Nghỉ cho relay và engine</small>
+              </label>
+              
+              <label class="field">
+                Repeat count D <span class="tooltip-icon" title="Số lần lặp chu kỳ A-B-C (càng nhiều = backfire càng dài)">ⓘ</span>
+                <input type="number" id="manualPulseRepeat" min="1" max="10" step="1" value="3">
+                <small class="field-hint">3 lần = 3 chu kỳ CUT-FIRE-OFF (lặp lại cho đến khi nhả)</small>
+              </label>
+              
+              <div id="manualPulseCycleInfo">
+                <strong>⏱️ Tổng chu kỳ:</strong> <span id="manualCycleTime">450</span> ms
+                <span id="manualCycleStatus"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -275,7 +436,7 @@
     </section>
 
     <section class="card tab-panel" id="tab-tools">
-      <div class="grid">
+      <div class="grid">s
         <div>
           <h3>Import / Export</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -530,6 +691,15 @@
           {label:"Decel pulse on (ms)", value:cfg.backfireDecelPulseMs},
           {label:"Decel pulse off (ms)", value:cfg.backfireDecelOffMs},
           {label:"Decel pulses", value:cfg.backfireDecelPulseCount},
+          {label:"Manual Backfire", value:formatBool(cfg.manualBackfireEnabled)},
+          {label:"Manual BF mode", value:formatManualBFMode(cfg.manualBackfireMode)},
+          {label:"Manual BF hold (ms)", value:cfg.manualBackfireHoldMs},
+          {label:"Manual BF min RPM", value:cfg.manualMinRpm},
+          {label:"Manual IGN only", value:formatBool(cfg.manualIgnOnly)},
+          {label:"Manual pulse A (ms)", value:cfg.manualPulseCutMs},
+          {label:"Manual pulse B (ms)", value:cfg.manualPulseFireMs},
+          {label:"Manual pulse C (ms)", value:cfg.manualPulseOffMs},
+          {label:"Manual pulse repeat", value:cfg.manualPulseRepeat},
           {label:"AP timeout (ms)", value:cfg.apTimeoutMs},
           {label:"Wi-Fi password", value:cfg.apPassword ? `Đã đặt (${cfg.apPassword.length} ký tự)` : "Không đặt"},
           {label:"Auto map entries", value:cfg.autoMap?.length ?? 0}
@@ -584,10 +754,43 @@
         if (val === undefined || val === null || Number.isNaN(val)) return "-";
         return val;
       }
+      function updateBackfireVisibility(){
+        const enabled = $("backfireMode")?.checked || false;
+        const autoFields = $("autoBackfireFields");
+        const manualSection = $("manualBackfireSection");
+        if (autoFields) {
+          autoFields.style.display = enabled ? "block" : "none";
+        }
+        if (manualSection) {
+          manualSection.style.display = enabled ? "block" : "none";
+        }
+      }
+
       function updateBackfireProfileUi(){
         const select = $("backfireProfile");
         if (!select) return;
         const profile = Number(select.value) || 0;
+        const profiles = ["Basic threshold","Staged theo band","Burst combo","Blend dual-cut","Decel IGN pops"];
+        const descs = [
+          "Cộng thêm cut time khi RPM ≥ threshold",
+          "Cộng thêm cut time dựa vào band RPM (chưa triển khai)",
+          "Combo nhiều shift: cộng cut time theo số lần shift liên tiếp",
+          "Blend IGN/INJ: cắt IGN lâu hơn INJ để tạo nhiều xăng",
+          "Giảm ga từ RPM cao: kích pulse IGN tạo tiếng pop"
+        ];
+        const desc = $("profileDescription");
+        if (desc) {
+          const emoji = ["ℹ️", "📊", "⚡", "🔀", "📉"][profile] || "ℹ️";
+          desc.innerHTML = `<strong style="color:var(--accent)">${emoji} ${profiles[profile]}:</strong> ${descs[profile]}`;
+        }
+        
+        // Ẩn/hiện Cooldown cho Decel profile
+        const cooldownField = $("bfCooldownField");
+        if (cooldownField) {
+          cooldownField.hidden = (profile === 4);
+        }
+        
+        // Ẩn/hiện tất cả profile-specific fields
         document.querySelectorAll(".bf-field").forEach(el=>{
           const profiles = (el.dataset.profile || "")
             .split(",")
@@ -600,6 +803,49 @@
           el.hidden = !profiles.includes(profile);
         });
       }
+
+      function updateManualBackfireUi(){
+        const enabled = $("manualBackfireEnabled")?.checked || false;
+        const mode = Number($("manualBackfireMode")?.value || 0);
+        const fieldsDiv = $("manualBackfireFields");
+        const pulseDiv = $("manualPulseFields");
+        if (fieldsDiv) {
+          fieldsDiv.classList.toggle("visible", enabled);
+        }
+        if (pulseDiv) {
+          pulseDiv.style.display = (enabled && mode === 2) ? "block" : "none";
+        }
+      }
+
+      function updateManualPulseCycle(){
+        const cutMs = Number($("manualPulseCutMs")?.value || 0);
+        const fireMs = Number($("manualPulseFireMs")?.value || 0);
+        const offMs = Number($("manualPulseOffMs")?.value || 0);
+        const repeat = Number($("manualPulseRepeat")?.value || 1);
+        const cycleMs = (cutMs + fireMs + offMs) * repeat;
+        const cycleDisplay = $("manualCycleTime");
+        const info = $("manualPulseCycleInfo");
+        if (cycleDisplay) cycleDisplay.textContent = cycleMs;
+        if (info) {
+          info.classList.toggle("warn", cycleMs < 400);
+          const status = $("manualCycleStatus");
+          if (status) {
+            if (cycleMs < 400) {
+              status.textContent = " ⚠️ Relay cơ có thể không kịp (khuyến cáo ≥ 400ms)";
+              status.style.color = "var(--warn)";
+            } else {
+              status.textContent = " ✅ An toàn";
+              status.style.color = "var(--success)";
+            }
+          }
+        }
+      }
+
+      function formatManualBFMode(mode){
+        const modes = {0:"Off", 1:"Continuous", 2:"Pulse"};
+        return modes[Number(mode)] || "Unknown";
+      }
+
       function formatBytes(bytes){
         const num = Number(bytes);
         if (!Number.isFinite(num) || num <= 0) return "0 B";
@@ -653,6 +899,10 @@
         $("testCutBtn").addEventListener("click", runTestCut);
         $("testRpmBtn").addEventListener("click", runTestRpm);
         $("stopRpmBtn").addEventListener("click", stopTestRpm);
+        $("backfireMode").addEventListener("change", ()=>{
+          updateBackfireVisibility();
+          markDirty();
+        });
         $("backfireProfile").addEventListener("change", ()=>{
           updateBackfireProfileUi();
         });
@@ -702,6 +952,18 @@
         $("apPassword").addEventListener("input", ()=>{
           updateWifiStatus();
         });
+        $("manualBackfireEnabled").addEventListener("change", ()=>{
+          updateManualBackfireUi();
+          markDirty();
+        });
+        $("manualBackfireMode").addEventListener("change", ()=>{
+          updateManualBackfireUi();
+          markDirty();
+        });
+        $("manualPulseCutMs").addEventListener("input", updateManualPulseCycle);
+        $("manualPulseFireMs").addEventListener("input", updateManualPulseCycle);
+        $("manualPulseOffMs").addEventListener("input", updateManualPulseCycle);
+        $("manualPulseRepeat").addEventListener("input", updateManualPulseCycle);
         document.addEventListener("input", evt=>{
           if (hydrating) return;
           if (evt.target.closest("#autoMapList")) return;
@@ -1179,6 +1441,18 @@
         $("backfireDecelOffMs").value = cfg.backfireDecelOffMs ?? 45;
         $("backfireDecelPulseCount").value = cfg.backfireDecelPulseCount ?? 3;
         updateBackfireProfileUi();
+        updateBackfireVisibility();
+        if ($("manualBackfireEnabled")) $("manualBackfireEnabled").checked = !!cfg.manualBackfireEnabled;
+        if ($("manualBackfireMode")) $("manualBackfireMode").value = cfg.manualBackfireMode ?? 0;
+        if ($("manualBackfireHoldMs")) $("manualBackfireHoldMs").value = cfg.manualBackfireHoldMs ?? 3000;
+        if ($("manualMinRpm")) $("manualMinRpm").value = cfg.manualMinRpm ?? 4000;
+        if ($("manualIgnOnly")) $("manualIgnOnly").checked = cfg.manualIgnOnly !== false;
+        if ($("manualPulseCutMs")) $("manualPulseCutMs").value = cfg.manualPulseCutMs ?? 200;
+        if ($("manualPulseFireMs")) $("manualPulseFireMs").value = cfg.manualPulseFireMs ?? 50;
+        if ($("manualPulseOffMs")) $("manualPulseOffMs").value = cfg.manualPulseOffMs ?? 200;
+        if ($("manualPulseRepeat")) $("manualPulseRepeat").value = cfg.manualPulseRepeat ?? 3;
+        updateManualBackfireUi();
+        updateManualPulseCycle();
         $("apTimeoutMs").value = cfg.apTimeoutMs ?? 120000;
         $("apPassword").value = cfg.apPassword ?? "";
         wifiPasswordVisible = false;
@@ -1311,6 +1585,15 @@
           backfireDecelPulseMs: parseInt($("backfireDecelPulseMs").value,10) || 0,
           backfireDecelOffMs: parseInt($("backfireDecelOffMs").value,10) || 0,
           backfireDecelPulseCount: parseInt($("backfireDecelPulseCount").value,10) || 0,
+          manualBackfireEnabled: $("manualBackfireEnabled")?.checked || false,
+          manualBackfireMode: parseInt($("manualBackfireMode")?.value,10) || 0,
+          manualBackfireHoldMs: parseInt($("manualBackfireHoldMs")?.value,10) || 3000,
+          manualMinRpm: parseInt($("manualMinRpm")?.value,10) || 4000,
+          manualIgnOnly: $("manualIgnOnly")?.checked || true,
+          manualPulseCutMs: parseInt($("manualPulseCutMs")?.value,10) || 200,
+          manualPulseFireMs: parseInt($("manualPulseFireMs")?.value,10) || 50,
+          manualPulseOffMs: parseInt($("manualPulseOffMs")?.value,10) || 200,
+          manualPulseRepeat: parseInt($("manualPulseRepeat")?.value,10) || 3,
           apTimeoutMs: parseInt($("apTimeoutMs").value,10) || 0,
           apPassword: ($("apPassword").value || "").trim(),
           autoMap: state.autoMap.map(entry=>({...entry}))
