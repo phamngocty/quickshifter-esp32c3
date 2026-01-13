@@ -757,12 +757,8 @@
       function updateBackfireVisibility(){
         const enabled = $("backfireMode")?.checked || false;
         const autoFields = $("autoBackfireFields");
-        const manualSection = $("manualBackfireSection");
         if (autoFields) {
           autoFields.style.display = enabled ? "block" : "none";
-        }
-        if (manualSection) {
-          manualSection.style.display = enabled ? "block" : "none";
         }
       }
 

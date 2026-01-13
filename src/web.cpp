@@ -203,6 +203,15 @@ static void writeConfigJson(const QSConfig &c, JsonObject obj) {
   obj["minRpm"] = c.minRpm;
   obj["cutIgnEnabled"] = c.cutIgnEnabled;
   obj["cutInjEnabled"] = c.cutInjEnabled;
+  obj["manualBackfireEnabled"] = c.manualBackfireEnabled;
+  obj["manualBackfireHoldMs"] = c.manualBackfireHoldMs;
+  obj["manualBackfireMode"] = c.manualBackfireMode;
+  obj["manualPulseCutMs"] = c.manualPulseCutMs;
+  obj["manualPulseFireMs"] = c.manualPulseFireMs;
+  obj["manualPulseOffMs"] = c.manualPulseOffMs;
+  obj["manualPulseRepeat"] = c.manualPulseRepeat;
+  obj["manualMinRpm"] = c.manualMinRpm;
+  obj["manualIgnOnly"] = c.manualIgnOnly;
   obj["autoMapCount"] = c.autoMapCount;
   JsonArray arr = obj.createNestedArray("autoMap");
   writeAutoMapJson(c, arr);
@@ -254,6 +263,15 @@ static void collectConfigChanges(const QSConfig &before, const QSConfig &after, 
   if (before.minRpm != after.minRpm) EMIT_CHANGE(minRpm);
   if (before.cutIgnEnabled != after.cutIgnEnabled) EMIT_CHANGE(cutIgnEnabled);
   if (before.cutInjEnabled != after.cutInjEnabled) EMIT_CHANGE(cutInjEnabled);
+  if (before.manualBackfireEnabled != after.manualBackfireEnabled) EMIT_CHANGE(manualBackfireEnabled);
+  if (before.manualBackfireHoldMs != after.manualBackfireHoldMs) EMIT_CHANGE(manualBackfireHoldMs);
+  if (before.manualBackfireMode != after.manualBackfireMode) EMIT_CHANGE(manualBackfireMode);
+  if (before.manualPulseCutMs != after.manualPulseCutMs) EMIT_CHANGE(manualPulseCutMs);
+  if (before.manualPulseFireMs != after.manualPulseFireMs) EMIT_CHANGE(manualPulseFireMs);
+  if (before.manualPulseOffMs != after.manualPulseOffMs) EMIT_CHANGE(manualPulseOffMs);
+  if (before.manualPulseRepeat != after.manualPulseRepeat) EMIT_CHANGE(manualPulseRepeat);
+  if (before.manualMinRpm != after.manualMinRpm) EMIT_CHANGE(manualMinRpm);
+  if (before.manualIgnOnly != after.manualIgnOnly) EMIT_CHANGE(manualIgnOnly);
   if (strncmp(before.apPassword, after.apPassword, sizeof(before.apPassword)) != 0) {
     out["apPasswordChanged"] = true;
     changed = true;
@@ -375,6 +393,15 @@ void web_init() {
     c.minRpm = doc["minRpm"] | c.minRpm;
     c.cutIgnEnabled = doc["cutIgnEnabled"] | c.cutIgnEnabled;
     c.cutInjEnabled = doc["cutInjEnabled"] | c.cutInjEnabled;
+    c.manualBackfireEnabled = doc["manualBackfireEnabled"] | c.manualBackfireEnabled;
+    c.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | c.manualBackfireHoldMs;
+    c.manualBackfireMode = doc["manualBackfireMode"] | c.manualBackfireMode;
+    c.manualPulseCutMs = doc["manualPulseCutMs"] | c.manualPulseCutMs;
+    c.manualPulseFireMs = doc["manualPulseFireMs"] | c.manualPulseFireMs;
+    c.manualPulseOffMs = doc["manualPulseOffMs"] | c.manualPulseOffMs;
+    c.manualPulseRepeat = doc["manualPulseRepeat"] | c.manualPulseRepeat;
+    c.manualMinRpm = doc["manualMinRpm"] | c.manualMinRpm;
+    c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();
       pass.trim();
@@ -483,6 +510,15 @@ void web_init() {
     c.minRpm = doc["minRpm"] | c.minRpm;
     c.cutIgnEnabled = doc["cutIgnEnabled"] | c.cutIgnEnabled;
     c.cutInjEnabled = doc["cutInjEnabled"] | c.cutInjEnabled;
+    c.manualBackfireEnabled = doc["manualBackfireEnabled"] | c.manualBackfireEnabled;
+    c.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | c.manualBackfireHoldMs;
+    c.manualBackfireMode = doc["manualBackfireMode"] | c.manualBackfireMode;
+    c.manualPulseCutMs = doc["manualPulseCutMs"] | c.manualPulseCutMs;
+    c.manualPulseFireMs = doc["manualPulseFireMs"] | c.manualPulseFireMs;
+    c.manualPulseOffMs = doc["manualPulseOffMs"] | c.manualPulseOffMs;
+    c.manualPulseRepeat = doc["manualPulseRepeat"] | c.manualPulseRepeat;
+    c.manualMinRpm = doc["manualMinRpm"] | c.manualMinRpm;
+    c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();
       pass.trim();
