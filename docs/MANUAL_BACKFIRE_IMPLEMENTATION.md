@@ -13,9 +13,18 @@
 - Phù hợp: Tạo backfire dài, engine braking
 
 #### **Mode 2: Pulse Pattern (Băm xung)**
-- Giữ Shift > 3s → Chạy chu kỳ: CUT(A) → FIRE(B) → OFF(C) × D lần
-- Lặp lại cho đến khi nhả
+- Giữ Shift > 3s → Chạy chu kỳ: CUT dài (A) → (FIRE B → CUT ngắn C) × D lần
+- Lặp lại cả chu kỳ nếu vẫn giữ
 - Phù hợp: Backfire nhấp nháy kiểu "súng máy"
+
+**Logic chi tiết (đã cập nhật):**
+- A (CUT dài): Cắt IGN (hoặc IGN+INJ) trong `manualPulseCutMs` (ví dụ 2000ms).
+- B (FIRE): Bật lửa lại trong `manualPulseFireMs` (ví dụ 50ms).
+- C (CUT ngắn): Cắt ngắn trong `manualPulseOffMs` (ví dụ 200ms) sau B.
+- Lặp B-C D lần (`manualPulseRepeat`, ví dụ 3). Hết D lần quay lại A mới nếu vẫn giữ.
+- Nhả bất kỳ lúc nào → OFF ngay, dừng chế độ.
+
+Ghi chú: OFF (`cut_trigger_dual(0,0)`) bỏ qua guard 200ms để dừng tức thì khi nhả.
 
 ### Điều kiện kích hoạt
 ✅ `manualBackfireEnabled = true`  
@@ -193,8 +202,8 @@ void loop() {
 - Mặc định: 200 + 50 + 200 = 450ms ✅
 
 ### 3. Guard time 200ms
-- Giữ nguyên trong `cut_trigger_dual()`
-- Không ảnh hưởng manual mode vì trigger liên tục
+- Giữ nguyên trong `cut_trigger_dual()` để tránh spam cut.
+- ĐÃ sửa: OFF (`cut_trigger_dual(0,0)`) bỏ qua guard để dừng tức thì khi nhả hoặc chuyển phase.
 
 ### 4. Lock priority
 - Khi Lock ON → Manual backfire bị chặn
@@ -243,7 +252,8 @@ curl -X POST http://192.168.4.1/config/set \
 | `src/config.cpp` | Default values, JSON serialize/deserialize |
 | `src/shift.h` | `+shift_get_press_duration()` |
 | `src/shift.cpp` | Track `pressStartMs`, implement duration function |
-| `src/main.cpp` | State machine, `handle_manual_backfire()`, update callbacks |
+| `src/cut.cpp` | Cho phép OFF bỏ qua guard 200ms (dừng tức thì) |
+| `src/main.cpp` | State machine, `handle_manual_backfire()`, thêm phase A-B-C cho Mode 2 |
 
 ---
 

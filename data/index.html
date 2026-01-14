@@ -354,7 +354,7 @@
             <label class="field">
               Min RPM <span class="tooltip-icon" title="RPM tối thiểu để kích Manual Backfire (tránh chết máy ở RPM thấp)">ⓘ</span>
               <input type="number" id="manualMinRpm" min="0" max="10000" step="100" value="4000">
-              <small class="field-hint warn">RPM &lt; 4000: nguy cơ chết máy. Khuyến cáo ≥ 4000</small>
+              <small class="field-hint warn">⚠️ Khuyến cáo ≥ 4000 RPM để tránh chết máy. Bạn có thể nhập &lt; 4000 nhưng tự chịu rủi ro.</small>
             </label>
             
             <div class="toggle-row compact">
@@ -380,9 +380,9 @@
               </label>
               
               <label class="field">
-                Off time C (ms) <span class="tooltip-icon" title="Thời gian nghỉ trước chu kỳ tiếp theo">ⓘ</span>
+                CUT ngắn C (ms) <span class="tooltip-icon" title="Thời gian cắt ngắn ngay sau FIRE (C phase)">ⓘ</span>
                 <input type="number" id="manualPulseOffMs" min="50" max="1000" step="10" value="200">
-                <small class="field-hint">200ms: Nghỉ cho relay và engine</small>
+                <small class="field-hint">200ms: cắt ngắn sau FIRE; giảm để nhịp nhanh hơn</small>
               </label>
               
               <label class="field">
@@ -1584,8 +1584,11 @@
           manualBackfireEnabled: $("manualBackfireEnabled")?.checked || false,
           manualBackfireMode: parseInt($("manualBackfireMode")?.value,10) || 0,
           manualBackfireHoldMs: parseInt($("manualBackfireHoldMs")?.value,10) || 3000,
-          manualMinRpm: parseInt($("manualMinRpm")?.value,10) || 4000,
-          manualIgnOnly: $("manualIgnOnly")?.checked || true,
+          manualMinRpm: (()=>{
+            const v = parseInt($("manualMinRpm")?.value,10);
+            return Number.isFinite(v) ? v : 4000;
+          })(),
+          manualIgnOnly: !!($("manualIgnOnly")?.checked),
           manualPulseCutMs: parseInt($("manualPulseCutMs")?.value,10) || 200,
           manualPulseFireMs: parseInt($("manualPulseFireMs")?.value,10) || 50,
           manualPulseOffMs: parseInt($("manualPulseOffMs")?.value,10) || 200,
