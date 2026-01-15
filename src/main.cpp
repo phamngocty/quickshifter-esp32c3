@@ -374,11 +374,11 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         // Duy trì cắt trong A
         if (cfg.manualIgnOnly)
         {
-          cut_trigger_dual(cfg.manualPulseCutMs, 0, currentRpm);
+          cut_trigger_dual_fast(cfg.manualPulseCutMs, 0, currentRpm);
         }
         else
         {
-          cut_trigger_dual(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
+          cut_trigger_dual_fast(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
         }
       }
       break;
@@ -420,11 +420,11 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         // Duy trì cắt ngắn trong C
         if (cfg.manualIgnOnly)
         {
-          cut_trigger_dual(cfg.manualPulseOffMs, 0, currentRpm);
+          cut_trigger_dual_fast(cfg.manualPulseOffMs, 0, currentRpm);
         }
         else
         {
-          cut_trigger_dual(cfg.manualPulseOffMs, cfg.manualPulseOffMs, currentRpm);
+          cut_trigger_dual_fast(cfg.manualPulseOffMs, cfg.manualPulseOffMs, currentRpm);
         }
       }
       break;
