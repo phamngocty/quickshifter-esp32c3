@@ -48,6 +48,12 @@ static bool validateApPassword(const String &pass) {
   return true;
 }
 
+static int clampManualMinRpm(int value) {
+  if (value < 0) return 0;
+  if (value > 10000) return 10000;
+  return value;
+}
+
 static bool applyApPassword(QSConfig &cfg, const String &pass) {
   char buffer[sizeof(cfg.apPassword)];
   pass.toCharArray(buffer, sizeof(buffer));
@@ -400,7 +406,9 @@ void web_init() {
     c.manualPulseFireMs = doc["manualPulseFireMs"] | c.manualPulseFireMs;
     c.manualPulseOffMs = doc["manualPulseOffMs"] | c.manualPulseOffMs;
     c.manualPulseRepeat = doc["manualPulseRepeat"] | c.manualPulseRepeat;
-    c.manualMinRpm = doc["manualMinRpm"] | c.manualMinRpm;
+    if (doc.containsKey("manualMinRpm")) {
+      c.manualMinRpm = clampManualMinRpm(doc["manualMinRpm"].as<int>());
+    }
     c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();
@@ -517,7 +525,9 @@ void web_init() {
     c.manualPulseFireMs = doc["manualPulseFireMs"] | c.manualPulseFireMs;
     c.manualPulseOffMs = doc["manualPulseOffMs"] | c.manualPulseOffMs;
     c.manualPulseRepeat = doc["manualPulseRepeat"] | c.manualPulseRepeat;
-    c.manualMinRpm = doc["manualMinRpm"] | c.manualMinRpm;
+    if (doc.containsKey("manualMinRpm")) {
+      c.manualMinRpm = clampManualMinRpm(doc["manualMinRpm"].as<int>());
+    }
     c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();

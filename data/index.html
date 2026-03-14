@@ -1556,6 +1556,11 @@
       }
 
       function gatherConfig(){
+        const manualMinRpmValue = Number.parseInt($("manualMinRpm")?.value, 10);
+        const manualMinRpm = Number.isFinite(manualMinRpmValue)
+          ? Math.max(0, Math.min(10000, manualMinRpmValue))
+          : 4000;
+
         return {
           modeAuto: $("modeAuto").checked,
           shiftActiveLow: $("shiftActiveLow").checked,
@@ -1584,10 +1589,7 @@
           manualBackfireEnabled: $("manualBackfireEnabled")?.checked || false,
           manualBackfireMode: parseInt($("manualBackfireMode")?.value,10) || 0,
           manualBackfireHoldMs: parseInt($("manualBackfireHoldMs")?.value,10) || 3000,
-          manualMinRpm: (()=>{
-            const v = parseInt($("manualMinRpm")?.value,10);
-            return Number.isFinite(v) ? v : 4000;
-          })(),
+          manualMinRpm,
           manualIgnOnly: !!($("manualIgnOnly")?.checked),
           manualPulseCutMs: parseInt($("manualPulseCutMs")?.value,10) || 200,
           manualPulseFireMs: parseInt($("manualPulseFireMs")?.value,10) || 50,

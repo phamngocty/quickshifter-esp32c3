@@ -218,6 +218,9 @@ bool loadConfig() {
   cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
   cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
 
+  if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;
+  if (cfg.manualMinRpm > 10000) cfg.manualMinRpm = 10000;
+
   if (cfg.backfireProfile > BACKFIRE_PROFILE_DECEL) cfg.backfireProfile = BACKFIRE_PROFILE_BASIC;
   if (cfg.backfireCooldownMs < 0) cfg.backfireCooldownMs = 0;
   if (cfg.backfireBurstWindowMs < 0) cfg.backfireBurstWindowMs = 0;
