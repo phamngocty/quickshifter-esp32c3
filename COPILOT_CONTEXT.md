@@ -55,6 +55,7 @@ Copilot, hãy đọc kỹ và luôn dùng toàn bộ thông tin này khi gợi �
 2. Kết nối module này vào main Quickshifter.
 3. Expose API → Web UI bật/tắt Lock Mode + đổi pass.
 4. Log event: PASS_OK / PASS_FAIL.
+   5
 
 ## 🎮 Khi bật VSCode
 
