@@ -54,6 +54,12 @@ static int clampManualMinRpm(int value) {
   return value;
 }
 
+static int clampMinRpm(int value) {
+  if (value < 0) return 0;
+  if (value > 18000) return 18000;
+  return value;
+}
+
 static bool applyApPassword(QSConfig &cfg, const String &pass) {
   char buffer[sizeof(cfg.apPassword)];
   pass.toCharArray(buffer, sizeof(buffer));
@@ -396,7 +402,9 @@ void web_init() {
     c.backfireDecelOffMs = doc["backfireDecelOffMs"] | c.backfireDecelOffMs;
     c.backfireDecelPulseCount = doc["backfireDecelPulseCount"] | c.backfireDecelPulseCount;
     c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
-    c.minRpm = doc["minRpm"] | c.minRpm;
+    if (doc.containsKey("minRpm")) {
+      c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
+    }
     c.cutIgnEnabled = doc["cutIgnEnabled"] | c.cutIgnEnabled;
     c.cutInjEnabled = doc["cutInjEnabled"] | c.cutInjEnabled;
     c.manualBackfireEnabled = doc["manualBackfireEnabled"] | c.manualBackfireEnabled;
@@ -515,7 +523,9 @@ void web_init() {
     c.backfireDecelOffMs = doc["backfireDecelOffMs"] | c.backfireDecelOffMs;
     c.backfireDecelPulseCount = doc["backfireDecelPulseCount"] | c.backfireDecelPulseCount;
     c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
-    c.minRpm = doc["minRpm"] | c.minRpm;
+    if (doc.containsKey("minRpm")) {
+      c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
+    }
     c.cutIgnEnabled = doc["cutIgnEnabled"] | c.cutIgnEnabled;
     c.cutInjEnabled = doc["cutInjEnabled"] | c.cutInjEnabled;
     c.manualBackfireEnabled = doc["manualBackfireEnabled"] | c.manualBackfireEnabled;
@@ -565,6 +575,7 @@ void web_init() {
     const QSConfig &c = getConfig();
     int duration = r->hasParam("ms") ? r->getParam("ms")->value().toInt() : c.cutTimeFixed;
     if (duration < 5) duration = 5;
+    if (duration > 500) duration = 500; // Kaizen: Poka-Yoke limit
     cut_trigger_ms(duration, rpm_get());
     r->send(200, "application/json", "{\"ok\":true}");
   });

@@ -466,6 +466,9 @@ void onShiftPressed()
   // Trigger quickshift ngay lập tức
   int currentRpm = rpm_get();
   const QSConfig &cfg = getConfig();
+
+  if (currentRpm < cfg.minRpm)
+    return;
   unsigned long baseCut = cfg.modeAuto ? config_resolve_cut_ms(currentRpm) : cfg.cutTimeFixed;
   unsigned long ignCut = baseCut;
   unsigned long injCut = baseCut;

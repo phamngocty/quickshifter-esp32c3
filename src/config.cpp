@@ -204,19 +204,8 @@ bool loadConfig() {
   apPassStr.toCharArray(cfg.apPassword, sizeof(cfg.apPassword));
   cfg.apPassword[sizeof(cfg.apPassword)-1] = '\0';
   cfg.minRpm = doc["minRpm"] | 1500;
-  cfg.cutIgnEnabled = doc["cutIgnEnabled"] | true;
-  cfg.cutInjEnabled = doc["cutInjEnabled"] | true;
-
-  // Load manual backfire config
-  cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | false;
-  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 3000;
-  cfg.manualBackfireMode = doc["manualBackfireMode"] | 1;
-  cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 200;
-  cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 50;
-  cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 200;
-  cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 3;
-  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
-  cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
+  if (cfg.minRpm < 0) cfg.minRpm = 0;
+  if (cfg.minRpm > 18000) cfg.minRpm = 18000;
 
   if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;
   if (cfg.manualMinRpm > 10000) cfg.manualMinRpm = 10000;
@@ -319,7 +308,7 @@ int config_resolve_cut_ms(int rpm) {
       return entry.cutMs;
     }
   }
-  return cfg.autoMap[cfg.autoMapCount - 1].cutMs;
+  return cfg.cutTimeFixed;
 }
 
 const AutoMapEntry *config_find_auto_map_entry(int rpm, uint8_t *outIndex) {
@@ -331,6 +320,5 @@ const AutoMapEntry *config_find_auto_map_entry(int rpm, uint8_t *outIndex) {
       return &entry;
     }
   }
-  if (outIndex) *outIndex = cfg.autoMapCount - 1;
-  return &cfg.autoMap[cfg.autoMapCount - 1];
+  return nullptr;
 }
