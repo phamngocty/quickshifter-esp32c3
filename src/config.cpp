@@ -176,6 +176,9 @@ bool loadConfig() {
     return saveConfig();
   }
 
+  // Start from known-good defaults, then override with persisted values.
+  setDefaults();
+
   cfg.shiftActiveLow = doc["shiftActiveLow"] | true;
   cfg.shiftDebounceMs = doc["shiftDebounceMs"] | 30;
   cfg.relayPolarityHighToCut = doc["relayPolarityHighToCut"] | true;
@@ -207,8 +210,33 @@ bool loadConfig() {
   if (cfg.minRpm < 0) cfg.minRpm = 0;
   if (cfg.minRpm > 18000) cfg.minRpm = 18000;
 
+  cfg.cutIgnEnabled = doc["cutIgnEnabled"] | true;
+  cfg.cutInjEnabled = doc["cutInjEnabled"] | true;
+
+  cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | false;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 3000;
+  cfg.manualBackfireMode = doc["manualBackfireMode"] | 1;
+  cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 200;
+  cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 50;
+  cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 200;
+  cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 3;
+  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
+  cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
+
   if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;
   if (cfg.manualMinRpm > 10000) cfg.manualMinRpm = 10000;
+
+  if (cfg.manualBackfireMode > 2) cfg.manualBackfireMode = 2;
+  if (cfg.manualBackfireHoldMs < 100) cfg.manualBackfireHoldMs = 100;
+  if (cfg.manualBackfireHoldMs > 10000) cfg.manualBackfireHoldMs = 10000;
+  if (cfg.manualPulseCutMs < 5) cfg.manualPulseCutMs = 5;
+  if (cfg.manualPulseCutMs > 2000) cfg.manualPulseCutMs = 2000;
+  if (cfg.manualPulseFireMs < 5) cfg.manualPulseFireMs = 5;
+  if (cfg.manualPulseFireMs > 2000) cfg.manualPulseFireMs = 2000;
+  if (cfg.manualPulseOffMs < 5) cfg.manualPulseOffMs = 5;
+  if (cfg.manualPulseOffMs > 2000) cfg.manualPulseOffMs = 2000;
+  if (cfg.manualPulseRepeat == 0) cfg.manualPulseRepeat = 1;
+  if (cfg.manualPulseRepeat > 20) cfg.manualPulseRepeat = 20;
 
   if (cfg.backfireProfile > BACKFIRE_PROFILE_DECEL) cfg.backfireProfile = BACKFIRE_PROFILE_BASIC;
   if (cfg.backfireCooldownMs < 0) cfg.backfireCooldownMs = 0;
