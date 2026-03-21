@@ -4,6 +4,8 @@
 
 static QSConfig cfg;
 const char *CONFIG_PATH = "/config.json";
+const char *CONFIG_TMP_PATH = "/config.tmp";
+const char *CONFIG_BAK_PATH = "/config.bak";
 static const int DEFAULT_BUCKET_WIDTH = 1000;
 static const uint8_t DEFAULT_AUTO_MAP_COUNT = 8;
 
@@ -17,10 +19,13 @@ static bool ensureFsMounted() {
 
 static void setDefaultAutoMap() {
   cfg.autoMapCount = DEFAULT_AUTO_MAP_COUNT;
-  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {50, 50, 45, 40, 35, 30, 25, 20};
+  // 150cc street-bike baseline: longer cut at low-mid rpm, taper at high rpm.
+  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {62, 56, 50, 44, 38, 34, 31, 28};
+  const int mins[DEFAULT_AUTO_MAP_COUNT] = {3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500};
+  const int maxs[DEFAULT_AUTO_MAP_COUNT] = {4499, 5999, 7499, 8999, 10499, 11999, 13499, 14999};
   for (uint8_t i = 0; i < cfg.autoMapCount; ++i) {
-    cfg.autoMap[i].rpmMin = i * DEFAULT_BUCKET_WIDTH;
-    cfg.autoMap[i].rpmMax = (i == cfg.autoMapCount - 1) ? (i + 1) * DEFAULT_BUCKET_WIDTH + 999 : ((i + 1) * DEFAULT_BUCKET_WIDTH) - 1;
+    cfg.autoMap[i].rpmMin = mins[i];
+    cfg.autoMap[i].rpmMax = maxs[i];
     cfg.autoMap[i].cutMs = defaults[i];
     cfg.autoMap[i].backfireAddMs = 0;
     cfg.autoMap[i].backfireEnabled = false;
@@ -160,6 +165,9 @@ static void loadAutoMapFromJson(JsonVariant variant) {
 
 bool loadConfig() {
   if (!ensureFsMounted()) return false;
+  if (!LittleFS.exists(CONFIG_PATH) && LittleFS.exists(CONFIG_BAK_PATH)) {
+    LittleFS.rename(CONFIG_BAK_PATH, CONFIG_PATH);
+  }
   if (!LittleFS.exists(CONFIG_PATH)) {
     setDefaults();
     return saveConfig();
@@ -272,7 +280,7 @@ bool loadConfig() {
 
 bool saveConfig() {
   if (!ensureFsMounted()) return false;
-  File f = LittleFS.open(CONFIG_PATH, "w");
+  File f = LittleFS.open(CONFIG_TMP_PATH, "w");
   if (!f) return false;
 
   DynamicJsonDocument doc(2048);
@@ -324,8 +332,35 @@ bool saveConfig() {
   doc["manualIgnOnly"] = cfg.manualIgnOnly;
 
   bool res = (serializeJson(doc, f) > 0);
+  f.flush();
   f.close();
-  return res;
+  if (!res) {
+    LittleFS.remove(CONFIG_TMP_PATH);
+    return false;
+  }
+
+  if (LittleFS.exists(CONFIG_BAK_PATH)) {
+    LittleFS.remove(CONFIG_BAK_PATH);
+  }
+
+  if (LittleFS.exists(CONFIG_PATH)) {
+    if (!LittleFS.rename(CONFIG_PATH, CONFIG_BAK_PATH)) {
+      LittleFS.remove(CONFIG_TMP_PATH);
+      return false;
+    }
+  }
+
+  if (!LittleFS.rename(CONFIG_TMP_PATH, CONFIG_PATH)) {
+    if (LittleFS.exists(CONFIG_BAK_PATH)) {
+      LittleFS.rename(CONFIG_BAK_PATH, CONFIG_PATH);
+    }
+    return false;
+  }
+
+  if (LittleFS.exists(CONFIG_BAK_PATH)) {
+    LittleFS.remove(CONFIG_BAK_PATH);
+  }
+  return true;
 }
 
 int config_resolve_cut_ms(int rpm) {

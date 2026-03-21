@@ -405,9 +405,13 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div>
           <strong>Auto Map</strong>
-          <div style="color:var(--text-dim);font-size:13px">Thêm band, chỉnh ngưỡng RPM ngay trên từng hàng.</div>
+          <div style="color:var(--text-dim);font-size:13px">Thêm band, chỉnh ngưỡng RPM ngay trên từng hàng (tối đa 12 band).</div>
         </div>
-        <button class="ghost" id="addMapBtn">+ Thêm band</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="secondary" id="preset150Btn">Preset 150cc</button>
+          <button class="secondary" id="preset150DetailBtn">Preset 150cc (12 band)</button>
+          <button class="ghost" id="addMapBtn">+ Thêm band</button>
+        </div>
       </div>
       <div class="auto-map-list" id="autoMapList"></div>
     </section>
@@ -888,9 +892,16 @@
           loadConfig();
         });
         $("addMapBtn").addEventListener("click", ()=>{
-          addAutoMapEntry();
-          renderAutoMap();
-          markDirty();
+          if (addAutoMapEntry()) {
+            renderAutoMap();
+            markDirty();
+          }
+        });
+        $("preset150Btn").addEventListener("click", ()=>{
+          apply150ccPreset();
+        });
+        $("preset150DetailBtn").addEventListener("click", ()=>{
+          apply150ccDetailedPreset();
         });
         $("testCutBtn").addEventListener("click", runTestCut);
         $("testRpmBtn").addEventListener("click", runTestRpm);
@@ -1364,7 +1375,7 @@
           return {min, max, cut, bf: bfVal, bfEnabled};
         });
         if (!cfg.autoMap.length){
-          for (let i=0;i<8;i++) cfg.autoMap.push({min:i*1000,max:i*1000+999,cut:50,bf:0,bfEnabled:false});
+          cfg.autoMap = getAutoMapPreset150cc();
         }
         normalizeAutoMapList(cfg.autoMap);
         if (typeof cfg.apPassword !== "string") cfg.apPassword = "";
@@ -1476,14 +1487,14 @@
                 <input type="number" data-idx="${idx}" data-field="max" value="${entry.max}" min="0" step="50">
               </label>
               <label class="field">Cut (ms)
-                <input type="number" data-idx="${idx}" data-field="cut" value="${entry.cut}" min="5" max="200">
+                <input type="number" class="map-cut-input" data-idx="${idx}" data-field="cut" value="${entry.cut}" min="5" max="200">
               </label>
               <button class="ghost" data-remove="${idx}">Remove</button>
             </div>
             <label class="field">Band preview
               <input type="range" class="map-slider" data-idx="${idx}" min="5" max="200" value="${entry.cut}">
             </label>
-            <div class="map-label">${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfLabel}</div>
+            <div class="map-label" data-label-idx="${idx}">${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfLabel}</div>
             <div class="map-row-bottom" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
               <label class="field">Backfire +ms
                 <input type="number" data-idx="${idx}" data-field="bf" value="${entry.bf ?? 0}" min="0" max="80">
@@ -1500,7 +1511,8 @@
           }
         });
         container.querySelectorAll(".map-slider").forEach(slider=>{
-          slider.addEventListener("input", mapSliderChanged);
+          slider.addEventListener("input", mapSliderInputChanged);
+          slider.addEventListener("change", mapSliderCommitChanged);
         });
         container.querySelectorAll("button[data-remove]").forEach(btn=>{
           btn.addEventListener("click",()=>{
@@ -1536,23 +1548,97 @@
         markDirty();
       }
 
-      function mapSliderChanged(evt){
+      function mapSliderInputChanged(evt){
         const idx = Number(evt.target.dataset.idx);
         const value = Number(evt.target.value);
         if (!Number.isFinite(value)) return;
-        state.autoMap[idx].cut = value;
-        logUiAction("UI_MAP_SLIDER", {index: idx, value});
-        renderAutoMap();
+        const entry = state.autoMap[idx];
+        if (!entry) return;
+        entry.cut = Math.max(5, Math.min(200, value));
+        const row = evt.target.closest(".map-row");
+        if (row) {
+          const cutInput = row.querySelector('input.map-cut-input[data-idx="' + idx + '"]');
+          if (cutInput) cutInput.value = String(entry.cut);
+          const label = row.querySelector('div.map-label[data-label-idx="' + idx + '"]');
+          if (label) {
+            const bfText = entry.bfEnabled && entry.bf ? ` | BF ${entry.bf} ms` : "";
+            label.textContent = `${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfText}`;
+          }
+        }
         markDirty();
       }
 
+      function mapSliderCommitChanged(evt){
+        const idx = Number(evt.target.dataset.idx);
+        const value = Number(evt.target.value);
+        if (!Number.isFinite(value)) return;
+        logUiAction("UI_MAP_SLIDER", {index: idx, value});
+      }
+
       function addAutoMapEntry(){
+        if (state.autoMap.length >= MAX_MAP) {
+          toast(`Tối đa ${MAX_MAP} band`, "error");
+          return false;
+        }
         const last = state.autoMap[state.autoMap.length-1];
         const start = last ? last.max + 1 : 0;
         const entry = {min:start,max:start+999,cut:last?last.cut:50,bf:0,bfEnabled:false};
         state.autoMap.push(entry);
         logUiAction("UI_MAP_ADD", {index: state.autoMap.length-1, min: entry.min, max: entry.max, cut: entry.cut});
         normalizeAutoMapList(state.autoMap);
+        return true;
+      }
+
+      function getAutoMapPreset150cc(){
+        return [
+          {min:3000,max:4499,cut:62,bf:0,bfEnabled:false},
+          {min:4500,max:5999,cut:56,bf:0,bfEnabled:false},
+          {min:6000,max:7499,cut:50,bf:0,bfEnabled:false},
+          {min:7500,max:8999,cut:44,bf:0,bfEnabled:false},
+          {min:9000,max:10499,cut:38,bf:0,bfEnabled:false},
+          {min:10500,max:11999,cut:34,bf:0,bfEnabled:false},
+          {min:12000,max:13499,cut:31,bf:0,bfEnabled:false},
+          {min:13500,max:14999,cut:28,bf:0,bfEnabled:false}
+        ];
+      }
+
+      function getAutoMapPreset150ccDetailed(){
+        return [
+          {min:3000,max:3999,cut:64,bf:0,bfEnabled:false},
+          {min:4000,max:4999,cut:60,bf:0,bfEnabled:false},
+          {min:5000,max:5999,cut:56,bf:0,bfEnabled:false},
+          {min:6000,max:6999,cut:52,bf:0,bfEnabled:false},
+          {min:7000,max:7999,cut:48,bf:0,bfEnabled:false},
+          {min:8000,max:8999,cut:44,bf:0,bfEnabled:false},
+          {min:9000,max:9999,cut:40,bf:0,bfEnabled:false},
+          {min:10000,max:10999,cut:36,bf:0,bfEnabled:false},
+          {min:11000,max:11999,cut:33,bf:0,bfEnabled:false},
+          {min:12000,max:12999,cut:31,bf:0,bfEnabled:false},
+          {min:13000,max:13999,cut:29,bf:0,bfEnabled:false},
+          {min:14000,max:14999,cut:27,bf:0,bfEnabled:false}
+        ];
+      }
+
+      function apply150ccPreset(){
+        const ok = confirm("Áp preset Auto Map cho xe 150cc? Dữ liệu band hiện tại sẽ bị thay thế.");
+        if (!ok) return;
+        state.autoMap = getAutoMapPreset150cc();
+        normalizeAutoMapList(state.autoMap);
+        renderAutoMap();
+        markDirty();
+        logUiAction("UI_MAP_PRESET_150CC", {bands: state.autoMap.length});
+        toast("Đã áp preset 150cc. Nhấn Lưu cấu hình để ghi vào bộ nhớ.", "success");
+      }
+
+      function apply150ccDetailedPreset(){
+        const ok = confirm("Áp preset Auto Map chi tiết 150cc (12 band)? Dữ liệu band hiện tại sẽ bị thay thế.");
+        if (!ok) return;
+        state.autoMap = getAutoMapPreset150ccDetailed();
+        normalizeAutoMapList(state.autoMap);
+        renderAutoMap();
+        markDirty();
+        logUiAction("UI_MAP_PRESET_150CC_12", {bands: state.autoMap.length});
+        toast("Đã áp preset 150cc (12 band). Nhấn Lưu cấu hình để ghi vào bộ nhớ.", "success");
       }
 
       function gatherConfig(){

@@ -374,9 +374,28 @@ void web_init() {
   server.on("/config/set", HTTP_POST, [](AsyncWebServerRequest *r){
     // handled in body
   }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+    String *payload;
+    if (index == 0) {
+      payload = new String();
+      payload->reserve(total);
+      r->_tempObject = payload;
+    } else {
+      payload = reinterpret_cast<String*>(r->_tempObject);
+    }
+    if (!payload) {
+      r->send(500, "text/plain", "alloc fail");
+      return;
+    }
+    payload->concat(String(reinterpret_cast<char*>(data), len));
+    if (index + len < total) {
+      return; // wait for remaining chunks
+    }
+
     QSConfig before = getConfig();
     DynamicJsonDocument doc(4096);
-    DeserializationError err = deserializeJson(doc, (char*)data, len);
+    DeserializationError err = deserializeJson(doc, *payload);
+    delete payload;
+    r->_tempObject = nullptr;
     if (err) { r->send(400, "text/plain", "invalid json"); return; }
     QSConfig &c = const_cast<QSConfig&>(getConfig());
     bool apPassChanged = false;
@@ -433,7 +452,10 @@ void web_init() {
     shift_configure(c.shiftActiveLow, c.shiftDebounceMs);
     rpm_set_ppr(c.ppr);
     rpm_set_scale(c.rpmScaleFactor);
-    saveConfig();
+    if (!saveConfig()) {
+      r->send(500, "text/plain", "save fail");
+      return;
+    }
     DynamicJsonDocument changesDoc(1536);
     JsonObject changeObj = changesDoc.to<JsonObject>();
     collectConfigChanges(before, c, changeObj);
