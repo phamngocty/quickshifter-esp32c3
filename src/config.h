@@ -27,6 +27,7 @@ struct QSConfig {
 
   float ppr;
   float rpmScaleFactor;
+  float rpmOffset;
 
   bool modeAuto;
   int cutTimeFixed;

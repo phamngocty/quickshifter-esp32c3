@@ -203,6 +203,9 @@
           <label class="field">RPM scale factor
             <input type="number" id="rpmScaleFactor" min="0.1" max="5" step="0.01" value="1">
           </label>
+          <label class="field">RPM offset
+            <input type="number" id="rpmOffset" min="-5000" max="5000" step="1" value="0">
+          </label>
         </div>
         <div id="backfireSection">
           <div class="bf-section-header">
@@ -449,9 +452,17 @@
             <input type="file" id="importInput" hidden accept="application/json">
           </div>
           <h3 style="margin-top:20px">Calibrate RPM</h3>
-          <label class="field">Target RPM
+          <label class="field">Target RPM (1 điểm)
             <input type="number" id="calTarget" placeholder="VD: 5000">
           </label>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <label class="field" style="flex:1">Target thấp (2 điểm)
+              <input type="number" id="calTargetLow" placeholder="VD: 2500">
+            </label>
+            <label class="field" style="flex:1">Target cao (2 điểm)
+              <input type="number" id="calTargetHigh" placeholder="VD: 7000">
+            </label>
+          </div>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
             <label class="field" style="flex:1">Samples
               <input type="number" id="calSamples" min="3" max="40" value="12">
@@ -463,6 +474,7 @@
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             <button class="secondary" id="sampleRpmBtn">Sample current RPM</button>
             <button id="calibrateBtn">Calibrate (auto)</button>
+            <button class="secondary" id="calibrate2Btn">Calibrate 2 điểm</button>
           </div>
           <div id="calStatus" style="color:var(--text-dim);margin-top:8px"></div>
           <h3 style="margin-top:24px">Wi-Fi Access Point</h3>
@@ -681,6 +693,7 @@
           {label:"Min RPM", value:cfg.minRpm},
           {label:"PPR", value:cfg.ppr},
           {label:"RPM scale factor", value:cfg.rpmScaleFactor},
+          {label:"RPM offset", value:cfg.rpmOffset},
           {label:"Backfire mode", value:formatBool(cfg.backfireMode)},
           {label:"Backfire profile", value:formatBackfireProfile(cfg.backfireProfile)},
           {label:"Backfire +ms", value:cfg.backfireAddMs},
@@ -927,6 +940,7 @@
           sampleCurrentRpm();
         });
         $("calibrateBtn").addEventListener("click", calibrateAutoSample);
+        $("calibrate2Btn").addEventListener("click", calibrateTwoPointAutoSample);
         $("lockSaveBtn").addEventListener("click", saveLockSettings);
         $("lockRefreshBtn").addEventListener("click", ()=>{
           logUiAction("UI_LOCK_REFRESH");
@@ -1402,6 +1416,7 @@
         cfg.backfireDecelPulseCount = ensureNumber(cfg.backfireDecelPulseCount, 3);
         if (cfg.backfireDecelPulseCount < 1) cfg.backfireDecelPulseCount = 1;
         if (cfg.backfireDecelPulseCount > 8) cfg.backfireDecelPulseCount = 8;
+        cfg.rpmOffset = ensureNumber(cfg.rpmOffset, 0);
       }
 
       function ensureNumber(val, fallback){ const num = Number(val); return Number.isFinite(num) ? num : fallback; }
@@ -1433,6 +1448,7 @@
         $("minRpm").value = cfg.minRpm ?? 1500;
         $("ppr").value = cfg.ppr ?? 1;
         $("rpmScaleFactor").value = cfg.rpmScaleFactor ?? 1;
+        $("rpmOffset").value = cfg.rpmOffset ?? 0;
         $("backfireMode").checked = !!cfg.backfireMode;
         $("backfireProfile").value = cfg.backfireProfile ?? 0;
         $("backfireRpmThreshold").value = cfg.backfireRpmThreshold ?? 6000;
@@ -1591,37 +1607,82 @@
 
       function getAutoMapPreset150cc(){
         return [
-          {min:3000,max:4499,cut:62,bf:0,bfEnabled:false},
-          {min:4500,max:5999,cut:56,bf:0,bfEnabled:false},
-          {min:6000,max:7499,cut:50,bf:0,bfEnabled:false},
-          {min:7500,max:8999,cut:44,bf:0,bfEnabled:false},
-          {min:9000,max:10499,cut:38,bf:0,bfEnabled:false},
-          {min:10500,max:11999,cut:34,bf:0,bfEnabled:false},
-          {min:12000,max:13499,cut:31,bf:0,bfEnabled:false},
-          {min:13500,max:14999,cut:28,bf:0,bfEnabled:false}
+          {min:4000,max:4999,cut:106,bf:0,bfEnabled:false},
+          {min:5000,max:5999,cut:94,bf:0,bfEnabled:false},
+          {min:6000,max:6999,cut:89,bf:0,bfEnabled:false},
+          {min:7000,max:7999,cut:80,bf:0,bfEnabled:false},
+          {min:8000,max:8999,cut:72,bf:0,bfEnabled:false},
+          {min:9000,max:9999,cut:69,bf:0,bfEnabled:false},
+          {min:10000,max:10999,cut:66,bf:0,bfEnabled:false},
+          {min:11000,max:12500,cut:57,bf:0,bfEnabled:false}
         ];
       }
 
       function getAutoMapPreset150ccDetailed(){
         return [
-          {min:3000,max:3999,cut:64,bf:0,bfEnabled:false},
-          {min:4000,max:4999,cut:60,bf:0,bfEnabled:false},
-          {min:5000,max:5999,cut:56,bf:0,bfEnabled:false},
-          {min:6000,max:6999,cut:52,bf:0,bfEnabled:false},
-          {min:7000,max:7999,cut:48,bf:0,bfEnabled:false},
-          {min:8000,max:8999,cut:44,bf:0,bfEnabled:false},
-          {min:9000,max:9999,cut:40,bf:0,bfEnabled:false},
-          {min:10000,max:10999,cut:36,bf:0,bfEnabled:false},
-          {min:11000,max:11999,cut:33,bf:0,bfEnabled:false},
-          {min:12000,max:12999,cut:31,bf:0,bfEnabled:false},
-          {min:13000,max:13999,cut:29,bf:0,bfEnabled:false},
-          {min:14000,max:14999,cut:27,bf:0,bfEnabled:false}
+          {min:3000,max:3999,cut:115,bf:0,bfEnabled:false},
+          {min:4000,max:4999,cut:106,bf:0,bfEnabled:false},
+          {min:5000,max:5999,cut:94,bf:0,bfEnabled:false},
+          {min:6000,max:6999,cut:89,bf:0,bfEnabled:false},
+          {min:7000,max:7999,cut:80,bf:0,bfEnabled:false},
+          {min:8000,max:8999,cut:72,bf:0,bfEnabled:false},
+          {min:9000,max:9999,cut:69,bf:0,bfEnabled:false},
+          {min:10000,max:10999,cut:66,bf:0,bfEnabled:false},
+          {min:11000,max:11999,cut:58,bf:0,bfEnabled:false},
+          {min:12000,max:12999,cut:55,bf:0,bfEnabled:false},
+          {min:13000,max:13999,cut:50,bf:0,bfEnabled:false},
+          {min:14000,max:14999,cut:50,bf:0,bfEnabled:false}
         ];
+      }
+
+      function apply150ccBaseProfileSettings(){
+        $("modeAuto").checked = true;
+        $("cutTimeFixed").value = 90;
+        $("shiftDebounceMs").value = 30;
+        $("minRpm").value = 1500;
+        $("ppr").value = 1;
+        $("rpmScaleFactor").value = 2.2;
+        $("rpmOffset").value = 0;
+        $("cutIgnEnabled").checked = true;
+        $("cutInjEnabled").checked = false;
+
+        $("backfireMode").checked = false;
+        $("backfireProfile").value = 0;
+        $("backfireAddMs").value = 10;
+        $("backfireRpmThreshold").value = 6000;
+        $("backfireCooldownMs").value = 600;
+        $("backfireBurstWindowMs").value = 1200;
+        $("backfireBurstExtraMs").value = 4;
+        $("backfireBurstMax").value = 3;
+        $("backfireIgnExtraMs").value = 6;
+        $("backfireDecelHighRpm").value = 7000;
+        $("backfireDecelDropRpm").value = 1500;
+        $("backfireDecelPulseMs").value = 35;
+        $("backfireDecelOffMs").value = 45;
+        $("backfireDecelPulseCount").value = 3;
+
+        $("manualBackfireEnabled").checked = true;
+        $("manualBackfireMode").value = 1;
+        $("manualBackfireHoldMs").value = 1500;
+        $("manualMinRpm").value = 0;
+        $("manualIgnOnly").checked = true;
+        $("manualPulseCutMs").value = 200;
+        $("manualPulseFireMs").value = 50;
+        $("manualPulseOffMs").value = 200;
+        $("manualPulseRepeat").value = 3;
+
+        updateBackfireProfileUi();
+        updateBackfireVisibility();
+        updateManualBackfireUi();
+        updateManualPulseCycle();
+        updateCutHint();
+        updateWifiStatus();
       }
 
       function apply150ccPreset(){
         const ok = confirm("Áp preset Auto Map cho xe 150cc? Dữ liệu band hiện tại sẽ bị thay thế.");
         if (!ok) return;
+        apply150ccBaseProfileSettings();
         state.autoMap = getAutoMapPreset150cc();
         normalizeAutoMapList(state.autoMap);
         renderAutoMap();
@@ -1633,6 +1694,7 @@
       function apply150ccDetailedPreset(){
         const ok = confirm("Áp preset Auto Map chi tiết 150cc (12 band)? Dữ liệu band hiện tại sẽ bị thay thế.");
         if (!ok) return;
+        apply150ccBaseProfileSettings();
         state.autoMap = getAutoMapPreset150ccDetailed();
         normalizeAutoMapList(state.autoMap);
         renderAutoMap();
@@ -1658,6 +1720,7 @@
           minRpm: parseInt($("minRpm").value,10) || 0,
           ppr: parseFloat($("ppr").value) || 1,
           rpmScaleFactor: parseFloat($("rpmScaleFactor").value) || 1,
+          rpmOffset: parseFloat($("rpmOffset").value) || 0,
           backfireMode: $("backfireMode").checked,
           backfireProfile: parseInt($("backfireProfile").value,10) || 0,
           backfireRpmThreshold: parseInt($("backfireRpmThreshold").value,10) || 0,
@@ -1775,6 +1838,7 @@
       function sampleCurrentRpm(){
         if (!state.liveRpm){ toast("Chưa có RPM","warn"); return; }
         $("calTarget").value = state.liveRpm;
+        if ($("calTargetLow")) $("calTargetLow").value = state.liveRpm;
         $("calStatus").textContent = `Sample: ${state.liveRpm} RPM`;
       }
 
@@ -1808,6 +1872,60 @@
           console.error(err);
           toast("Calibrate lỗi","error");
           $("calStatus").textContent = "Calibrate thất bại";
+        } finally {
+          state.collecting = false;
+        }
+      }
+
+      async function collectRpmSamples(samples, interval, label){
+        const readings = [];
+        for (let i=0;i<samples;i++){
+          readings.push(state.liveRpm || 0);
+          $("calStatus").textContent = `${label} ${i+1}/${samples}: ${state.liveRpm || 0} RPM`;
+          await wait(interval);
+        }
+        return readings;
+      }
+
+      async function calibrateTwoPointAutoSample(){
+        if (state.collecting) return;
+        const lowTarget = parseFloat($("calTargetLow").value);
+        const highTarget = parseFloat($("calTargetHigh").value);
+        const samples = parseInt($("calSamples").value,10) || 12;
+        const interval = parseInt($("calInterval").value,10) || 150;
+        if (!lowTarget || !highTarget || lowTarget <= 0 || highTarget <= 0 || highTarget <= lowTarget){
+          toast("Nhập target thấp/cao hợp lệ","error");
+          return;
+        }
+
+        logUiAction("UI_CALIBRATE_2PT", {lowTarget, highTarget, samples, interval});
+        state.collecting = true;
+        try {
+          alert(`Giữ tua máy gần ${Math.round(lowTarget)} RPM rồi bấm OK để lấy mẫu điểm thấp.`);
+          const lowReadings = await collectRpmSamples(samples, interval, "Low samples");
+
+          alert(`Giữ tua máy gần ${Math.round(highTarget)} RPM rồi bấm OK để lấy mẫu điểm cao.`);
+          const highReadings = await collectRpmSamples(samples, interval, "High samples");
+
+          const res = await fetch("/calibrate/two-point", {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({
+              lowTargetRpm: lowTarget,
+              highTargetRpm: highTarget,
+              lowMeasuredSamples: lowReadings,
+              highMeasuredSamples: highReadings
+            })
+          });
+          if (!res.ok) throw new Error(res.statusText);
+          const data = await res.json();
+          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} Offset=${Number(data.newOffset).toFixed(1)} | low=${Number(data.lowAvgMeasured).toFixed(1)} high=${Number(data.highAvgMeasured).toFixed(1)}`;
+          toast("Calibrate 2 điểm xong","success");
+          loadConfig();
+        } catch(err){
+          console.error(err);
+          toast("Calibrate 2 điểm lỗi","error");
+          $("calStatus").textContent = "Calibrate 2 điểm thất bại";
         } finally {
           state.collecting = false;
         }

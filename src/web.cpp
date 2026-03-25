@@ -17,6 +17,7 @@
 static AsyncWebServer server(80);
 static AsyncEventSource events("/log/stream");
 static unsigned long lastTelemetryMs = 0;
+static const size_t WEB_CONFIG_JSON_CAPACITY = 8192;
 
 struct UploadStatus {
   bool ok = true;
@@ -194,6 +195,7 @@ static void writeConfigJson(const QSConfig &c, JsonObject obj) {
   obj["relayPolarityHighToCut"] = c.relayPolarityHighToCut;
   obj["ppr"] = c.ppr;
   obj["rpmScaleFactor"] = c.rpmScaleFactor;
+  obj["rpmOffset"] = c.rpmOffset;
   obj["modeAuto"] = c.modeAuto;
   obj["cutTimeFixed"] = c.cutTimeFixed;
   obj["backfireMode"] = c.backfireMode;
@@ -255,6 +257,7 @@ static void collectConfigChanges(const QSConfig &before, const QSConfig &after, 
   if (before.relayPolarityHighToCut != after.relayPolarityHighToCut) EMIT_CHANGE(relayPolarityHighToCut);
   if (before.ppr != after.ppr) EMIT_CHANGE(ppr);
   if (before.rpmScaleFactor != after.rpmScaleFactor) EMIT_CHANGE(rpmScaleFactor);
+  if (before.rpmOffset != after.rpmOffset) EMIT_CHANGE(rpmOffset);
   if (before.modeAuto != after.modeAuto) EMIT_CHANGE(modeAuto);
   if (before.cutTimeFixed != after.cutTimeFixed) EMIT_CHANGE(cutTimeFixed);
   if (before.backfireMode != after.backfireMode) EMIT_CHANGE(backfireMode);
@@ -341,7 +344,7 @@ void web_init() {
   });
 
   server.on("/config/get", HTTP_GET, [](AsyncWebServerRequest *r){
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
     const QSConfig &c = getConfig();
     JsonObject root = doc.to<JsonObject>();
     writeConfigJson(c, root);
@@ -392,7 +395,7 @@ void web_init() {
     }
 
     QSConfig before = getConfig();
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
     DeserializationError err = deserializeJson(doc, *payload);
     delete payload;
     r->_tempObject = nullptr;
@@ -404,6 +407,7 @@ void web_init() {
     c.relayPolarityHighToCut = doc["relayPolarityHighToCut"] | c.relayPolarityHighToCut;
     c.ppr = doc["ppr"] | c.ppr;
     c.rpmScaleFactor = doc["rpmScaleFactor"] | c.rpmScaleFactor;
+    c.rpmOffset = doc["rpmOffset"] | c.rpmOffset;
     c.modeAuto = doc["modeAuto"] | c.modeAuto;
     c.cutTimeFixed = doc["cutTimeFixed"] | c.cutTimeFixed;
     c.backfireMode = doc["backfireMode"] | c.backfireMode;
@@ -452,6 +456,7 @@ void web_init() {
     shift_configure(c.shiftActiveLow, c.shiftDebounceMs);
     rpm_set_ppr(c.ppr);
     rpm_set_scale(c.rpmScaleFactor);
+    rpm_set_offset(c.rpmOffset);
     if (!saveConfig()) {
       r->send(500, "text/plain", "save fail");
       return;
@@ -489,7 +494,13 @@ void web_init() {
   });
 
   server.on("/export", HTTP_GET, [](AsyncWebServerRequest *r){
-    r->send(LittleFS, "/config.json", "application/json");
+    DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
+    const QSConfig &c = getConfig();
+    JsonObject root = doc.to<JsonObject>();
+    writeConfigJson(c, root);
+    String out;
+    serializeJson(doc, out);
+    r->send(200, "application/json", out);
   });
 
   server.on("/import", HTTP_POST, [](AsyncWebServerRequest *r){
@@ -512,7 +523,7 @@ void web_init() {
       return; // wait for remaining chunks
     }
 
-    DynamicJsonDocument doc(4096);
+    DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
     DeserializationError err = deserializeJson(doc, *payload);
     delete payload;
     r->_tempObject = nullptr;
@@ -529,9 +540,11 @@ void web_init() {
     c.relayPolarityHighToCut = doc["relayPolarityHighToCut"] | c.relayPolarityHighToCut;
     c.ppr = doc["ppr"] | c.ppr;
     c.rpmScaleFactor = doc["rpmScaleFactor"] | c.rpmScaleFactor;
+    c.rpmOffset = doc["rpmOffset"] | c.rpmOffset;
     c.modeAuto = doc["modeAuto"] | c.modeAuto;
     c.cutTimeFixed = doc["cutTimeFixed"] | c.cutTimeFixed;
     c.backfireMode = doc["backfireMode"] | c.backfireMode;
+    c.backfireProfile = doc["backfireProfile"] | c.backfireProfile;
     c.backfireAddMs = doc["backfireAddMs"] | c.backfireAddMs;
     c.backfireRpmThreshold = doc["backfireRpmThreshold"] | c.backfireRpmThreshold;
     c.backfireCooldownMs = doc["backfireCooldownMs"] | c.backfireCooldownMs;
@@ -577,6 +590,7 @@ void web_init() {
     shift_configure(c.shiftActiveLow, c.shiftDebounceMs);
     rpm_set_ppr(c.ppr);
     rpm_set_scale(c.rpmScaleFactor);
+    rpm_set_offset(c.rpmOffset);
     if (!saveConfig()) {
       r->send(500, "text/plain", "save fail");
       return;
@@ -782,6 +796,7 @@ void web_init() {
     float newFactor = cfg.rpmScaleFactor * (target / avg);
     cfg.rpmScaleFactor = newFactor;
     rpm_set_scale(newFactor);
+    rpm_set_offset(cfg.rpmOffset);
     saveConfig();
 
     DynamicJsonDocument resp(256);
@@ -789,6 +804,79 @@ void web_init() {
     resp["avgMeasured"] = avg;
     resp["stdDev"] = stdDev;
     resp["count"] = samples.size();
+    String out;
+    serializeJson(resp, out);
+    r->send(200, "application/json", out);
+  });
+
+  server.on("/calibrate/two-point", HTTP_POST, [](AsyncWebServerRequest *r){
+    // body handled below
+  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+    DynamicJsonDocument doc(2048);
+    DeserializationError err = deserializeJson(doc, (char*)data, len);
+    if (err) { r->send(400, "text/plain", "invalid json"); return; }
+
+    float lowTarget = doc["lowTargetRpm"] | 0;
+    float highTarget = doc["highTargetRpm"] | 0;
+    JsonArray lowSamples = doc["lowMeasuredSamples"].as<JsonArray>();
+    JsonArray highSamples = doc["highMeasuredSamples"].as<JsonArray>();
+
+    if (lowTarget <= 0 || highTarget <= 0 || highTarget <= lowTarget ||
+        lowSamples.isNull() || highSamples.isNull() ||
+        lowSamples.size() == 0 || highSamples.size() == 0) {
+      r->send(400, "text/plain", "invalid data");
+      return;
+    }
+
+    auto calcAvg = [](JsonArray arr) -> float {
+      float sum = 0.0f;
+      for (JsonVariant v : arr) sum += v.as<float>();
+      return sum / arr.size();
+    };
+
+    auto calcStd = [](JsonArray arr, float avg) -> float {
+      float variance = 0.0f;
+      for (JsonVariant v : arr) {
+        float d = v.as<float>() - avg;
+        variance += d * d;
+      }
+      variance /= arr.size();
+      return sqrtf(variance);
+    };
+
+    float lowAvg = calcAvg(lowSamples);
+    float highAvg = calcAvg(highSamples);
+    if (lowAvg <= 0 || highAvg <= 0 || fabsf(highAvg - lowAvg) < 1.0f) {
+      r->send(400, "text/plain", "invalid sample spread");
+      return;
+    }
+
+    float alpha = (highTarget - lowTarget) / (highAvg - lowAvg);
+    float beta = lowTarget - (alpha * lowAvg);
+
+    QSConfig &cfg = const_cast<QSConfig&>(getConfig());
+    float oldScale = cfg.rpmScaleFactor;
+    float oldOffset = cfg.rpmOffset;
+    float newScale = alpha * oldScale;
+    float newOffset = (alpha * oldOffset) + beta;
+
+    cfg.rpmScaleFactor = newScale;
+    cfg.rpmOffset = newOffset;
+    rpm_set_scale(newScale);
+    rpm_set_offset(newOffset);
+    saveConfig();
+
+    DynamicJsonDocument resp(768);
+    resp["newFactor"] = newScale;
+    resp["newOffset"] = newOffset;
+    resp["alpha"] = alpha;
+    resp["beta"] = beta;
+    resp["lowAvgMeasured"] = lowAvg;
+    resp["highAvgMeasured"] = highAvg;
+    resp["lowStdDev"] = calcStd(lowSamples, lowAvg);
+    resp["highStdDev"] = calcStd(highSamples, highAvg);
+    resp["lowCount"] = lowSamples.size();
+    resp["highCount"] = highSamples.size();
     String out;
     serializeJson(resp, out);
     r->send(200, "application/json", out);

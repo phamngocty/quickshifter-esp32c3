@@ -555,6 +555,7 @@ void setup()
 
   rpm_set_ppr(cfg.ppr);
   rpm_set_scale(cfg.rpmScaleFactor);
+  rpm_set_offset(cfg.rpmOffset);
   rpm_init(RPM_PIN);
 
   cut_init(RELAY_IGN, RELAY_INJ, cfg.relayPolarityHighToCut);

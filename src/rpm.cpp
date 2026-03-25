@@ -5,13 +5,16 @@ static volatile uint32_t pulseCount = 0;
 static volatile uint32_t acceptedPulseCount = 0;
 static volatile uint32_t lastEdgeUs = 0;
 static volatile uint32_t lastValidPeriodUs = 0;
+static volatile uint32_t minValidPeriodUs = 250;
 
 static unsigned long lastUpdateMs = 0;
 static int lastRpm = 0;
 static float scale = 1.0f;
+static float offsetRpm = 0.0f;
 static float pprVal = 1.0f;
 
-static const uint32_t ISR_DEBOUNCE_US = 4000;
+static const uint32_t MIN_PERIOD_FLOOR_US = 250;
+static const uint32_t MAX_MEASURABLE_RPM = 24000;
 static const uint32_t SIGNAL_TIMEOUT_US = 300000;
 static const uint32_t UPDATE_INTERVAL_MS = 20;
 static const uint8_t RPM_MA_SIZE = 6;
@@ -20,6 +23,15 @@ static float rpmBuffer[RPM_MA_SIZE] = {0.0f};
 static uint8_t rpmBufferIndex = 0;
 static uint8_t rpmBufferCount = 0;
 static uint32_t lastAcceptedSnapshot = 0;
+
+static inline void rpm_recompute_min_period() {
+  float pprLocal = pprVal;
+  if (pprLocal < 0.01f) pprLocal = 0.01f;
+  float periodUs = 60000000.0f / (MAX_MEASURABLE_RPM * pprLocal);
+  uint32_t computed = static_cast<uint32_t>(periodUs);
+  if (computed < MIN_PERIOD_FLOOR_US) computed = MIN_PERIOD_FLOOR_US;
+  minValidPeriodUs = computed;
+}
 
 static inline void rpm_filter_reset() {
   for (uint8_t i = 0; i < RPM_MA_SIZE; ++i) {
@@ -54,7 +66,7 @@ static void IRAM_ATTR rpm_isr() {
 
   if (prevUs != 0) {
     const uint32_t deltaUs = nowUs - prevUs;
-    if (deltaUs < ISR_DEBOUNCE_US) {
+    if (deltaUs < minValidPeriodUs) {
       return;
     }
     lastValidPeriodUs = deltaUs;
@@ -70,6 +82,7 @@ void rpm_set_ppr(float ppr) {
     ppr = 0.01f;
   }
   pprVal = ppr;
+  rpm_recompute_min_period();
 }
 
 void rpm_set_scale(float factor) {
@@ -77,8 +90,16 @@ void rpm_set_scale(float factor) {
   scale = factor;
 }
 
+void rpm_set_offset(float offset) {
+  offsetRpm = offset;
+}
+
 float rpm_get_scale() {
   return scale;
+}
+
+float rpm_get_offset() {
+  return offsetRpm;
 }
 
 void rpm_init(uint8_t pin) {
@@ -93,6 +114,7 @@ void rpm_init(uint8_t pin) {
   lastAcceptedSnapshot = 0;
   lastRpm = 0;
   rpm_filter_reset();
+  rpm_recompute_min_period();
 
   pinMode(pin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(pin), rpm_isr, RISING);
@@ -100,7 +122,8 @@ void rpm_init(uint8_t pin) {
 
 void rpm_update() {
   const unsigned long nowMs = millis();
-  if ((nowMs - lastUpdateMs) < UPDATE_INTERVAL_MS) {
+  const unsigned long elapsedMs = nowMs - lastUpdateMs;
+  if (elapsedMs < UPDATE_INTERVAL_MS) {
     return;
   }
   lastUpdateMs = nowMs;
@@ -115,8 +138,15 @@ void rpm_update() {
   lastEdgeSnapshot = lastEdgeUs;
   interrupts();
 
-  if (acceptedSnapshot != lastAcceptedSnapshot && periodUsSnapshot >= ISR_DEBOUNCE_US) {
-    float rawRpm = (60000000.0f / (periodUsSnapshot * pprVal)) * scale;
+  uint32_t pulseDelta = acceptedSnapshot - lastAcceptedSnapshot;
+  if (pulseDelta > 0 && elapsedMs > 0) {
+    float rawRpm = (pulseDelta * 60000.0f) / (elapsedMs * pprVal);
+    // Blend a little period-based estimate to keep response quick on transients.
+    if (periodUsSnapshot >= minValidPeriodUs) {
+      float periodRpm = 60000000.0f / (periodUsSnapshot * pprVal);
+      rawRpm = (rawRpm * 0.7f) + (periodRpm * 0.3f);
+    }
+    rawRpm = (rawRpm * scale) + offsetRpm;
     if (rawRpm < 0.0f) {
       rawRpm = 0.0f;
     }

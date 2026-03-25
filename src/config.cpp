@@ -8,6 +8,7 @@ const char *CONFIG_TMP_PATH = "/config.tmp";
 const char *CONFIG_BAK_PATH = "/config.bak";
 static const int DEFAULT_BUCKET_WIDTH = 1000;
 static const uint8_t DEFAULT_AUTO_MAP_COUNT = 8;
+static const size_t CONFIG_JSON_CAPACITY = 8192;
 
 static bool ensureFsMounted() {
   static bool mounted = false;
@@ -19,10 +20,10 @@ static bool ensureFsMounted() {
 
 static void setDefaultAutoMap() {
   cfg.autoMapCount = DEFAULT_AUTO_MAP_COUNT;
-  // 150cc street-bike baseline: longer cut at low-mid rpm, taper at high rpm.
-  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {62, 56, 50, 44, 38, 34, 31, 28};
-  const int mins[DEFAULT_AUTO_MAP_COUNT] = {3000, 4500, 6000, 7500, 9000, 10500, 12000, 13500};
-  const int maxs[DEFAULT_AUTO_MAP_COUNT] = {4499, 5999, 7499, 8999, 10499, 11999, 13499, 14999};
+  // 150cc baseline default (same as UI 8-band preset): 4000..12500 rpm.
+  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {106, 94, 89, 80, 72, 69, 66, 57};
+  const int mins[DEFAULT_AUTO_MAP_COUNT] = {4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000};
+  const int maxs[DEFAULT_AUTO_MAP_COUNT] = {4999, 5999, 6999, 7999, 8999, 9999, 10999, 12500};
   for (uint8_t i = 0; i < cfg.autoMapCount; ++i) {
     cfg.autoMap[i].rpmMin = mins[i];
     cfg.autoMap[i].rpmMax = maxs[i];
@@ -77,10 +78,11 @@ void setDefaults() {
   cfg.relayPolarityHighToCut = true;
 
   cfg.ppr = 1.0f;
-  cfg.rpmScaleFactor = 1.0f;
+  cfg.rpmScaleFactor = 2.2f;
+  cfg.rpmOffset = 0.0f;
 
   cfg.modeAuto = true;
-  cfg.cutTimeFixed = 50;
+  cfg.cutTimeFixed = 90;
   setDefaultAutoMap();
 
   cfg.backfireMode = false;
@@ -103,17 +105,17 @@ void setDefaults() {
   cfg.minRpm = 1500;
 
   cfg.cutIgnEnabled = true;
-  cfg.cutInjEnabled = true;
+  cfg.cutInjEnabled = false;
 
   // Manual Backfire defaults
-  cfg.manualBackfireEnabled = false;
-  cfg.manualBackfireHoldMs = 3000;
+  cfg.manualBackfireEnabled = true;
+  cfg.manualBackfireHoldMs = 1500;
   cfg.manualBackfireMode = 1;
   cfg.manualPulseCutMs = 200;
   cfg.manualPulseFireMs = 50;
   cfg.manualPulseOffMs = 200;
   cfg.manualPulseRepeat = 3;
-  cfg.manualMinRpm = 4000;
+  cfg.manualMinRpm = 0;
   cfg.manualIgnOnly = true;
 }
 
@@ -176,7 +178,7 @@ bool loadConfig() {
   File f = LittleFS.open(CONFIG_PATH, "r");
   if (!f) return false;
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(CONFIG_JSON_CAPACITY);
   DeserializationError err = deserializeJson(doc, f);
   f.close();
   if (err) {
@@ -191,9 +193,10 @@ bool loadConfig() {
   cfg.shiftDebounceMs = doc["shiftDebounceMs"] | 30;
   cfg.relayPolarityHighToCut = doc["relayPolarityHighToCut"] | true;
   cfg.ppr = doc["ppr"] | 1.0f;
-  cfg.rpmScaleFactor = doc["rpmScaleFactor"] | 1.0f;
+  cfg.rpmScaleFactor = doc["rpmScaleFactor"] | cfg.rpmScaleFactor;
+  cfg.rpmOffset = doc["rpmOffset"] | cfg.rpmOffset;
   cfg.modeAuto = doc["modeAuto"] | true;
-  cfg.cutTimeFixed = doc["cutTimeFixed"] | 50;
+  cfg.cutTimeFixed = doc["cutTimeFixed"] | cfg.cutTimeFixed;
   cfg.backfireMode = doc["backfireMode"] | false;
   cfg.backfireProfile = doc["backfireProfile"] | BACKFIRE_PROFILE_BASIC;
   cfg.backfireAddMs = doc["backfireAddMs"] | 10;
@@ -218,17 +221,17 @@ bool loadConfig() {
   if (cfg.minRpm < 0) cfg.minRpm = 0;
   if (cfg.minRpm > 18000) cfg.minRpm = 18000;
 
-  cfg.cutIgnEnabled = doc["cutIgnEnabled"] | true;
-  cfg.cutInjEnabled = doc["cutInjEnabled"] | true;
+  cfg.cutIgnEnabled = doc["cutIgnEnabled"] | cfg.cutIgnEnabled;
+  cfg.cutInjEnabled = doc["cutInjEnabled"] | cfg.cutInjEnabled;
 
-  cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | false;
-  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 3000;
+  cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | cfg.manualBackfireEnabled;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | cfg.manualBackfireHoldMs;
   cfg.manualBackfireMode = doc["manualBackfireMode"] | 1;
   cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 200;
   cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 50;
   cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 200;
   cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 3;
-  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
+  cfg.manualMinRpm = doc["manualMinRpm"] | cfg.manualMinRpm;
   cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
 
   if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;
@@ -283,12 +286,13 @@ bool saveConfig() {
   File f = LittleFS.open(CONFIG_TMP_PATH, "w");
   if (!f) return false;
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(CONFIG_JSON_CAPACITY);
   doc["shiftActiveLow"] = cfg.shiftActiveLow;
   doc["shiftDebounceMs"] = cfg.shiftDebounceMs;
   doc["relayPolarityHighToCut"] = cfg.relayPolarityHighToCut;
   doc["ppr"] = cfg.ppr;
   doc["rpmScaleFactor"] = cfg.rpmScaleFactor;
+  doc["rpmOffset"] = cfg.rpmOffset;
   doc["modeAuto"] = cfg.modeAuto;
   doc["cutTimeFixed"] = cfg.cutTimeFixed;
   JsonArray arr = doc.createNestedArray("autoMap");
