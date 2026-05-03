@@ -158,6 +158,7 @@
         <div class="metric">
           <h3>RPM</h3>
           <div class="value" id="rpmValue">0</div>
+          <div class="meta" id="rpmRawMeta">Raw: 0 RPM</div>
           <div class="meta" id="rpmMeta">Đợi stream</div>
         </div>
         <div class="metric">
@@ -553,6 +554,7 @@
               <button id="fwUploadBtn" type="button" disabled>Upload firmware</button>
             </div>
             <div class="progress"><span id="fwProgressBar"></span></div>
+            <div class="ota-status" id="fwProgressText">Tiến trình: 0%</div>
             <div class="ota-status" id="fwStatus">Chưa chọn file.</div>
           </div>
           <div class="ota-box">
@@ -567,6 +569,7 @@
               <button id="fsUploadBtn" type="button" disabled>Upload LittleFS</button>
             </div>
             <div class="progress"><span id="fsProgressBar"></span></div>
+            <div class="ota-status" id="fsProgressText">Tiến trình: 0%</div>
             <div class="ota-status" id="fsStatus">Chưa chọn file.</div>
           </div>
         </div>
@@ -610,6 +613,7 @@
         logs:[],
         stream:null,
         liveRpm:0,
+        liveRpmRaw:0,
         collecting:false,
         lock:null,
         lockFeed:[],
@@ -1003,14 +1007,16 @@
             pick: $("fwPickBtn"),
             upload: $("fwUploadBtn"),
             status: $("fwStatus"),
-            bar: $("fwProgressBar")
+            bar: $("fwProgressBar"),
+            progressText: $("fwProgressText")
           },
           littlefs:{
             input: $("fsFileInput"),
             pick: $("fsPickBtn"),
             upload: $("fsUploadBtn"),
             status: $("fsStatus"),
-            bar: $("fsProgressBar")
+            bar: $("fsProgressBar"),
+            progressText: $("fsProgressText")
           }
         };
         Object.entries(otaControls).forEach(([kind, refs])=>{
@@ -1042,8 +1048,10 @@
         const slot = state.ota[kind];
         const refs = otaControls?.[kind];
         if (!slot || !refs) return;
+        const pct = Math.round((slot.progress || 0) * 100);
         if (refs.status) refs.status.textContent = slot.status || "";
-        if (refs.bar) refs.bar.style.width = `${Math.round((slot.progress || 0) * 100)}%`;
+        if (refs.bar) refs.bar.style.width = `${pct}%`;
+        if (refs.progressText) refs.progressText.textContent = `Tiến trình: ${pct}%`;
         const disableInputs = !!slot.uploading;
         if (refs.pick) refs.pick.disabled = disableInputs;
         if (refs.input) refs.input.disabled = disableInputs;
@@ -1842,6 +1850,55 @@
         $("calStatus").textContent = `Sample: ${state.liveRpm} RPM`;
       }
 
+      function formatCalQuality(stdDev, avg){
+        const avgVal = Number(avg);
+        const stdVal = Number(stdDev);
+        if (!Number.isFinite(avgVal) || avgVal <= 0 || !Number.isFinite(stdVal) || stdVal < 0) {
+          return {cv:"-", label:"Không đủ dữ liệu"};
+        }
+        const cv = (stdVal / avgVal) * 100;
+        if (cv <= 1.5) return {cv:cv.toFixed(2), label:"Rất ổn"};
+        if (cv <= 3.0) return {cv:cv.toFixed(2), label:"Ổn"};
+        if (cv <= 5.0) return {cv:cv.toFixed(2), label:"Nhiễu cao"};
+        return {cv:cv.toFixed(2), label:"Nhiễu rất cao"};
+      }
+
+      function formatCalUsedSamples(data, usedKey, totalKey){
+        const total = Number(data?.[totalKey]);
+        const used = Number(data?.[usedKey]);
+        const totalOk = Number.isFinite(total) && total > 0;
+        const usedOk = Number.isFinite(used) && used > 0;
+        if (usedOk && totalOk) return `${used}/${total}`;
+        if (totalOk) return String(total);
+        return "-";
+      }
+
+      function mapCalibrateErrorMessage(raw){
+        const msg = String(raw || "").trim();
+        if (!msg) return "Lỗi không xác định";
+        if (msg.includes("invalid data")) return "Dữ liệu calibrate không hợp lệ";
+        if (msg.includes("invalid json")) return "Payload calibrate bị lỗi định dạng";
+        if (msg.includes("invalid samples")) return "Mẫu RPM không hợp lệ (quá ít hoặc nhiễu nặng)";
+        if (msg.includes("invalid sample spread")) return "2 điểm đo quá gần nhau, cần tách RPM thấp/cao xa hơn";
+        if (msg.includes("sample too close to offset")) return "Điểm đo quá gần offset hiện tại, hãy tăng target RPM";
+        if (msg.includes("new factor out of range")) return "Hệ số scale tính ra vượt giới hạn an toàn";
+        if (msg.includes("new scale/offset out of range")) return "Scale/Offset tính ra vượt giới hạn an toàn";
+        if (msg.includes("invalid calibration result")) return "Kết quả calibrate không ổn định";
+        if (msg.includes("alloc fail")) return "Thiếu bộ nhớ xử lý calibrate";
+        return msg;
+      }
+
+      async function readCalibrateError(res){
+        let bodyText = "";
+        try {
+          bodyText = (await res.text()) || "";
+        } catch(_){
+          bodyText = "";
+        }
+        const fallback = res.statusText || `HTTP ${res.status}`;
+        return mapCalibrateErrorMessage(bodyText || fallback);
+      }
+
       async function calibrateAutoSample(){
         if (state.collecting) return;
         const target = parseFloat($("calTarget").value);
@@ -1863,15 +1920,23 @@
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify({targetRpm:target, measuredSamples:readings})
           });
-          if (!res.ok) throw new Error(res.statusText);
+          if (!res.ok) {
+            const reason = await readCalibrateError(res);
+            throw new Error(reason);
+          }
           const data = await res.json();
-          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} avg=${Number(data.avgMeasured).toFixed(1)} std=${Number(data.stdDev).toFixed(2)}`;
+          const avg = Number(data.avgMeasured) || 0;
+          const std = Number(data.stdDev) || 0;
+          const quality = formatCalQuality(std, avg);
+          const used = formatCalUsedSamples(data, "usedCount", "count");
+          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} | avg=${avg.toFixed(1)} std=${std.toFixed(2)} (CV=${quality.cv}%) | mẫu dùng ${used} | ${quality.label}`;
           toast("Calibrate xong","success");
           loadConfig();
         } catch(err){
           console.error(err);
-          toast("Calibrate lỗi","error");
-          $("calStatus").textContent = "Calibrate thất bại";
+          const reason = (err && err.message) ? err.message : "Calibrate thất bại";
+          toast(`Calibrate lỗi: ${reason}`,"error");
+          $("calStatus").textContent = `Calibrate thất bại: ${reason}`;
         } finally {
           state.collecting = false;
         }
@@ -1917,15 +1982,30 @@
               highMeasuredSamples: highReadings
             })
           });
-          if (!res.ok) throw new Error(res.statusText);
+          if (!res.ok) {
+            const reason = await readCalibrateError(res);
+            throw new Error(reason);
+          }
           const data = await res.json();
-          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} Offset=${Number(data.newOffset).toFixed(1)} | low=${Number(data.lowAvgMeasured).toFixed(1)} high=${Number(data.highAvgMeasured).toFixed(1)}`;
+          const lowAvg = Number(data.lowAvgMeasured) || 0;
+          const highAvg = Number(data.highAvgMeasured) || 0;
+          const lowStd = Number(data.lowStdDev) || 0;
+          const highStd = Number(data.highStdDev) || 0;
+          const lowQuality = formatCalQuality(lowStd, lowAvg);
+          const highQuality = formatCalQuality(highStd, highAvg);
+          const lowUsed = formatCalUsedSamples(data, "lowUsedCount", "lowCount");
+          const highUsed = formatCalUsedSamples(data, "highUsedCount", "highCount");
+          const targetSpan = highTarget - lowTarget;
+          const measuredSpan = highAvg - lowAvg;
+          const spanErr = targetSpan > 0 ? ((measuredSpan / targetSpan) - 1) * 100 : 0;
+          $("calStatus").textContent = `Scale=${Number(data.newFactor).toFixed(4)} Offset=${Number(data.newOffset).toFixed(1)} | low=${lowAvg.toFixed(1)}(CV ${lowQuality.cv}% - ${lowQuality.label}, ${lowUsed}) high=${highAvg.toFixed(1)}(CV ${highQuality.cv}% - ${highQuality.label}, ${highUsed}) | lệch span trước calib=${spanErr.toFixed(2)}%`;
           toast("Calibrate 2 điểm xong","success");
           loadConfig();
         } catch(err){
           console.error(err);
-          toast("Calibrate 2 điểm lỗi","error");
-          $("calStatus").textContent = "Calibrate 2 điểm thất bại";
+          const reason = (err && err.message) ? err.message : "Calibrate 2 điểm thất bại";
+          toast(`Calibrate 2 điểm lỗi: ${reason}`,"error");
+          $("calStatus").textContent = `Calibrate 2 điểm thất bại: ${reason}`;
         } finally {
           state.collecting = false;
         }
@@ -2001,6 +2081,7 @@
       function handleTelemetry(entry){
         applyLiveMetrics({
           rpm: entry.rpm,
+          rpmRaw: entry.rpmRaw,
           cut: entry.cut,
           shift: entry.shift,
           event: entry.event,
@@ -2011,8 +2092,11 @@
 
       function applyLiveMetrics(payload){
         const rpm = Number.isFinite(payload.rpm) ? payload.rpm : 0;
+        const rpmRaw = Number.isFinite(payload.rpmRaw) ? payload.rpmRaw : (state.liveRpmRaw || 0);
         state.liveRpm = rpm;
+        state.liveRpmRaw = rpmRaw;
         $("rpmValue").textContent = rpm;
+        $("rpmRawMeta").textContent = `Raw: ${rpmRaw} RPM`;
         if (payload.metaLabel) $("rpmMeta").textContent = payload.metaLabel;
         const cutActive = !!payload.cut;
         $("cutState").textContent = cutActive ? "CUT" : "Standby";

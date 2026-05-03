@@ -18,16 +18,20 @@ static AsyncWebServer server(80);
 static AsyncEventSource events("/log/stream");
 static unsigned long lastTelemetryMs = 0;
 static const size_t WEB_CONFIG_JSON_CAPACITY = 8192;
+static const size_t MAX_CAL_SAMPLES = 64;
 
-struct UploadStatus {
+struct UploadStatus
+{
   bool ok = true;
   String message;
 };
 
-static void send_json_status(AsyncWebServerRequest *r, bool ok, const String &msg) {
+static void send_json_status(AsyncWebServerRequest *r, bool ok, const String &msg)
+{
   DynamicJsonDocument doc(128);
   doc["ok"] = ok;
-  if (msg.length()) {
+  if (msg.length())
+  {
     doc["message"] = msg;
   }
   String out;
@@ -38,34 +42,47 @@ static void send_json_status(AsyncWebServerRequest *r, bool ok, const String &ms
 static void writeAutoMapJson(const QSConfig &c, JsonArray arr);
 static void writeConfigJson(const QSConfig &c, JsonObject obj);
 
-static bool validateApPassword(const String &pass) {
+static bool validateApPassword(const String &pass)
+{
   size_t len = pass.length();
-  if (len == 0) return true;
-  if (len < 8 || len > 63) return false;
-  for (size_t i = 0; i < len; ++i) {
+  if (len == 0)
+    return true;
+  if (len < 8 || len > 63)
+    return false;
+  for (size_t i = 0; i < len; ++i)
+  {
     char c = pass[i];
-    if (c < 32 || c > 126) return false;
+    if (c < 32 || c > 126)
+      return false;
   }
   return true;
 }
 
-static int clampManualMinRpm(int value) {
-  if (value < 0) return 0;
-  if (value > 10000) return 10000;
+static int clampManualMinRpm(int value)
+{
+  if (value < 0)
+    return 0;
+  if (value > 10000)
+    return 10000;
   return value;
 }
 
-static int clampMinRpm(int value) {
-  if (value < 0) return 0;
-  if (value > 18000) return 18000;
+static int clampMinRpm(int value)
+{
+  if (value < 0)
+    return 0;
+  if (value > 18000)
+    return 18000;
   return value;
 }
 
-static bool applyApPassword(QSConfig &cfg, const String &pass) {
+static bool applyApPassword(QSConfig &cfg, const String &pass)
+{
   char buffer[sizeof(cfg.apPassword)];
   pass.toCharArray(buffer, sizeof(buffer));
   buffer[sizeof(buffer) - 1] = '\0';
-  if (strncmp(cfg.apPassword, buffer, sizeof(cfg.apPassword)) == 0) {
+  if (strncmp(cfg.apPassword, buffer, sizeof(cfg.apPassword)) == 0)
+  {
     return false;
   }
   strncpy(cfg.apPassword, buffer, sizeof(cfg.apPassword));
@@ -85,23 +102,27 @@ static const uint8_t TEST_PWM_CH = 5;
 static const uint8_t TEST_PWM_RES = 8;
 static const uint8_t TEST_PWM_DUTY = 128;
 
-static void stop_test_pwm_output() {
+static void stop_test_pwm_output()
+{
   ledcDetachPin(TEST_PWM);
   pinMode(TEST_PWM, OUTPUT);
   digitalWrite(TEST_PWM, LOW);
 }
 
-void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfgSnapshot) {
+void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfgSnapshot)
+{
   DynamicJsonDocument doc(4096);
   doc["t"] = e.t;
   doc["rpm"] = e.rpm;
   doc["cut"] = e.cut;
   doc["shift"] = e.shift;
   doc["event"] = e.event;
-  if (meta) {
+  if (meta)
+  {
     doc["changes"] = meta->as<JsonVariantConst>();
   }
-  if (cfgSnapshot) {
+  if (cfgSnapshot)
+  {
     JsonObject cfgObj = doc.createNestedObject("config");
     writeConfigJson(*cfgSnapshot, cfgObj);
   }
@@ -110,10 +131,12 @@ void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfg
   events.send(out.c_str(), "log", millis());
 }
 
-static void send_live_telemetry() {
+static void send_live_telemetry()
+{
   DynamicJsonDocument doc(256);
   doc["t"] = millis();
   doc["rpm"] = rpm_get();
+  doc["rpmRaw"] = rpm_get_raw();
   doc["cut"] = cut_is_active();
   doc["shift"] = shift_is_pressed() ? "PRESSED" : "RELEASED";
   doc["lock"] = lock_is_engaged() ? "LOCKED" : (lock_is_enabled() ? "ARMED" : "OFF");
@@ -122,7 +145,8 @@ static void send_live_telemetry() {
   events.send(out.c_str(), "telemetry", millis());
 }
 
-static void send_lock_status(AsyncWebServerRequest *r) {
+static void send_lock_status(AsyncWebServerRequest *r)
+{
   LockStatus st;
   lock_get_status(st);
   DynamicJsonDocument doc(512);
@@ -143,7 +167,8 @@ static void send_lock_status(AsyncWebServerRequest *r) {
   r->send(200, "application/json", out);
 }
 
-bool startAP() {
+bool startAP()
+{
   const QSConfig &cfg = getConfig();
   String ssid = "QS_tu_lam_dien_tu_";
   uint32_t mac = (uint32_t)((ESP.getEfuseMac() >> 24) & 0xFFFFFF);
@@ -153,11 +178,13 @@ bool startAP() {
   const char *pass = cfg.apPassword;
   bool hasPass = pass && strlen(pass) >= 8;
   bool ok = hasPass ? WiFi.softAP(ssid.c_str(), pass, 1, 0, 4) : WiFi.softAP(ssid.c_str());
-  if (ok) {
+  if (ok)
+  {
     IPAddress local(192, 168, 4, 1);
     IPAddress gateway(192, 168, 4, 1);
     IPAddress subnet(255, 255, 255, 0);
-    if (!WiFi.softAPConfig(local, gateway, subnet)) {
+    if (!WiFi.softAPConfig(local, gateway, subnet))
+    {
       Serial.println("SoftAP config failed, using default IP");
     }
     WiFi.softAPsetHostname("qs-esp32c3");
@@ -166,20 +193,25 @@ bool startAP() {
     Serial.print("AP IP: ");
     Serial.println(WiFi.softAPIP());
     Serial.println(hasPass ? "SoftAP secured with password" : "SoftAP open (no password)");
-  } else {
+  }
+  else
+  {
     Serial.println("SoftAP start failed");
   }
   return ok;
 }
 
-static void restartAccessPoint() {
+static void restartAccessPoint()
+{
   WiFi.softAPdisconnect(true);
   delay(100);
   startAP();
 }
 
-static void writeAutoMapJson(const QSConfig &c, JsonArray arr) {
-  for (uint8_t i = 0; i < c.autoMapCount; ++i) {
+static void writeAutoMapJson(const QSConfig &c, JsonArray arr)
+{
+  for (uint8_t i = 0; i < c.autoMapCount; ++i)
+  {
     JsonObject o = arr.createNestedObject();
     o["min"] = c.autoMap[i].rpmMin;
     o["max"] = c.autoMap[i].rpmMax;
@@ -189,7 +221,8 @@ static void writeAutoMapJson(const QSConfig &c, JsonArray arr) {
   }
 }
 
-static void writeConfigJson(const QSConfig &c, JsonObject obj) {
+static void writeConfigJson(const QSConfig &c, JsonObject obj)
+{
   obj["shiftActiveLow"] = c.shiftActiveLow;
   obj["shiftDebounceMs"] = c.shiftDebounceMs;
   obj["relayPolarityHighToCut"] = c.relayPolarityHighToCut;
@@ -231,95 +264,146 @@ static void writeConfigJson(const QSConfig &c, JsonObject obj) {
   writeAutoMapJson(c, arr);
 }
 
-static bool autoMapEquals(const QSConfig &a, const QSConfig &b) {
-  if (a.autoMapCount != b.autoMapCount) return false;
-  for (uint8_t i = 0; i < a.autoMapCount; ++i) {
+static bool autoMapEquals(const QSConfig &a, const QSConfig &b)
+{
+  if (a.autoMapCount != b.autoMapCount)
+    return false;
+  for (uint8_t i = 0; i < a.autoMapCount; ++i)
+  {
     const AutoMapEntry &ea = a.autoMap[i];
     const AutoMapEntry &eb = b.autoMap[i];
     if (ea.rpmMin != eb.rpmMin || ea.rpmMax != eb.rpmMax || ea.cutMs != eb.cutMs ||
-        ea.backfireAddMs != eb.backfireAddMs || ea.backfireEnabled != eb.backfireEnabled) {
+        ea.backfireAddMs != eb.backfireAddMs || ea.backfireEnabled != eb.backfireEnabled)
+    {
       return false;
     }
   }
   return true;
 }
 
-static void collectConfigChanges(const QSConfig &before, const QSConfig &after, JsonObject out) {
+static void collectConfigChanges(const QSConfig &before, const QSConfig &after, JsonObject out)
+{
   bool changed = false;
-#define EMIT_CHANGE(field) \
-  do { \
+#define EMIT_CHANGE(field)     \
+  do                           \
+  {                            \
     out[#field] = after.field; \
-    changed = true; \
+    changed = true;            \
   } while (0)
 
-  if (before.shiftActiveLow != after.shiftActiveLow) EMIT_CHANGE(shiftActiveLow);
-  if (before.shiftDebounceMs != after.shiftDebounceMs) EMIT_CHANGE(shiftDebounceMs);
-  if (before.relayPolarityHighToCut != after.relayPolarityHighToCut) EMIT_CHANGE(relayPolarityHighToCut);
-  if (before.ppr != after.ppr) EMIT_CHANGE(ppr);
-  if (before.rpmScaleFactor != after.rpmScaleFactor) EMIT_CHANGE(rpmScaleFactor);
-  if (before.rpmOffset != after.rpmOffset) EMIT_CHANGE(rpmOffset);
-  if (before.modeAuto != after.modeAuto) EMIT_CHANGE(modeAuto);
-  if (before.cutTimeFixed != after.cutTimeFixed) EMIT_CHANGE(cutTimeFixed);
-  if (before.backfireMode != after.backfireMode) EMIT_CHANGE(backfireMode);
-  if (before.backfireProfile != after.backfireProfile) EMIT_CHANGE(backfireProfile);
-  if (before.backfireAddMs != after.backfireAddMs) EMIT_CHANGE(backfireAddMs);
-  if (before.backfireRpmThreshold != after.backfireRpmThreshold) EMIT_CHANGE(backfireRpmThreshold);
-  if (before.backfireCooldownMs != after.backfireCooldownMs) EMIT_CHANGE(backfireCooldownMs);
-  if (before.backfireBurstWindowMs != after.backfireBurstWindowMs) EMIT_CHANGE(backfireBurstWindowMs);
-  if (before.backfireBurstMax != after.backfireBurstMax) EMIT_CHANGE(backfireBurstMax);
-  if (before.backfireBurstExtraMs != after.backfireBurstExtraMs) EMIT_CHANGE(backfireBurstExtraMs);
-  if (before.backfireIgnExtraMs != after.backfireIgnExtraMs) EMIT_CHANGE(backfireIgnExtraMs);
-  if (before.backfireDecelHighRpm != after.backfireDecelHighRpm) EMIT_CHANGE(backfireDecelHighRpm);
-  if (before.backfireDecelDropRpm != after.backfireDecelDropRpm) EMIT_CHANGE(backfireDecelDropRpm);
-  if (before.backfireDecelPulseMs != after.backfireDecelPulseMs) EMIT_CHANGE(backfireDecelPulseMs);
-  if (before.backfireDecelOffMs != after.backfireDecelOffMs) EMIT_CHANGE(backfireDecelOffMs);
-  if (before.backfireDecelPulseCount != after.backfireDecelPulseCount) EMIT_CHANGE(backfireDecelPulseCount);
-  if (before.apTimeoutMs != after.apTimeoutMs) EMIT_CHANGE(apTimeoutMs);
-  if (before.minRpm != after.minRpm) EMIT_CHANGE(minRpm);
-  if (before.cutIgnEnabled != after.cutIgnEnabled) EMIT_CHANGE(cutIgnEnabled);
-  if (before.cutInjEnabled != after.cutInjEnabled) EMIT_CHANGE(cutInjEnabled);
-  if (before.manualBackfireEnabled != after.manualBackfireEnabled) EMIT_CHANGE(manualBackfireEnabled);
-  if (before.manualBackfireHoldMs != after.manualBackfireHoldMs) EMIT_CHANGE(manualBackfireHoldMs);
-  if (before.manualBackfireMode != after.manualBackfireMode) EMIT_CHANGE(manualBackfireMode);
-  if (before.manualPulseCutMs != after.manualPulseCutMs) EMIT_CHANGE(manualPulseCutMs);
-  if (before.manualPulseFireMs != after.manualPulseFireMs) EMIT_CHANGE(manualPulseFireMs);
-  if (before.manualPulseOffMs != after.manualPulseOffMs) EMIT_CHANGE(manualPulseOffMs);
-  if (before.manualPulseRepeat != after.manualPulseRepeat) EMIT_CHANGE(manualPulseRepeat);
-  if (before.manualMinRpm != after.manualMinRpm) EMIT_CHANGE(manualMinRpm);
-  if (before.manualIgnOnly != after.manualIgnOnly) EMIT_CHANGE(manualIgnOnly);
-  if (strncmp(before.apPassword, after.apPassword, sizeof(before.apPassword)) != 0) {
+  if (before.shiftActiveLow != after.shiftActiveLow)
+    EMIT_CHANGE(shiftActiveLow);
+  if (before.shiftDebounceMs != after.shiftDebounceMs)
+    EMIT_CHANGE(shiftDebounceMs);
+  if (before.relayPolarityHighToCut != after.relayPolarityHighToCut)
+    EMIT_CHANGE(relayPolarityHighToCut);
+  if (before.ppr != after.ppr)
+    EMIT_CHANGE(ppr);
+  if (before.rpmScaleFactor != after.rpmScaleFactor)
+    EMIT_CHANGE(rpmScaleFactor);
+  if (before.rpmOffset != after.rpmOffset)
+    EMIT_CHANGE(rpmOffset);
+  if (before.modeAuto != after.modeAuto)
+    EMIT_CHANGE(modeAuto);
+  if (before.cutTimeFixed != after.cutTimeFixed)
+    EMIT_CHANGE(cutTimeFixed);
+  if (before.backfireMode != after.backfireMode)
+    EMIT_CHANGE(backfireMode);
+  if (before.backfireProfile != after.backfireProfile)
+    EMIT_CHANGE(backfireProfile);
+  if (before.backfireAddMs != after.backfireAddMs)
+    EMIT_CHANGE(backfireAddMs);
+  if (before.backfireRpmThreshold != after.backfireRpmThreshold)
+    EMIT_CHANGE(backfireRpmThreshold);
+  if (before.backfireCooldownMs != after.backfireCooldownMs)
+    EMIT_CHANGE(backfireCooldownMs);
+  if (before.backfireBurstWindowMs != after.backfireBurstWindowMs)
+    EMIT_CHANGE(backfireBurstWindowMs);
+  if (before.backfireBurstMax != after.backfireBurstMax)
+    EMIT_CHANGE(backfireBurstMax);
+  if (before.backfireBurstExtraMs != after.backfireBurstExtraMs)
+    EMIT_CHANGE(backfireBurstExtraMs);
+  if (before.backfireIgnExtraMs != after.backfireIgnExtraMs)
+    EMIT_CHANGE(backfireIgnExtraMs);
+  if (before.backfireDecelHighRpm != after.backfireDecelHighRpm)
+    EMIT_CHANGE(backfireDecelHighRpm);
+  if (before.backfireDecelDropRpm != after.backfireDecelDropRpm)
+    EMIT_CHANGE(backfireDecelDropRpm);
+  if (before.backfireDecelPulseMs != after.backfireDecelPulseMs)
+    EMIT_CHANGE(backfireDecelPulseMs);
+  if (before.backfireDecelOffMs != after.backfireDecelOffMs)
+    EMIT_CHANGE(backfireDecelOffMs);
+  if (before.backfireDecelPulseCount != after.backfireDecelPulseCount)
+    EMIT_CHANGE(backfireDecelPulseCount);
+  if (before.apTimeoutMs != after.apTimeoutMs)
+    EMIT_CHANGE(apTimeoutMs);
+  if (before.minRpm != after.minRpm)
+    EMIT_CHANGE(minRpm);
+  if (before.cutIgnEnabled != after.cutIgnEnabled)
+    EMIT_CHANGE(cutIgnEnabled);
+  if (before.cutInjEnabled != after.cutInjEnabled)
+    EMIT_CHANGE(cutInjEnabled);
+  if (before.manualBackfireEnabled != after.manualBackfireEnabled)
+    EMIT_CHANGE(manualBackfireEnabled);
+  if (before.manualBackfireHoldMs != after.manualBackfireHoldMs)
+    EMIT_CHANGE(manualBackfireHoldMs);
+  if (before.manualBackfireMode != after.manualBackfireMode)
+    EMIT_CHANGE(manualBackfireMode);
+  if (before.manualPulseCutMs != after.manualPulseCutMs)
+    EMIT_CHANGE(manualPulseCutMs);
+  if (before.manualPulseFireMs != after.manualPulseFireMs)
+    EMIT_CHANGE(manualPulseFireMs);
+  if (before.manualPulseOffMs != after.manualPulseOffMs)
+    EMIT_CHANGE(manualPulseOffMs);
+  if (before.manualPulseRepeat != after.manualPulseRepeat)
+    EMIT_CHANGE(manualPulseRepeat);
+  if (before.manualMinRpm != after.manualMinRpm)
+    EMIT_CHANGE(manualMinRpm);
+  if (before.manualIgnOnly != after.manualIgnOnly)
+    EMIT_CHANGE(manualIgnOnly);
+  if (strncmp(before.apPassword, after.apPassword, sizeof(before.apPassword)) != 0)
+  {
     out["apPasswordChanged"] = true;
     changed = true;
   }
 #undef EMIT_CHANGE
-  if (!autoMapEquals(before, after)) {
+  if (!autoMapEquals(before, after))
+  {
     JsonArray arr = out.createNestedArray("autoMap");
     writeAutoMapJson(after, arr);
     changed = true;
   }
 
   out["source"] = "webui";
-  if (!changed) {
+  if (!changed)
+  {
     out["note"] = "no-change";
   }
 }
 
-static void updateAutoMapFromPayload(JsonVariant variant) {
-  if (!variant.is<JsonArray>()) return;
+static void updateAutoMapFromPayload(JsonVariant variant)
+{
+  if (!variant.is<JsonArray>())
+    return;
   JsonArray arr = variant.as<JsonArray>();
   QSConfig &cfg = const_cast<QSConfig &>(getConfig());
   cfg.autoMapCount = 0;
-  for (JsonVariant item : arr) {
-    if (cfg.autoMapCount >= MAX_AUTO_MAP) break;
+  for (JsonVariant item : arr)
+  {
+    if (cfg.autoMapCount >= MAX_AUTO_MAP)
+      break;
     AutoMapEntry &entry = cfg.autoMap[cfg.autoMapCount++];
-    if (item.is<JsonObject>()) {
+    if (item.is<JsonObject>())
+    {
       JsonObject o = item.as<JsonObject>();
       entry.rpmMin = o["min"] | (cfg.autoMapCount - 1) * 1000;
       entry.rpmMax = o["max"] | (entry.rpmMin + 999);
       entry.cutMs = o["cut"] | 50;
       entry.backfireAddMs = o["bf"] | 0;
       entry.backfireEnabled = o.containsKey("bfEnabled") ? o["bfEnabled"].as<bool>() : entry.backfireAddMs > 0;
-    } else {
+    }
+    else
+    {
       entry.rpmMin = (cfg.autoMapCount - 1) * 1000;
       entry.rpmMax = entry.rpmMin + 999;
       entry.cutMs = item.as<int>();
@@ -330,34 +414,139 @@ static void updateAutoMapFromPayload(JsonVariant variant) {
   config_normalize_auto_map();
 }
 
-void web_init() {
+struct CalSampleStats
+{
+  bool ok = false;
+  float avg = 0.0f;
+  float stdDev = 0.0f;
+  float minVal = 0.0f;
+  float maxVal = 0.0f;
+  uint16_t rawCount = 0;
+  uint16_t usedCount = 0;
+};
+
+static bool collectCalSamples(JsonArray arr, float *buffer, size_t capacity, size_t &countOut)
+{
+  countOut = 0;
+  if (arr.isNull() || !buffer || capacity == 0)
+  {
+    return false;
+  }
+
+  for (JsonVariant v : arr)
+  {
+    if (countOut >= capacity)
+      break;
+    float sample = v.as<float>();
+    if (!isfinite(sample))
+      continue;
+    if (sample <= 0.0f || sample > 50000.0f)
+      continue;
+    buffer[countOut++] = sample;
+  }
+  return countOut > 0;
+}
+
+static void sortSamplesAscending(float *values, size_t count)
+{
+  if (!values || count < 2)
+    return;
+  for (size_t i = 1; i < count; ++i)
+  {
+    float key = values[i];
+    size_t j = i;
+    while (j > 0 && values[j - 1] > key)
+    {
+      values[j] = values[j - 1];
+      --j;
+    }
+    values[j] = key;
+  }
+}
+
+static CalSampleStats computeCalSampleStats(JsonArray arr)
+{
+  CalSampleStats stats;
+  float samples[MAX_CAL_SAMPLES] = {0.0f};
+  size_t count = 0;
+  if (!collectCalSamples(arr, samples, MAX_CAL_SAMPLES, count))
+  {
+    return stats;
+  }
+
+  stats.rawCount = static_cast<uint16_t>(count);
+  sortSamplesAscending(samples, count);
+
+  // Trim 10% at each tail to reduce spike/noise effect, but keep enough points.
+  size_t trim = count / 10;
+  if (trim > 2)
+    trim = 2;
+  size_t start = trim;
+  size_t end = count - trim;
+  if (end <= start || (end - start) < 3)
+  {
+    start = 0;
+    end = count;
+  }
+
+  const size_t used = end - start;
+  if (used == 0)
+  {
+    return stats;
+  }
+
+  stats.minVal = samples[start];
+  stats.maxVal = samples[end - 1];
+  stats.usedCount = static_cast<uint16_t>(used);
+
+  float sum = 0.0f;
+  for (size_t i = start; i < end; ++i)
+  {
+    sum += samples[i];
+  }
+  stats.avg = sum / used;
+
+  float variance = 0.0f;
+  for (size_t i = start; i < end; ++i)
+  {
+    float diff = samples[i] - stats.avg;
+    variance += diff * diff;
+  }
+  variance /= used;
+  stats.stdDev = sqrtf(variance);
+  stats.ok = true;
+  return stats;
+}
+
+void web_init()
+{
   LittleFS.begin();
-  if (!startAP()) {
+  if (!startAP())
+  {
     Serial.println("Retrying SoftAP...");
     delay(500);
     startAP();
   }
   server.addHandler(&events);
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *r){
-    r->send(LittleFS, "/index.html", "text/html");
-  });
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *r)
+            { r->send(LittleFS, "/index.html", "text/html"); });
 
-  server.on("/config/get", HTTP_GET, [](AsyncWebServerRequest *r){
+  server.on("/config/get", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
     DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
     const QSConfig &c = getConfig();
     JsonObject root = doc.to<JsonObject>();
     writeConfigJson(c, root);
     String out;
     serializeJson(doc, out);
-    r->send(200, "application/json", out);
-  });
+    r->send(200, "application/json", out); });
 
-  server.on("/lock", HTTP_GET, [](AsyncWebServerRequest *r){
-    send_lock_status(r);
-  });
+  server.on("/lock", HTTP_GET, [](AsyncWebServerRequest *r)
+            { send_lock_status(r); });
 
-  server.on("/lock", HTTP_POST, [](AsyncWebServerRequest *r){}, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+  server.on("/lock", HTTP_POST, [](AsyncWebServerRequest *r) {}, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
     DynamicJsonDocument doc(512);
     DeserializationError err = deserializeJson(doc, (char*)data, len);
     if (err) { r->send(400, "text/plain", "invalid json"); return; }
@@ -371,12 +560,14 @@ void web_init() {
       r->send(400, "text/plain", "invalid pass");
       return;
     }
-    send_lock_status(r);
-  });
+    send_lock_status(r); });
 
-  server.on("/config/set", HTTP_POST, [](AsyncWebServerRequest *r){
-    // handled in body
-  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+  server.on("/config/set", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+              // handled in body
+            },
+            NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
     String *payload;
     if (index == 0) {
       payload = new String();
@@ -468,12 +659,14 @@ void web_init() {
     r->send(200, "application/json", "{\"ok\":true}");
     if (apPassChanged) {
       restartAccessPoint();
-    }
-  });
+    } });
 
-  server.on("/log/ui", HTTP_POST, [](AsyncWebServerRequest *r){
-    // body handled below
-  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+  server.on("/log/ui", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+              // body handled below
+            },
+            NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
     DynamicJsonDocument doc(512);
     DeserializationError err = deserializeJson(doc, (char*)data, len);
     if (err) { r->send(400, "text/plain", "invalid json"); return; }
@@ -490,22 +683,24 @@ void web_init() {
     }
     bool hasMeta = metaObj.size() > 0;
     log_push(rpm_get(), false, "UI", label, hasMeta ? &metaDoc : nullptr, nullptr);
-    r->send(200, "application/json", "{\"ok\":true}");
-  });
+    r->send(200, "application/json", "{\"ok\":true}"); });
 
-  server.on("/export", HTTP_GET, [](AsyncWebServerRequest *r){
+  server.on("/export", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
     DynamicJsonDocument doc(WEB_CONFIG_JSON_CAPACITY);
     const QSConfig &c = getConfig();
     JsonObject root = doc.to<JsonObject>();
     writeConfigJson(c, root);
     String out;
     serializeJson(doc, out);
-    r->send(200, "application/json", out);
-  });
+    r->send(200, "application/json", out); });
 
-  server.on("/import", HTTP_POST, [](AsyncWebServerRequest *r){
-    // response handled after body received
-  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
+  server.on("/import", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+              // response handled after body received
+            },
+            NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
     String *payload;
     if (index == 0) {
       payload = new String();
@@ -604,19 +799,19 @@ void web_init() {
     r->send(200, "application/json", "{\"ok\":true}");
     if (apPassChanged) {
       restartAccessPoint();
-    }
-  });
+    } });
 
-  server.on("/test/cut", HTTP_GET, [](AsyncWebServerRequest *r){
+  server.on("/test/cut", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
     const QSConfig &c = getConfig();
     int duration = r->hasParam("ms") ? r->getParam("ms")->value().toInt() : c.cutTimeFixed;
     if (duration < 5) duration = 5;
     if (duration > 500) duration = 500; // Kaizen: Poka-Yoke limit
     cut_trigger_ms(duration, rpm_get());
-    r->send(200, "application/json", "{\"ok\":true}");
-  });
+    r->send(200, "application/json", "{\"ok\":true}"); });
 
-  server.on("/test/rpm", HTTP_GET, [](AsyncWebServerRequest *r){
+  server.on("/test/rpm", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
     if (r->hasParam("rpm")) {
       String s = r->getParam("rpm")->value();
       int rpm = s.toInt();
@@ -639,29 +834,27 @@ void web_init() {
       r->send(200, "application/json", "{\"ok\":true}");
     } else {
       r->send(400, "text/plain", "missing rpm");
-    }
-  });
+    } });
 
-  server.on("/test/rpm/stop", HTTP_POST, [](AsyncWebServerRequest *r){
+  server.on("/test/rpm/stop", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
     stop_test_pwm_output();
     DynamicJsonDocument meta(128);
     meta["source"] = "test-rpm";
     log_push(rpm_get(), false, "SYS", "TEST_PWM_STOP", &meta);
-    r->send(200, "application/json", "{\"ok\":true}");
-  });
+    r->send(200, "application/json", "{\"ok\":true}"); });
 
-  server.on("/ota/firmware", HTTP_POST,
-    [](AsyncWebServerRequest *r){
+  server.on("/ota/firmware", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
       UploadStatus *state = reinterpret_cast<UploadStatus*>(r->_tempObject);
       String msg = state ? state->message : "ota idle";
       bool ok = state ? state->ok : false;
       delete state;
       r->_tempObject = nullptr;
-      send_json_status(r, ok, msg);
-    },
-    [](AsyncWebServerRequest *r, const String&, size_t index, uint8_t *data, size_t len, bool final){
+      send_json_status(r, ok, msg); }, [](AsyncWebServerRequest *r, const String &, size_t index, uint8_t *data, size_t len, bool final)
+            {
       UploadStatus *state = reinterpret_cast<UploadStatus*>(r->_tempObject);
-      if (!state) {
+      if (index == 0 && !state) {
         state = new UploadStatus();
         r->_tempObject = state;
         size_t total = r->contentLength();
@@ -703,22 +896,19 @@ void web_init() {
           meta["bytes"] = ota_manager_bytes_written();
           log_push(0, false, "SYS", "OTA_FW_DONE", &meta);
         }
-      }
-    }
-  );
+      } });
 
-  server.on("/ota/fs", HTTP_POST,
-    [](AsyncWebServerRequest *r){
+  server.on("/ota/fs", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
       UploadStatus *state = reinterpret_cast<UploadStatus*>(r->_tempObject);
       String msg = state ? state->message : "fs idle";
       bool ok = state ? state->ok : false;
       delete state;
       r->_tempObject = nullptr;
-      send_json_status(r, ok, msg);
-    },
-    [](AsyncWebServerRequest *r, const String&, size_t index, uint8_t *data, size_t len, bool final){
+      send_json_status(r, ok, msg); }, [](AsyncWebServerRequest *r, const String &, size_t index, uint8_t *data, size_t len, bool final)
+            {
       UploadStatus *state = reinterpret_cast<UploadStatus*>(r->_tempObject);
-      if (!state) {
+      if (index == 0 && !state) {
         state = new UploadStatus();
         r->_tempObject = state;
         size_t total = r->contentLength();
@@ -759,61 +949,112 @@ void web_init() {
           meta["bytes"] = fs_updater_bytes_written();
           log_push(0, false, "SYS", "OTA_FS_DONE", &meta);
         }
-      }
-    }
-  );
+      } });
 
-  server.on("/calibrate", HTTP_POST, [](AsyncWebServerRequest *r){
-    // body handled below
-  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
-    DynamicJsonDocument doc(1024);
-    DeserializationError err = deserializeJson(doc, (char*)data, len);
+  server.on("/calibrate", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+              // body handled below
+            },
+            NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+    String *payload;
+    if (index == 0) {
+      payload = new String();
+      payload->reserve(total);
+      r->_tempObject = payload;
+    } else {
+      payload = reinterpret_cast<String*>(r->_tempObject);
+    }
+    if (!payload) {
+      r->send(500, "text/plain", "alloc fail");
+      return;
+    }
+    payload->concat(String(reinterpret_cast<char*>(data), len));
+    if (index + len < total) {
+      return;
+    }
+
+    DynamicJsonDocument doc(2048);
+    DeserializationError err = deserializeJson(doc, *payload);
+    delete payload;
+    r->_tempObject = nullptr;
     if (err) { r->send(400, "text/plain", "invalid json"); return; }
+
     float target = doc["targetRpm"] | 0;
     JsonArray samples = doc["measuredSamples"].as<JsonArray>();
     if (target <= 0 || samples.isNull() || samples.size() == 0) {
       r->send(400, "text/plain", "invalid data");
       return;
     }
-    float sum = 0;
-    for (JsonVariant v : samples) {
-      sum += v.as<float>();
-    }
-    float avg = sum / samples.size();
-    if (avg <= 0) {
-      r->send(400, "text/plain", "avg zero");
+
+    CalSampleStats stats = computeCalSampleStats(samples);
+    if (!stats.ok || stats.avg <= 0.0f) {
+      r->send(400, "text/plain", "invalid samples");
       return;
     }
-    float variance = 0;
-    for (JsonVariant v : samples) {
-      float diff = v.as<float>() - avg;
-      variance += diff * diff;
-    }
-    variance /= samples.size();
-    float stdDev = sqrtf(variance);
 
     QSConfig &cfg = const_cast<QSConfig&>(getConfig());
-    float newFactor = cfg.rpmScaleFactor * (target / avg);
+    const float oldFactor = cfg.rpmScaleFactor;
+    const float oldOffset = cfg.rpmOffset;
+    const float numerator = target - oldOffset;
+    const float denominator = stats.avg - oldOffset;
+    if (fabsf(denominator) < 1.0f) {
+      r->send(400, "text/plain", "sample too close to offset");
+      return;
+    }
+
+    float ratio = numerator / denominator;
+    float newFactor = oldFactor * ratio;
+    if (!isfinite(newFactor) || newFactor < 0.01f || newFactor > 20.0f) {
+      r->send(400, "text/plain", "new factor out of range");
+      return;
+    }
+
     cfg.rpmScaleFactor = newFactor;
     rpm_set_scale(newFactor);
-    rpm_set_offset(cfg.rpmOffset);
+    rpm_set_offset(oldOffset);
     saveConfig();
 
-    DynamicJsonDocument resp(256);
+    DynamicJsonDocument resp(512);
     resp["newFactor"] = newFactor;
-    resp["avgMeasured"] = avg;
-    resp["stdDev"] = stdDev;
-    resp["count"] = samples.size();
+    resp["oldFactor"] = oldFactor;
+    resp["avgMeasured"] = stats.avg;
+    resp["stdDev"] = stats.stdDev;
+    resp["count"] = stats.rawCount;
+    resp["usedCount"] = stats.usedCount;
+    resp["minUsed"] = stats.minVal;
+    resp["maxUsed"] = stats.maxVal;
     String out;
     serializeJson(resp, out);
-    r->send(200, "application/json", out);
-  });
+    r->send(200, "application/json", out); });
 
-  server.on("/calibrate/two-point", HTTP_POST, [](AsyncWebServerRequest *r){
-    // body handled below
-  }, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total){
-    DynamicJsonDocument doc(2048);
-    DeserializationError err = deserializeJson(doc, (char*)data, len);
+  server.on("/calibrate/two-point", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+              // body handled below
+            },
+            NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+    String *payload;
+    if (index == 0) {
+      payload = new String();
+      payload->reserve(total);
+      r->_tempObject = payload;
+    } else {
+      payload = reinterpret_cast<String*>(r->_tempObject);
+    }
+    if (!payload) {
+      r->send(500, "text/plain", "alloc fail");
+      return;
+    }
+    payload->concat(String(reinterpret_cast<char*>(data), len));
+    if (index + len < total) {
+      return;
+    }
+
+    DynamicJsonDocument doc(3072);
+    DeserializationError err = deserializeJson(doc, *payload);
+    delete payload;
+    r->_tempObject = nullptr;
     if (err) { r->send(400, "text/plain", "invalid json"); return; }
 
     float lowTarget = doc["lowTargetRpm"] | 0;
@@ -828,37 +1069,34 @@ void web_init() {
       return;
     }
 
-    auto calcAvg = [](JsonArray arr) -> float {
-      float sum = 0.0f;
-      for (JsonVariant v : arr) sum += v.as<float>();
-      return sum / arr.size();
-    };
+    CalSampleStats lowStats = computeCalSampleStats(lowSamples);
+    CalSampleStats highStats = computeCalSampleStats(highSamples);
+    if (!lowStats.ok || !highStats.ok || lowStats.avg <= 0.0f || highStats.avg <= 0.0f) {
+      r->send(400, "text/plain", "invalid samples");
+      return;
+    }
 
-    auto calcStd = [](JsonArray arr, float avg) -> float {
-      float variance = 0.0f;
-      for (JsonVariant v : arr) {
-        float d = v.as<float>() - avg;
-        variance += d * d;
-      }
-      variance /= arr.size();
-      return sqrtf(variance);
-    };
-
-    float lowAvg = calcAvg(lowSamples);
-    float highAvg = calcAvg(highSamples);
-    if (lowAvg <= 0 || highAvg <= 0 || fabsf(highAvg - lowAvg) < 1.0f) {
+    if (fabsf(highStats.avg - lowStats.avg) < 1.0f) {
       r->send(400, "text/plain", "invalid sample spread");
       return;
     }
 
-    float alpha = (highTarget - lowTarget) / (highAvg - lowAvg);
-    float beta = lowTarget - (alpha * lowAvg);
+    float alpha = (highTarget - lowTarget) / (highStats.avg - lowStats.avg);
+    float beta = lowTarget - (alpha * lowStats.avg);
+    if (!isfinite(alpha) || !isfinite(beta)) {
+      r->send(400, "text/plain", "invalid calibration result");
+      return;
+    }
 
     QSConfig &cfg = const_cast<QSConfig&>(getConfig());
     float oldScale = cfg.rpmScaleFactor;
     float oldOffset = cfg.rpmOffset;
     float newScale = alpha * oldScale;
     float newOffset = (alpha * oldOffset) + beta;
+    if (!isfinite(newScale) || !isfinite(newOffset) || newScale < 0.01f || newScale > 20.0f) {
+      r->send(400, "text/plain", "new scale/offset out of range");
+      return;
+    }
 
     cfg.rpmScaleFactor = newScale;
     cfg.rpmOffset = newOffset;
@@ -866,30 +1104,34 @@ void web_init() {
     rpm_set_offset(newOffset);
     saveConfig();
 
-    DynamicJsonDocument resp(768);
+    DynamicJsonDocument resp(1024);
     resp["newFactor"] = newScale;
     resp["newOffset"] = newOffset;
+    resp["oldFactor"] = oldScale;
+    resp["oldOffset"] = oldOffset;
     resp["alpha"] = alpha;
     resp["beta"] = beta;
-    resp["lowAvgMeasured"] = lowAvg;
-    resp["highAvgMeasured"] = highAvg;
-    resp["lowStdDev"] = calcStd(lowSamples, lowAvg);
-    resp["highStdDev"] = calcStd(highSamples, highAvg);
-    resp["lowCount"] = lowSamples.size();
-    resp["highCount"] = highSamples.size();
+    resp["lowAvgMeasured"] = lowStats.avg;
+    resp["highAvgMeasured"] = highStats.avg;
+    resp["lowStdDev"] = lowStats.stdDev;
+    resp["highStdDev"] = highStats.stdDev;
+    resp["lowCount"] = lowStats.rawCount;
+    resp["highCount"] = highStats.rawCount;
+    resp["lowUsedCount"] = lowStats.usedCount;
+    resp["highUsedCount"] = highStats.usedCount;
     String out;
     serializeJson(resp, out);
-    r->send(200, "application/json", out);
-  });
+    r->send(200, "application/json", out); });
 
   server.begin();
   log_set_callback(on_new_log);
-
 }
 
-void web_handle() {
+void web_handle()
+{
   unsigned long now = millis();
-  if (now - lastTelemetryMs >= 250) {
+  if (now - lastTelemetryMs >= 250)
+  {
     lastTelemetryMs = now;
     send_live_telemetry();
   }
