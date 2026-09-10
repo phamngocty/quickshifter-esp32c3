@@ -5,3 +5,4 @@
 
 void web_init();
 void web_handle();
+void web_send_limiter_sync(bool enabled);

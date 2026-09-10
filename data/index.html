@@ -208,123 +208,61 @@
             <input type="number" id="rpmOffset" min="-5000" max="5000" step="1" value="0">
           </label>
         </div>
-        <div id="backfireSection">
+        <div id="autoLimiterSection">
           <div class="bf-section-header">
-            <span class="icon">🔥</span>
-            <h3>Automatic Backfire</h3>
+            <span class="icon">⚡</span>
+            <h3>Auto RPM Limiter (Hard Cut)</h3>
           </div>
-          <p class="bf-section-desc">Tự động kích backfire khi quickshift ở RPM cao theo profile đã chọn</p>
+          <p class="bf-section-desc">Tự động ngắt lửa tuyệt đối (Fixed-Window Hard Cut) khi vượt vòng tua mục tiêu & hỗ trợ Double-Click cần số</p>
           
           <div class="toggle-row">
-            <span>Backfire assist <span class="tooltip-icon" title="Bật để tự động thêm thời gian cắt khi RPM cao tạo backfire">ⓘ</span></span>
-            <input type="checkbox" id="backfireMode" class="switch">
+            <span>Double-Click Cần Số <span class="tooltip-icon" title="Cho phép nhấp đúp cần số 2 lần trong 500ms để Bật/Tắt nhanh tính năng Limiter khi đang lái xe">ⓘ</span></span>
+            <input type="checkbox" id="allow_double_click" class="switch" checked>
           </div>
-          
-          <div id="autoBackfireFields" style="display:none">
+
+          <div class="toggle-row">
+            <span>Bật Auto RPM Limiter <span class="tooltip-icon" title="Bật/Tắt tính năng Auto RPM Limiter ngắt lửa tại chỗ">ⓘ</span></span>
+            <input type="checkbox" id="limiter_enable" class="switch">
+          </div>
+
+          <div id="autoLimiterFields" style="display:none">
+            <div style="padding:12px 14px;border-radius:12px;background:rgba(70,196,186,.08);border:1px solid rgba(70,196,186,.25);font-size:13px;line-height:1.6;margin-bottom:14px;color:var(--text)">
+              <div style="font-weight:700;color:var(--accent);margin-bottom:4px">💡 Hướng dẫn & Nguyên lý hoạt động Hard Cut:</div>
+              • <strong>Kích hoạt cắt:</strong> Khi tua máy RPM &ge; <span id="hintTargetRpm" style="font-weight:700;color:var(--danger)">7000</span> RPM, hệ thống ngắt lửa hoàn toàn trong <span id="hintCutMs" style="font-weight:700">30</span>ms.<br>
+              • <strong>Trả lửa hồi phục:</strong> Trả lửa bắt buộc trong <span id="hintSparkMs" style="font-weight:700">20</span>ms để buồng đốt đánh lửa lại trước khi đo tiếp.<br>
+              • <strong>Thoát cắt:</strong> Chỉ trở về Standby khi tua máy rớt dưới <span id="hintExitRpm" style="font-weight:700;color:var(--success)">6800</span> RPM (Target - Hysteresis).<br>
+              • <strong>Phân quyền ưu tiên:</strong> Quickshift đá số, Manual Backfire hoặc Khóa xe sẽ tự động ngắt Limiter để đảm bảo an toàn tuyệt đối.<br>
+              • <strong>Mẹo:</strong> Bật công tắc <em>Double-Click Cần Số</em> ở trên để nhấp đúp cần số (≤ 500ms) bật/tắt nhanh Limiter trực tiếp khi chạy xe.
+            </div>
+
             <label class="field">
-              Backfire profile <span class="tooltip-icon" title="Chọn thuật toán backfire: Basic=đơn giản, Staged=theo band RPM, Burst=combo nhiều lần, Blend=cắt IGN/INJ khác nhau, Decel=kích khi giảm ga">ⓘ</span>
-              <select id="backfireProfile">
-                <option value="0">Basic threshold</option>
-                <option value="1">Staged theo band</option>
-                <option value="2">Burst combo</option>
-                <option value="3">Blend dual-cut</option>
-                <option value="4">Decel IGN pops</option>
-              </select>
+              Target RPM (Vòng tua cắt) <span class="tooltip-icon" title="Vòng tua bắt đầu kích hoạt cắt lửa. V.d: 7000 RPM">ⓘ</span>
+              <input type="number" id="target_rpm" min="1000" max="20000" step="100" value="7000">
+              <small class="field-hint">Khi RPM ≥ Target RPM, hệ thống sẽ kích hoạt chu kỳ Hard Cut</small>
             </label>
-            
-            <div id="profileDescription" style="padding:10px 14px;border-radius:10px;background:rgba(70,196,186,.08);border:1px solid rgba(70,196,186,.2);font-size:13px;line-height:1.5;margin-bottom:12px;color:var(--text-dim)">
-              <strong style="color:var(--accent)">ℹ️ Basic:</strong> Cộng thêm cut time khi RPM ≥ threshold
-            </div>
-            
-            <div id="autoBackfireCommonFields">
-              <label class="field">
-                Backfire threshold (RPM) <span class="tooltip-icon" title="RPM tối thiểu để kích backfire, dưới ngưỡng này không cộng thêm cut time">ⓘ</span>
-                <input type="number" id="backfireRpmThreshold" min="0" max="20000" step="100" value="6000">
-                <small class="field-hint">Ví dụ: 6000 RPM - chỉ backfire khi RPM ≥ 6000</small>
-              </label>
-              
-              <label class="field bf-common-field">
-                Extra cut (ms) <span class="tooltip-icon" title="Thời gian cắt thêm (ms) để tạo backfire. Giá trị cao hơn = backfire mạnh hơn nhưng có thể gây giật">ⓘ</span>
-                <input type="number" id="backfireAddMs" min="0" max="100" step="1" value="10">
-                <small class="field-hint">10-20ms: nhẹ nhàng | 30-50ms: trung bình | 60+ms: mạnh (cẩn thận)</small>
-              </label>
-              
-              <label class="field bf-common-field" id="bfCooldownField">
-                Cooldown (ms) <span class="tooltip-icon" title="Thời gian chờ giữa các lần backfire để tránh cắt liên tục. Relay cơ nên ≥500ms">ⓘ</span>
-                <input type="number" id="backfireCooldownMs" min="0" max="5000" step="50" value="600">
-                <small class="field-hint">Relay cơ: ≥500ms | SSR: có thể thấp hơn</small>
-              </label>
-            </div>
-            
-            <div class="bf-field" data-profile="2" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
-              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">⚡ Burst Combo Settings</p>
-              
-              <label class="field">
-                Burst window (ms) <span class="tooltip-icon" title="Cửa sổ thời gian để đếm combo. Nếu quickshift nhiều lần trong window này sẽ tăng cut time">ⓘ</span>
-                <input type="number" id="backfireBurstWindowMs" min="0" max="5000" step="50" value="1200">
-                <small class="field-hint">1200ms = 1.2s - thời gian để xây dựng combo</small>
-              </label>
-              
-              <label class="field">
-                Burst bonus mỗi lần (+ms) <span class="tooltip-icon" title="Cộng thêm bao nhiêu ms cho mỗi shift trong combo">ⓘ</span>
-                <input type="number" id="backfireBurstExtraMs" min="0" max="50" step="1" value="4">
-                <small class="field-hint">Ví dụ: 4ms × 3 combo = +12ms extra cut</small>
-              </label>
-              
-              <label class="field">
-                Burst tối đa (combo) <span class="tooltip-icon" title="Số shift tối đa để tính combo. Vượt quá sẽ không tăng thêm">ⓘ</span>
-                <input type="number" id="backfireBurstMax" min="1" max="5" step="1" value="3">
-                <small class="field-hint">3 combo = shift 3 lần liên tiếp trong window</small>
-              </label>
-            </div>
-            
-            <div class="bf-field" data-profile="3" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
-              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">🔀 Blend Dual-Cut Settings</p>
-              
-              <label class="field">
-                Blend IGN +ms <span class="tooltip-icon" title="Cắt IGN thêm bao nhiêu ms so với INJ (để backfire mạnh hơn)">ⓘ</span>
-                <input type="number" id="backfireIgnExtraMs" min="0" max="50" step="1" value="6">
-                <small class="field-hint">IGN cắt lâu hơn INJ để tạo nhiều xăng chưa cháy</small>
-              </label>
-            </div>
-            
-            <div class="bf-field" data-profile="4" style="border-top:1px dashed var(--border);padding-top:14px;margin-top:8px">
-              <p style="color:var(--accent);font-weight:600;font-size:13px;margin:0 0 12px">📉 Decel IGN Pops Settings</p>
-              
-              <label class="field">
-                Decel high RPM <span class="tooltip-icon" title="RPM cao cần đạt trước khi giảm ga. Chỉ kích nếu RPM từng ở mức này">ⓘ</span>
-                <input type="number" id="backfireDecelHighRpm" min="0" max="20000" step="100" value="7000">
-                <small class="field-hint">Phát hiện giảm ga từ RPM cao (vd: 7000 → 5500)</small>
-              </label>
-              
-              <label class="field">
-                RPM drop cần (Δ rpm) <span class="tooltip-icon" title="RPM phải giảm ít nhất bao nhiêu để coi là giảm ga mạnh">ⓘ</span>
-                <input type="number" id="backfireDecelDropRpm" min="100" max="8000" step="50" value="1500">
-                <small class="field-hint">1500 RPM = chênh lệch cần để kích backfire</small>
-              </label>
-              
-              <label class="field">
-                Pulse IGN on (ms) <span class="tooltip-icon" title="Thời gian cắt IGN cho mỗi pulse (tạo 1 tiếng pop)">ⓘ</span>
-                <input type="number" id="backfireDecelPulseMs" min="5" max="200" step="1" value="35">
-                <small class="field-hint">35ms = 1 pulse ngắn, âm thanh sắc</small>
-              </label>
-              
-              <label class="field">
-                Pulse off (ms) <span class="tooltip-icon" title="Thời gian nghỉ giữa các pulse (để phân biệt tiếng pop)">ⓘ</span>
-                <input type="number" id="backfireDecelOffMs" min="0" max="500" step="5" value="45">
-                <small class="field-hint">45ms = khoảng cách giữa các tiếng pop</small>
-              </label>
-              
-              <label class="field">
-                Số pulse IGN <span class="tooltip-icon" title="Số lần chớp IGN (số tiếng pop khi giảm ga)">ⓘ</span>
-                <input type="number" id="backfireDecelPulseCount" min="1" max="8" step="1" value="3">
-                <small class="field-hint">3 pulse = pop-pop-pop (3 tiếng)</small>
-              </label>
-            </div>
+
+            <label class="field">
+              RPM Hysteresis (Biên độ trễ) <span class="tooltip-icon" title="Độ trễ thoát cắt. V.d: 200 RPM -> Vòng tua rớt dưới (Target - 200) mới thoát cắt để tránh giật cục">ⓘ</span>
+              <input type="number" id="rpm_hysteresis" min="10" max="2000" step="50" value="200">
+              <small class="field-hint">Ngưỡng thoát cắt: <span id="hintExitCalc" style="color:var(--accent);font-weight:600">7000 - 200 = 6800</span> RPM</small>
+            </label>
+
+            <label class="field">
+              Hard Cut Time (ms) <span class="tooltip-icon" title="Thời gian ngắt lửa tuyệt đối trong 1 chu kỳ. V.d: 30ms">ⓘ</span>
+              <input type="number" id="hard_cut_ms" min="5" max="500" step="1" value="30">
+              <small class="field-hint">Thời gian ngắt lửa (Opto HIGH). Khuyến nghị: 25 - 40ms</small>
+            </label>
+
+            <label class="field">
+              Recovery Spark Time (ms) <span class="tooltip-icon" title="Thời gian trả lửa bắt buộc trước khi kiểm tra lại RPM. V.d: 20ms">ⓘ</span>
+              <input type="number" id="recovery_spark_ms" min="5" max="500" step="1" value="20">
+              <small class="field-hint">Thời gian hồi phục đánh lửa (Opto LOW). Khuyến nghị: 15 - 30ms</small>
+            </label>
           </div>
           
           <hr class="bf-section-divider">
         </div>
+
         
         <div id="manualBackfireSection">
           <div class="bf-section-header">
@@ -698,20 +636,12 @@
           {label:"PPR", value:cfg.ppr},
           {label:"RPM scale factor", value:cfg.rpmScaleFactor},
           {label:"RPM offset", value:cfg.rpmOffset},
-          {label:"Backfire mode", value:formatBool(cfg.backfireMode)},
-          {label:"Backfire profile", value:formatBackfireProfile(cfg.backfireProfile)},
-          {label:"Backfire +ms", value:cfg.backfireAddMs},
-          {label:"Backfire RPM threshold", value:cfg.backfireRpmThreshold},
-          {label:"Backfire cooldown (ms)", value:cfg.backfireCooldownMs},
-          {label:"Burst window (ms)", value:cfg.backfireBurstWindowMs},
-          {label:"Burst bonus +ms", value:cfg.backfireBurstExtraMs},
-          {label:"Burst max combo", value:cfg.backfireBurstMax},
-          {label:"Blend IGN +ms", value:cfg.backfireIgnExtraMs},
-          {label:"Decel high rpm", value:cfg.backfireDecelHighRpm},
-          {label:"Decel drop rpm", value:cfg.backfireDecelDropRpm},
-          {label:"Decel pulse on (ms)", value:cfg.backfireDecelPulseMs},
-          {label:"Decel pulse off (ms)", value:cfg.backfireDecelOffMs},
-          {label:"Decel pulses", value:cfg.backfireDecelPulseCount},
+          {label:"Auto Limiter Bật/Tắt", value:formatBool(cfg.limiter_enable)},
+          {label:"Double-Click Cần Số", value:formatBool(cfg.allow_double_click)},
+          {label:"Target RPM (Vòng tua cắt)", value:cfg.target_rpm},
+          {label:"RPM Hysteresis (Biên trễ)", value:cfg.rpm_hysteresis},
+          {label:"Hard Cut Time (ms)", value:cfg.hard_cut_ms},
+          {label:"Recovery Spark Time (ms)", value:cfg.recovery_spark_ms},
           {label:"Manual Backfire", value:formatBool(cfg.manualBackfireEnabled)},
           {label:"Manual BF mode", value:formatManualBFMode(cfg.manualBackfireMode)},
           {label:"Manual BF hold (ms)", value:cfg.manualBackfireHoldMs},
@@ -746,14 +676,13 @@
             <td>#${idx+1}</td>
             <td>${entry.min} → ${entry.max} rpm</td>
             <td>${entry.cut} ms</td>
-            <td>${entry.bfEnabled && entry.bf ? `${entry.bf} ms` : "off"}</td>
           </tr>
         `).join("");
         return `
           <div class="config-section">
             <h3>Auto map</h3>
             <table>
-              <thead><tr><th>Band</th><th>Khoảng RPM</th><th>Cut</th><th>Backfire</th></tr></thead>
+              <thead><tr><th>Band</th><th>Khoảng RPM</th><th>Cut</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
@@ -761,64 +690,33 @@
       }
 
       function formatBool(val){ return val ? "true" : "false"; }
-      function formatBackfireProfile(val){
-        switch(Number(val)){
-          case 1: return "Staged";
-          case 2: return "Burst";
-          case 3: return "Blend";
-          case 4: return "Decel";
-          default: return "Basic";
-        }
-      }
       function formatValue(val){
         if (typeof val === "boolean") return formatBool(val);
         if (val === undefined || val === null || Number.isNaN(val)) return "-";
         return val;
       }
-      function updateBackfireVisibility(){
-        const enabled = $("backfireMode")?.checked || false;
-        const autoFields = $("autoBackfireFields");
-        if (autoFields) {
-          autoFields.style.display = enabled ? "block" : "none";
+
+      function updateAutoLimiterUi(){
+        const enabled = $("limiter_enable")?.checked || false;
+        const fieldsDiv = $("autoLimiterFields");
+        if (fieldsDiv) {
+          fieldsDiv.style.display = enabled ? "block" : "none";
         }
+        updateAutoLimiterHints();
       }
 
-      function updateBackfireProfileUi(){
-        const select = $("backfireProfile");
-        if (!select) return;
-        const profile = Number(select.value) || 0;
-        const profiles = ["Basic threshold","Staged theo band","Burst combo","Blend dual-cut","Decel IGN pops"];
-        const descs = [
-          "Cộng thêm cut time khi RPM ≥ threshold",
-          "Cộng thêm cut time dựa vào band RPM (chưa triển khai)",
-          "Combo nhiều shift: cộng cut time theo số lần shift liên tiếp",
-          "Blend IGN/INJ: cắt IGN lâu hơn INJ để tạo nhiều xăng",
-          "Giảm ga từ RPM cao: kích pulse IGN tạo tiếng pop"
-        ];
-        const desc = $("profileDescription");
-        if (desc) {
-          const emoji = ["ℹ️", "📊", "⚡", "🔀", "📉"][profile] || "ℹ️";
-          desc.innerHTML = `<strong style="color:var(--accent)">${emoji} ${profiles[profile]}:</strong> ${descs[profile]}`;
-        }
-        
-        // Ẩn/hiện Cooldown cho Decel profile
-        const cooldownField = $("bfCooldownField");
-        if (cooldownField) {
-          cooldownField.hidden = (profile === 4);
-        }
-        
-        // Ẩn/hiện tất cả profile-specific fields
-        document.querySelectorAll(".bf-field").forEach(el=>{
-          const profiles = (el.dataset.profile || "")
-            .split(",")
-            .map(token=>Number(token.trim()))
-            .filter(num=>Number.isFinite(num));
-          if (!profiles.length) {
-            el.hidden = false;
-            return;
-          }
-          el.hidden = !profiles.includes(profile);
-        });
+      function updateAutoLimiterHints(){
+        const target = Number($("target_rpm")?.value || 7000);
+        const hyst = Number($("rpm_hysteresis")?.value || 200);
+        const cut = Number($("hard_cut_ms")?.value || 30);
+        const spark = Number($("recovery_spark_ms")?.value || 20);
+        const exit = Math.max(0, target - hyst);
+
+        if ($("hintTargetRpm")) $("hintTargetRpm").textContent = target;
+        if ($("hintCutMs")) $("hintCutMs").textContent = cut;
+        if ($("hintSparkMs")) $("hintSparkMs").textContent = spark;
+        if ($("hintExitRpm")) $("hintExitRpm").textContent = exit;
+        if ($("hintExitCalc")) $("hintExitCalc").textContent = `${target} - ${hyst} = ${exit}`;
       }
 
       function updateManualBackfireUi(){
@@ -852,7 +750,6 @@
               status.style.color = "var(--warn)";
             } else {
               status.textContent = " ✅ An toàn";
-              status.style.color = "var(--success)";
             }
           }
         }
@@ -923,13 +820,16 @@
         $("testCutBtn").addEventListener("click", runTestCut);
         $("testRpmBtn").addEventListener("click", runTestRpm);
         $("stopRpmBtn").addEventListener("click", stopTestRpm);
-        $("backfireMode").addEventListener("change", ()=>{
-          updateBackfireVisibility();
+        $("limiter_enable").addEventListener("change", ()=>{
+          updateAutoLimiterUi();
           markDirty();
         });
-        $("backfireProfile").addEventListener("change", ()=>{
-          updateBackfireProfileUi();
-        });
+        $("allow_double_click").addEventListener("change", markDirty);
+        $("target_rpm").addEventListener("input", updateAutoLimiterHints);
+        $("rpm_hysteresis").addEventListener("input", updateAutoLimiterHints);
+        $("hard_cut_ms").addEventListener("input", updateAutoLimiterHints);
+        $("recovery_spark_ms").addEventListener("input", updateAutoLimiterHints);
+
         $("exportBtn").addEventListener("click", ()=>{
           logUiAction("UI_EXPORT");
           downloadConfig();
@@ -1392,38 +1292,19 @@
           const min = ensureNumber(entry.min, idx*1000);
           const max = ensureNumber(entry.max, idx*1000+999);
           const cut = ensureNumber(entry.cut, 50);
-          const bfVal = ensureNumber(entry.bf ?? entry.backfireAddMs, 0);
-          const bfEnabled = !!entry.bfEnabled && bfVal > 0;
-          return {min, max, cut, bf: bfVal, bfEnabled};
+          return {min, max, cut};
         });
         if (!cfg.autoMap.length){
           cfg.autoMap = getAutoMapPreset150cc();
         }
         normalizeAutoMapList(cfg.autoMap);
         if (typeof cfg.apPassword !== "string") cfg.apPassword = "";
-        cfg.backfireProfile = ensureNumber(cfg.backfireProfile, 0);
-        if (cfg.backfireProfile < 0 || cfg.backfireProfile > 4) cfg.backfireProfile = 0;
-        cfg.backfireCooldownMs = ensureNumber(cfg.backfireCooldownMs, 600);
-        cfg.backfireBurstWindowMs = ensureNumber(cfg.backfireBurstWindowMs, 1200);
-        cfg.backfireBurstExtraMs = ensureNumber(cfg.backfireBurstExtraMs, 4);
-        cfg.backfireBurstMax = ensureNumber(cfg.backfireBurstMax, 3);
-        if (cfg.backfireBurstMax < 1) cfg.backfireBurstMax = 1;
-        cfg.backfireIgnExtraMs = ensureNumber(cfg.backfireIgnExtraMs, 6);
-        cfg.backfireDecelHighRpm = ensureNumber(cfg.backfireDecelHighRpm, 7000);
-        if (cfg.backfireDecelHighRpm < 0) cfg.backfireDecelHighRpm = 0;
-        if (cfg.backfireDecelHighRpm > 20000) cfg.backfireDecelHighRpm = 20000;
-        cfg.backfireDecelDropRpm = ensureNumber(cfg.backfireDecelDropRpm, 1500);
-        if (cfg.backfireDecelDropRpm < 0) cfg.backfireDecelDropRpm = 0;
-        if (cfg.backfireDecelDropRpm > 8000) cfg.backfireDecelDropRpm = 8000;
-        cfg.backfireDecelPulseMs = ensureNumber(cfg.backfireDecelPulseMs, 35);
-        if (cfg.backfireDecelPulseMs < 5) cfg.backfireDecelPulseMs = 5;
-        if (cfg.backfireDecelPulseMs > 200) cfg.backfireDecelPulseMs = 200;
-        cfg.backfireDecelOffMs = ensureNumber(cfg.backfireDecelOffMs, 45);
-        if (cfg.backfireDecelOffMs < 0) cfg.backfireDecelOffMs = 0;
-        if (cfg.backfireDecelOffMs > 500) cfg.backfireDecelOffMs = 500;
-        cfg.backfireDecelPulseCount = ensureNumber(cfg.backfireDecelPulseCount, 3);
-        if (cfg.backfireDecelPulseCount < 1) cfg.backfireDecelPulseCount = 1;
-        if (cfg.backfireDecelPulseCount > 8) cfg.backfireDecelPulseCount = 8;
+        cfg.allow_double_click = cfg.allow_double_click !== false;
+        cfg.limiter_enable = !!cfg.limiter_enable;
+        cfg.target_rpm = ensureNumber(cfg.target_rpm, 7000);
+        cfg.rpm_hysteresis = ensureNumber(cfg.rpm_hysteresis, 200);
+        cfg.hard_cut_ms = ensureNumber(cfg.hard_cut_ms, 30);
+        cfg.recovery_spark_ms = ensureNumber(cfg.recovery_spark_ms, 20);
         cfg.rpmOffset = ensureNumber(cfg.rpmOffset, 0);
       }
 
@@ -1438,9 +1319,6 @@
           if (list[i].max <= list[i].min) list[i].max = list[i].min + 50;
           if (list[i].cut < 5) list[i].cut = 5;
           if (list[i].cut > 200) list[i].cut = 200;
-          const bfVal = ensureNumber(list[i].bf, 0);
-          list[i].bf = Math.max(0, Math.min(80, bfVal));
-          list[i].bfEnabled = !!list[i].bfEnabled && list[i].bf > 0;
         }
         if (list.length > MAX_MAP) list.length = MAX_MAP;
       }
@@ -1457,22 +1335,12 @@
         $("ppr").value = cfg.ppr ?? 1;
         $("rpmScaleFactor").value = cfg.rpmScaleFactor ?? 1;
         $("rpmOffset").value = cfg.rpmOffset ?? 0;
-        $("backfireMode").checked = !!cfg.backfireMode;
-        $("backfireProfile").value = cfg.backfireProfile ?? 0;
-        $("backfireRpmThreshold").value = cfg.backfireRpmThreshold ?? 6000;
-        $("backfireAddMs").value = cfg.backfireAddMs ?? 10;
-        $("backfireCooldownMs").value = cfg.backfireCooldownMs ?? 600;
-        $("backfireBurstWindowMs").value = cfg.backfireBurstWindowMs ?? 1200;
-        $("backfireBurstExtraMs").value = cfg.backfireBurstExtraMs ?? 4;
-        $("backfireBurstMax").value = cfg.backfireBurstMax ?? 3;
-        $("backfireIgnExtraMs").value = cfg.backfireIgnExtraMs ?? 6;
-        $("backfireDecelHighRpm").value = cfg.backfireDecelHighRpm ?? 7000;
-        $("backfireDecelDropRpm").value = cfg.backfireDecelDropRpm ?? 1500;
-        $("backfireDecelPulseMs").value = cfg.backfireDecelPulseMs ?? 35;
-        $("backfireDecelOffMs").value = cfg.backfireDecelOffMs ?? 45;
-        $("backfireDecelPulseCount").value = cfg.backfireDecelPulseCount ?? 3;
-        updateBackfireProfileUi();
-        updateBackfireVisibility();
+        $("limiter_enable").checked = !!cfg.limiter_enable;
+        $("allow_double_click").checked = cfg.allow_double_click !== false;
+        $("target_rpm").value = cfg.target_rpm ?? 7000;
+        $("rpm_hysteresis").value = cfg.rpm_hysteresis ?? 200;
+        $("hard_cut_ms").value = cfg.hard_cut_ms ?? 30;
+        $("recovery_spark_ms").value = cfg.recovery_spark_ms ?? 20;
         if ($("manualBackfireEnabled")) $("manualBackfireEnabled").checked = !!cfg.manualBackfireEnabled;
         if ($("manualBackfireMode")) $("manualBackfireMode").value = cfg.manualBackfireMode ?? 0;
         if ($("manualBackfireHoldMs")) $("manualBackfireHoldMs").value = cfg.manualBackfireHoldMs ?? 3000;
@@ -1482,6 +1350,7 @@
         if ($("manualPulseFireMs")) $("manualPulseFireMs").value = cfg.manualPulseFireMs ?? 50;
         if ($("manualPulseOffMs")) $("manualPulseOffMs").value = cfg.manualPulseOffMs ?? 200;
         if ($("manualPulseRepeat")) $("manualPulseRepeat").value = cfg.manualPulseRepeat ?? 3;
+        updateAutoLimiterUi();
         updateManualBackfireUi();
         updateManualPulseCycle();
         $("apTimeoutMs").value = cfg.apTimeoutMs ?? 120000;
@@ -1501,7 +1370,6 @@
         state.autoMap.forEach((entry, idx)=>{
           const row = document.createElement("div");
           row.className = "map-row";
-          const bfLabel = entry.bfEnabled && entry.bf ? ` | BF ${entry.bf} ms` : "";
           row.innerHTML = `
             <div class="map-row-top">
               <label class="field">Min RPM
@@ -1518,13 +1386,7 @@
             <label class="field">Band preview
               <input type="range" class="map-slider" data-idx="${idx}" min="5" max="200" value="${entry.cut}">
             </label>
-            <div class="map-label" data-label-idx="${idx}">${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfLabel}</div>
-            <div class="map-row-bottom" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-              <label class="field">Backfire +ms
-                <input type="number" data-idx="${idx}" data-field="bf" value="${entry.bf ?? 0}" min="0" max="80">
-              </label>
-              <div class="toggle-row compact"><span>Kích backfire cho band</span><input type="checkbox" data-idx="${idx}" data-field="bfEnabled" class="switch" ${entry.bfEnabled ? "checked" : ""}></div>
-            </div>
+            <div class="map-label" data-label-idx="${idx}">${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms</div>
           `;
           container.appendChild(row);
         });
@@ -1563,7 +1425,6 @@
         } else {
           value = Number(evt.target.value);
           if (!Number.isFinite(value)) return;
-          if (field === "bf" && value < 0) value = 0;
         }
         state.autoMap[idx][field] = value;
         logUiAction("UI_MAP_FIELD", {index: idx, field, value});
@@ -1585,8 +1446,7 @@
           if (cutInput) cutInput.value = String(entry.cut);
           const label = row.querySelector('div.map-label[data-label-idx="' + idx + '"]');
           if (label) {
-            const bfText = entry.bfEnabled && entry.bf ? ` | BF ${entry.bf} ms` : "";
-            label.textContent = `${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms${bfText}`;
+            label.textContent = `${entry.min} RPM → ${entry.max} RPM | ${entry.cut} ms`;
           }
         }
         markDirty();
@@ -1606,7 +1466,7 @@
         }
         const last = state.autoMap[state.autoMap.length-1];
         const start = last ? last.max + 1 : 0;
-        const entry = {min:start,max:start+999,cut:last?last.cut:50,bf:0,bfEnabled:false};
+        const entry = {min:start,max:start+999,cut:last?last.cut:50};
         state.autoMap.push(entry);
         logUiAction("UI_MAP_ADD", {index: state.autoMap.length-1, min: entry.min, max: entry.max, cut: entry.cut});
         normalizeAutoMapList(state.autoMap);
@@ -1615,31 +1475,31 @@
 
       function getAutoMapPreset150cc(){
         return [
-          {min:4000,max:4999,cut:106,bf:0,bfEnabled:false},
-          {min:5000,max:5999,cut:94,bf:0,bfEnabled:false},
-          {min:6000,max:6999,cut:89,bf:0,bfEnabled:false},
-          {min:7000,max:7999,cut:80,bf:0,bfEnabled:false},
-          {min:8000,max:8999,cut:72,bf:0,bfEnabled:false},
-          {min:9000,max:9999,cut:69,bf:0,bfEnabled:false},
-          {min:10000,max:10999,cut:66,bf:0,bfEnabled:false},
-          {min:11000,max:12500,cut:57,bf:0,bfEnabled:false}
+          {min:4000,max:4999,cut:106},
+          {min:5000,max:5999,cut:94},
+          {min:6000,max:6999,cut:89},
+          {min:7000,max:7999,cut:80},
+          {min:8000,max:8999,cut:72},
+          {min:9000,max:9999,cut:69},
+          {min:10000,max:10999,cut:66},
+          {min:11000,max:12500,cut:57}
         ];
       }
 
       function getAutoMapPreset150ccDetailed(){
         return [
-          {min:3000,max:3999,cut:115,bf:0,bfEnabled:false},
-          {min:4000,max:4999,cut:106,bf:0,bfEnabled:false},
-          {min:5000,max:5999,cut:94,bf:0,bfEnabled:false},
-          {min:6000,max:6999,cut:89,bf:0,bfEnabled:false},
-          {min:7000,max:7999,cut:80,bf:0,bfEnabled:false},
-          {min:8000,max:8999,cut:72,bf:0,bfEnabled:false},
-          {min:9000,max:9999,cut:69,bf:0,bfEnabled:false},
-          {min:10000,max:10999,cut:66,bf:0,bfEnabled:false},
-          {min:11000,max:11999,cut:58,bf:0,bfEnabled:false},
-          {min:12000,max:12999,cut:55,bf:0,bfEnabled:false},
-          {min:13000,max:13999,cut:50,bf:0,bfEnabled:false},
-          {min:14000,max:14999,cut:50,bf:0,bfEnabled:false}
+          {min:3000,max:3999,cut:115},
+          {min:4000,max:4999,cut:106},
+          {min:5000,max:5999,cut:94},
+          {min:6000,max:6999,cut:89},
+          {min:7000,max:7999,cut:80},
+          {min:8000,max:8999,cut:72},
+          {min:9000,max:9999,cut:69},
+          {min:10000,max:10999,cut:66},
+          {min:11000,max:11999,cut:58},
+          {min:12000,max:12999,cut:55},
+          {min:13000,max:13999,cut:50},
+          {min:14000,max:14999,cut:50}
         ];
       }
 
@@ -1654,20 +1514,12 @@
         $("cutIgnEnabled").checked = true;
         $("cutInjEnabled").checked = false;
 
-        $("backfireMode").checked = false;
-        $("backfireProfile").value = 0;
-        $("backfireAddMs").value = 10;
-        $("backfireRpmThreshold").value = 6000;
-        $("backfireCooldownMs").value = 600;
-        $("backfireBurstWindowMs").value = 1200;
-        $("backfireBurstExtraMs").value = 4;
-        $("backfireBurstMax").value = 3;
-        $("backfireIgnExtraMs").value = 6;
-        $("backfireDecelHighRpm").value = 7000;
-        $("backfireDecelDropRpm").value = 1500;
-        $("backfireDecelPulseMs").value = 35;
-        $("backfireDecelOffMs").value = 45;
-        $("backfireDecelPulseCount").value = 3;
+        $("limiter_enable").checked = false;
+        $("allow_double_click").checked = true;
+        $("target_rpm").value = 7000;
+        $("rpm_hysteresis").value = 200;
+        $("hard_cut_ms").value = 30;
+        $("recovery_spark_ms").value = 20;
 
         $("manualBackfireEnabled").checked = true;
         $("manualBackfireMode").value = 1;
@@ -1679,8 +1531,7 @@
         $("manualPulseOffMs").value = 200;
         $("manualPulseRepeat").value = 3;
 
-        updateBackfireProfileUi();
-        updateBackfireVisibility();
+        updateAutoLimiterUi();
         updateManualBackfireUi();
         updateManualPulseCycle();
         updateCutHint();
@@ -1729,20 +1580,12 @@
           ppr: parseFloat($("ppr").value) || 1,
           rpmScaleFactor: parseFloat($("rpmScaleFactor").value) || 1,
           rpmOffset: parseFloat($("rpmOffset").value) || 0,
-          backfireMode: $("backfireMode").checked,
-          backfireProfile: parseInt($("backfireProfile").value,10) || 0,
-          backfireRpmThreshold: parseInt($("backfireRpmThreshold").value,10) || 0,
-          backfireAddMs: parseInt($("backfireAddMs").value,10) || 0,
-          backfireCooldownMs: parseInt($("backfireCooldownMs").value,10) || 0,
-          backfireBurstWindowMs: parseInt($("backfireBurstWindowMs").value,10) || 0,
-          backfireBurstExtraMs: parseInt($("backfireBurstExtraMs").value,10) || 0,
-          backfireBurstMax: parseInt($("backfireBurstMax").value,10) || 0,
-          backfireIgnExtraMs: parseInt($("backfireIgnExtraMs").value,10) || 0,
-          backfireDecelHighRpm: parseInt($("backfireDecelHighRpm").value,10) || 0,
-          backfireDecelDropRpm: parseInt($("backfireDecelDropRpm").value,10) || 0,
-          backfireDecelPulseMs: parseInt($("backfireDecelPulseMs").value,10) || 0,
-          backfireDecelOffMs: parseInt($("backfireDecelOffMs").value,10) || 0,
-          backfireDecelPulseCount: parseInt($("backfireDecelPulseCount").value,10) || 0,
+          allow_double_click: $("allow_double_click").checked,
+          limiter_enable: $("limiter_enable").checked,
+          target_rpm: parseInt($("target_rpm").value,10) || 7000,
+          rpm_hysteresis: parseInt($("rpm_hysteresis").value,10) || 200,
+          hard_cut_ms: parseInt($("hard_cut_ms").value,10) || 30,
+          recovery_spark_ms: parseInt($("recovery_spark_ms").value,10) || 20,
           manualBackfireEnabled: $("manualBackfireEnabled")?.checked || false,
           manualBackfireMode: parseInt($("manualBackfireMode")?.value,10) || 0,
           manualBackfireHoldMs: parseInt($("manualBackfireHoldMs")?.value,10) || 3000,
@@ -1757,6 +1600,7 @@
           autoMap: state.autoMap.map(entry=>({...entry}))
         };
       }
+
 
       async function saveConfig(){
         const btn = $("saveBtn");
@@ -2079,6 +1923,19 @@
       }
 
       function handleTelemetry(entry){
+        if (entry.limiter !== undefined) {
+          const limiterSwitch = $("limiter_enable");
+          if (limiterSwitch && !dirty) {
+            limiterSwitch.checked = !!entry.limiter;
+            updateAutoLimiterUi();
+          }
+        }
+        if (entry.allowDoubleClick !== undefined) {
+          const dblSwitch = $("allow_double_click");
+          if (dblSwitch && !dirty) {
+            dblSwitch.checked = !!entry.allowDoubleClick;
+          }
+        }
         applyLiveMetrics({
           rpm: entry.rpm,
           rpmRaw: entry.rpmRaw,
@@ -2136,8 +1993,7 @@
           $("bucketMeta").textContent = "Band: ngoài map";
           return;
         }
-        const bfText = band.bfEnabled && band.bf ? ` | BF ${band.bf} ms` : "";
-        $("bucketMeta").textContent = `Band: ${band.min}-${band.max} rpm (${band.cut} ms${bfText})`;
+        $("bucketMeta").textContent = `Band: ${band.min}-${band.max} rpm (${band.cut} ms)`;
       }
 
       function renderLogs(){

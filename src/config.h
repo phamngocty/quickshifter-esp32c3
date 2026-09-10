@@ -3,21 +3,21 @@
 
 static const size_t MAX_AUTO_MAP = 12;
 
-enum BackfireProfile : uint8_t {
-  BACKFIRE_PROFILE_BASIC = 0,
-  BACKFIRE_PROFILE_STAGED = 1,
-  BACKFIRE_PROFILE_BURST = 2,
-  BACKFIRE_PROFILE_BLEND = 3,
-  BACKFIRE_PROFILE_DECEL = 4
-};
-
 struct AutoMapEntry {
   int rpmMin;
   int rpmMax;
   int cutMs;
-  int backfireAddMs;
-  bool backfireEnabled;
 };
+
+// --- Giao diện Web UI & Auto RPM Limiter Global Variables ---
+extern bool allow_double_click; 
+extern bool limiter_enable;     
+
+// --- Thông số thuật toán Hard Cut ---
+extern int target_rpm;          // V.d: 7000
+extern int rpm_hysteresis;      // V.d: 200 (Thoát khi rớt dưới 6800)
+extern unsigned long hard_cut_ms;       // Thời gian ngắt lửa (V.d: 30ms)
+extern unsigned long recovery_spark_ms; // Thời gian trả lửa (V.d: 20ms)
 
 struct QSConfig {
   bool shiftActiveLow;
@@ -34,20 +34,13 @@ struct QSConfig {
   uint8_t autoMapCount;
   AutoMapEntry autoMap[MAX_AUTO_MAP];
 
-  bool backfireMode;
-  uint8_t backfireProfile;
-  int backfireAddMs;
-  int backfireRpmThreshold;
-  int backfireCooldownMs;
-  int backfireBurstWindowMs;
-  uint8_t backfireBurstMax;
-  int backfireBurstExtraMs;
-  int backfireIgnExtraMs;
-  int backfireDecelHighRpm;
-  int backfireDecelDropRpm;
-  int backfireDecelPulseMs;
-  int backfireDecelOffMs;
-  uint8_t backfireDecelPulseCount;
+  // Auto RPM Limiter Config
+  bool allow_double_click;
+  bool limiter_enable;
+  int target_rpm;
+  int rpm_hysteresis;
+  unsigned long hard_cut_ms;
+  unsigned long recovery_spark_ms;
 
   int apTimeoutMs;
   char apPassword[65];
@@ -69,9 +62,11 @@ struct QSConfig {
 };
 
 const QSConfig &getConfig();
+QSConfig &getMutableConfig();
 bool loadConfig();
 bool saveConfig();
 bool ensureDefaultConfig();
 int config_resolve_cut_ms(int rpm);
 void config_normalize_auto_map();
 const AutoMapEntry *config_find_auto_map_entry(int rpm, uint8_t *outIndex = nullptr);
+

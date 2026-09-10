@@ -10,6 +10,14 @@ static const int DEFAULT_BUCKET_WIDTH = 1000;
 static const uint8_t DEFAULT_AUTO_MAP_COUNT = 8;
 static const size_t CONFIG_JSON_CAPACITY = 8192;
 
+// --- Global Auto RPM Limiter Configuration Variables ---
+bool allow_double_click = true; 
+bool limiter_enable = false;     
+int target_rpm = 7000;          
+int rpm_hysteresis = 200;      
+unsigned long hard_cut_ms = 30;       
+unsigned long recovery_spark_ms = 20; 
+
 static bool ensureFsMounted() {
   static bool mounted = false;
   if (!mounted) {
@@ -28,8 +36,6 @@ static void setDefaultAutoMap() {
     cfg.autoMap[i].rpmMin = mins[i];
     cfg.autoMap[i].rpmMax = maxs[i];
     cfg.autoMap[i].cutMs = defaults[i];
-    cfg.autoMap[i].backfireAddMs = 0;
-    cfg.autoMap[i].backfireEnabled = false;
   }
 }
 
@@ -48,9 +54,6 @@ void config_normalize_auto_map() {
     if (entry.rpmMax < entry.rpmMin + 50) entry.rpmMax = entry.rpmMin + 50;
     if (entry.cutMs < 5) entry.cutMs = 5;
     if (entry.cutMs > 200) entry.cutMs = 200;
-    if (entry.backfireAddMs < 0) entry.backfireAddMs = 0;
-    if (entry.backfireAddMs > 80) entry.backfireAddMs = 80;
-    entry.backfireEnabled = entry.backfireAddMs > 0 ? entry.backfireEnabled : false;
   }
 
   // ensure ordering and no gaps reversal
@@ -71,6 +74,10 @@ const QSConfig &getConfig() {
   return cfg;
 }
 
+QSConfig &getMutableConfig() {
+  return cfg;
+}
+
 void setDefaults() {
   cfg.shiftActiveLow = true;
   cfg.shiftDebounceMs = 30;
@@ -85,20 +92,21 @@ void setDefaults() {
   cfg.cutTimeFixed = 90;
   setDefaultAutoMap();
 
-  cfg.backfireMode = false;
-  cfg.backfireProfile = BACKFIRE_PROFILE_BASIC;
-  cfg.backfireAddMs = 10;
-  cfg.backfireRpmThreshold = 6000;
-  cfg.backfireCooldownMs = 600;
-  cfg.backfireBurstWindowMs = 1200;
-  cfg.backfireBurstMax = 3;
-  cfg.backfireBurstExtraMs = 4;
-  cfg.backfireIgnExtraMs = 6;
-  cfg.backfireDecelHighRpm = 7000;
-  cfg.backfireDecelDropRpm = 1500;
-  cfg.backfireDecelPulseMs = 35;
-  cfg.backfireDecelOffMs = 45;
-  cfg.backfireDecelPulseCount = 3;
+  // Auto RPM Limiter Defaults
+  cfg.allow_double_click = true;
+  cfg.limiter_enable = false;
+  cfg.target_rpm = 7000;
+  cfg.rpm_hysteresis = 200;
+  cfg.hard_cut_ms = 30;
+  cfg.recovery_spark_ms = 20;
+
+  // Sync globals
+  allow_double_click = cfg.allow_double_click;
+  limiter_enable = cfg.limiter_enable;
+  target_rpm = cfg.target_rpm;
+  rpm_hysteresis = cfg.rpm_hysteresis;
+  hard_cut_ms = cfg.hard_cut_ms;
+  recovery_spark_ms = cfg.recovery_spark_ms;
 
   cfg.apTimeoutMs = 120000;
   cfg.apPassword[0] = '\0';
@@ -153,14 +161,10 @@ static void loadAutoMapFromJson(JsonVariant variant) {
       entry.rpmMin = o["min"] | ((cfg.autoMapCount - 1) * DEFAULT_BUCKET_WIDTH);
       entry.rpmMax = o["max"] | (entry.rpmMin + DEFAULT_BUCKET_WIDTH - 1);
       entry.cutMs = o["cut"] | 50;
-      entry.backfireAddMs = o["bf"] | 0;
-      entry.backfireEnabled = o.containsKey("bfEnabled") ? o["bfEnabled"].as<bool>() : entry.backfireAddMs > 0;
     } else {
       entry.rpmMin = (cfg.autoMapCount - 1) * DEFAULT_BUCKET_WIDTH;
       entry.rpmMax = entry.rpmMin + DEFAULT_BUCKET_WIDTH - 1;
       entry.cutMs = item.as<int>();
-      entry.backfireAddMs = 0;
-      entry.backfireEnabled = false;
     }
   }
 }
@@ -197,20 +201,33 @@ bool loadConfig() {
   cfg.rpmOffset = doc["rpmOffset"] | cfg.rpmOffset;
   cfg.modeAuto = doc["modeAuto"] | true;
   cfg.cutTimeFixed = doc["cutTimeFixed"] | cfg.cutTimeFixed;
-  cfg.backfireMode = doc["backfireMode"] | false;
-  cfg.backfireProfile = doc["backfireProfile"] | BACKFIRE_PROFILE_BASIC;
-  cfg.backfireAddMs = doc["backfireAddMs"] | 10;
-  cfg.backfireRpmThreshold = doc["backfireRpmThreshold"] | 6000;
-  cfg.backfireCooldownMs = doc["backfireCooldownMs"] | 600;
-  cfg.backfireBurstWindowMs = doc["backfireBurstWindowMs"] | 1200;
-  cfg.backfireBurstMax = doc["backfireBurstMax"] | 3;
-  cfg.backfireBurstExtraMs = doc["backfireBurstExtraMs"] | 4;
-  cfg.backfireIgnExtraMs = doc["backfireIgnExtraMs"] | 6;
-  cfg.backfireDecelHighRpm = doc["backfireDecelHighRpm"] | 7000;
-  cfg.backfireDecelDropRpm = doc["backfireDecelDropRpm"] | 1500;
-  cfg.backfireDecelPulseMs = doc["backfireDecelPulseMs"] | 35;
-  cfg.backfireDecelOffMs = doc["backfireDecelOffMs"] | 45;
-  cfg.backfireDecelPulseCount = doc["backfireDecelPulseCount"] | 3;
+  
+  // Auto RPM Limiter load
+  cfg.allow_double_click = doc.containsKey("allow_double_click") ? doc["allow_double_click"].as<bool>() : true;
+  cfg.limiter_enable = doc.containsKey("limiter_enable") ? doc["limiter_enable"].as<bool>() : false;
+  cfg.target_rpm = doc["target_rpm"] | 7000;
+  cfg.rpm_hysteresis = doc["rpm_hysteresis"] | 200;
+  cfg.hard_cut_ms = doc["hard_cut_ms"] | 30UL;
+  cfg.recovery_spark_ms = doc["recovery_spark_ms"] | 20UL;
+
+  // Validation
+  if (cfg.target_rpm < 1000) cfg.target_rpm = 1000;
+  if (cfg.target_rpm > 20000) cfg.target_rpm = 20000;
+  if (cfg.rpm_hysteresis < 10) cfg.rpm_hysteresis = 10;
+  if (cfg.rpm_hysteresis > 2000) cfg.rpm_hysteresis = 2000;
+  if (cfg.hard_cut_ms < 5) cfg.hard_cut_ms = 5;
+  if (cfg.hard_cut_ms > 500) cfg.hard_cut_ms = 500;
+  if (cfg.recovery_spark_ms < 5) cfg.recovery_spark_ms = 5;
+  if (cfg.recovery_spark_ms > 500) cfg.recovery_spark_ms = 500;
+
+  // Sync to globals
+  allow_double_click = cfg.allow_double_click;
+  limiter_enable = cfg.limiter_enable;
+  target_rpm = cfg.target_rpm;
+  rpm_hysteresis = cfg.rpm_hysteresis;
+  hard_cut_ms = cfg.hard_cut_ms;
+  recovery_spark_ms = cfg.recovery_spark_ms;
+
   cfg.apTimeoutMs = doc["apTimeoutMs"] | 120000;
   const char *apPassRaw = doc["apPassword"] | "";
   String apPassStr = apPassRaw;
@@ -249,23 +266,6 @@ bool loadConfig() {
   if (cfg.manualPulseRepeat == 0) cfg.manualPulseRepeat = 1;
   if (cfg.manualPulseRepeat > 20) cfg.manualPulseRepeat = 20;
 
-  if (cfg.backfireProfile > BACKFIRE_PROFILE_DECEL) cfg.backfireProfile = BACKFIRE_PROFILE_BASIC;
-  if (cfg.backfireCooldownMs < 0) cfg.backfireCooldownMs = 0;
-  if (cfg.backfireBurstWindowMs < 0) cfg.backfireBurstWindowMs = 0;
-  if (cfg.backfireBurstMax == 0) cfg.backfireBurstMax = 1;
-  if (cfg.backfireBurstExtraMs < 0) cfg.backfireBurstExtraMs = 0;
-  if (cfg.backfireIgnExtraMs < 0) cfg.backfireIgnExtraMs = 0;
-  if (cfg.backfireDecelHighRpm < 0) cfg.backfireDecelHighRpm = 0;
-  if (cfg.backfireDecelHighRpm > 20000) cfg.backfireDecelHighRpm = 20000;
-  if (cfg.backfireDecelDropRpm < 0) cfg.backfireDecelDropRpm = 0;
-  if (cfg.backfireDecelDropRpm > 8000) cfg.backfireDecelDropRpm = 8000;
-  if (cfg.backfireDecelPulseMs < 5) cfg.backfireDecelPulseMs = 5;
-  if (cfg.backfireDecelPulseMs > 200) cfg.backfireDecelPulseMs = 200;
-  if (cfg.backfireDecelOffMs < 0) cfg.backfireDecelOffMs = 0;
-  if (cfg.backfireDecelOffMs > 500) cfg.backfireDecelOffMs = 500;
-  if (cfg.backfireDecelPulseCount == 0) cfg.backfireDecelPulseCount = 1;
-  if (cfg.backfireDecelPulseCount > 8) cfg.backfireDecelPulseCount = 8;
-
   JsonVariant mapVariant = doc["autoMap"];
   if (!mapVariant.isNull()) {
     loadAutoMapFromJson(mapVariant);
@@ -286,6 +286,14 @@ bool saveConfig() {
   File f = LittleFS.open(CONFIG_TMP_PATH, "w");
   if (!f) return false;
 
+  // Sync globals to cfg
+  cfg.allow_double_click = allow_double_click;
+  cfg.limiter_enable = limiter_enable;
+  cfg.target_rpm = target_rpm;
+  cfg.rpm_hysteresis = rpm_hysteresis;
+  cfg.hard_cut_ms = hard_cut_ms;
+  cfg.recovery_spark_ms = recovery_spark_ms;
+
   DynamicJsonDocument doc(CONFIG_JSON_CAPACITY);
   doc["shiftActiveLow"] = cfg.shiftActiveLow;
   doc["shiftDebounceMs"] = cfg.shiftDebounceMs;
@@ -301,23 +309,16 @@ bool saveConfig() {
     obj["min"] = cfg.autoMap[i].rpmMin;
     obj["max"] = cfg.autoMap[i].rpmMax;
     obj["cut"] = cfg.autoMap[i].cutMs;
-    obj["bf"] = cfg.autoMap[i].backfireAddMs;
-    obj["bfEnabled"] = cfg.autoMap[i].backfireEnabled;
   }
-  doc["backfireMode"] = cfg.backfireMode;
-  doc["backfireProfile"] = cfg.backfireProfile;
-  doc["backfireAddMs"] = cfg.backfireAddMs;
-  doc["backfireRpmThreshold"] = cfg.backfireRpmThreshold;
-  doc["backfireCooldownMs"] = cfg.backfireCooldownMs;
-  doc["backfireBurstWindowMs"] = cfg.backfireBurstWindowMs;
-  doc["backfireBurstMax"] = cfg.backfireBurstMax;
-  doc["backfireBurstExtraMs"] = cfg.backfireBurstExtraMs;
-  doc["backfireIgnExtraMs"] = cfg.backfireIgnExtraMs;
-  doc["backfireDecelHighRpm"] = cfg.backfireDecelHighRpm;
-  doc["backfireDecelDropRpm"] = cfg.backfireDecelDropRpm;
-  doc["backfireDecelPulseMs"] = cfg.backfireDecelPulseMs;
-  doc["backfireDecelOffMs"] = cfg.backfireDecelOffMs;
-  doc["backfireDecelPulseCount"] = cfg.backfireDecelPulseCount;
+  
+  // Auto RPM Limiter save
+  doc["allow_double_click"] = cfg.allow_double_click;
+  doc["limiter_enable"] = cfg.limiter_enable;
+  doc["target_rpm"] = cfg.target_rpm;
+  doc["rpm_hysteresis"] = cfg.rpm_hysteresis;
+  doc["hard_cut_ms"] = cfg.hard_cut_ms;
+  doc["recovery_spark_ms"] = cfg.recovery_spark_ms;
+
   doc["apTimeoutMs"] = cfg.apTimeoutMs;
   doc["apPassword"] = cfg.apPassword;
   doc["minRpm"] = cfg.minRpm;
@@ -389,3 +390,4 @@ const AutoMapEntry *config_find_auto_map_entry(int rpm, uint8_t *outIndex) {
   }
   return nullptr;
 }
+

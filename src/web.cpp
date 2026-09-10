@@ -131,6 +131,16 @@ void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfg
   events.send(out.c_str(), "log", millis());
 }
 
+void web_send_limiter_sync(bool enabled)
+{
+  DynamicJsonDocument doc(128);
+  doc["type"] = "limiter_sync";
+  doc["limiter_enable"] = enabled;
+  String out;
+  serializeJson(doc, out);
+  events.send(out.c_str(), "telemetry", millis());
+}
+
 static void send_live_telemetry()
 {
   DynamicJsonDocument doc(256);
@@ -140,6 +150,8 @@ static void send_live_telemetry()
   doc["cut"] = cut_is_active();
   doc["shift"] = shift_is_pressed() ? "PRESSED" : "RELEASED";
   doc["lock"] = lock_is_engaged() ? "LOCKED" : (lock_is_enabled() ? "ARMED" : "OFF");
+  doc["limiter"] = limiter_enable;
+  doc["allowDoubleClick"] = allow_double_click;
   String out;
   serializeJson(doc, out);
   events.send(out.c_str(), "telemetry", millis());
@@ -216,8 +228,6 @@ static void writeAutoMapJson(const QSConfig &c, JsonArray arr)
     o["min"] = c.autoMap[i].rpmMin;
     o["max"] = c.autoMap[i].rpmMax;
     o["cut"] = c.autoMap[i].cutMs;
-    o["bf"] = c.autoMap[i].backfireAddMs;
-    o["bfEnabled"] = c.autoMap[i].backfireEnabled;
   }
 }
 
@@ -231,20 +241,15 @@ static void writeConfigJson(const QSConfig &c, JsonObject obj)
   obj["rpmOffset"] = c.rpmOffset;
   obj["modeAuto"] = c.modeAuto;
   obj["cutTimeFixed"] = c.cutTimeFixed;
-  obj["backfireMode"] = c.backfireMode;
-  obj["backfireProfile"] = c.backfireProfile;
-  obj["backfireAddMs"] = c.backfireAddMs;
-  obj["backfireRpmThreshold"] = c.backfireRpmThreshold;
-  obj["backfireCooldownMs"] = c.backfireCooldownMs;
-  obj["backfireBurstWindowMs"] = c.backfireBurstWindowMs;
-  obj["backfireBurstMax"] = c.backfireBurstMax;
-  obj["backfireBurstExtraMs"] = c.backfireBurstExtraMs;
-  obj["backfireIgnExtraMs"] = c.backfireIgnExtraMs;
-  obj["backfireDecelHighRpm"] = c.backfireDecelHighRpm;
-  obj["backfireDecelDropRpm"] = c.backfireDecelDropRpm;
-  obj["backfireDecelPulseMs"] = c.backfireDecelPulseMs;
-  obj["backfireDecelOffMs"] = c.backfireDecelOffMs;
-  obj["backfireDecelPulseCount"] = c.backfireDecelPulseCount;
+  
+  // Auto RPM Limiter JSON
+  obj["allow_double_click"] = c.allow_double_click;
+  obj["limiter_enable"] = c.limiter_enable;
+  obj["target_rpm"] = c.target_rpm;
+  obj["rpm_hysteresis"] = c.rpm_hysteresis;
+  obj["hard_cut_ms"] = c.hard_cut_ms;
+  obj["recovery_spark_ms"] = c.recovery_spark_ms;
+
   obj["apTimeoutMs"] = c.apTimeoutMs;
   obj["apPassword"] = c.apPassword;
   obj["minRpm"] = c.minRpm;
@@ -272,8 +277,7 @@ static bool autoMapEquals(const QSConfig &a, const QSConfig &b)
   {
     const AutoMapEntry &ea = a.autoMap[i];
     const AutoMapEntry &eb = b.autoMap[i];
-    if (ea.rpmMin != eb.rpmMin || ea.rpmMax != eb.rpmMax || ea.cutMs != eb.cutMs ||
-        ea.backfireAddMs != eb.backfireAddMs || ea.backfireEnabled != eb.backfireEnabled)
+    if (ea.rpmMin != eb.rpmMin || ea.rpmMax != eb.rpmMax || ea.cutMs != eb.cutMs)
     {
       return false;
     }
@@ -307,34 +311,18 @@ static void collectConfigChanges(const QSConfig &before, const QSConfig &after, 
     EMIT_CHANGE(modeAuto);
   if (before.cutTimeFixed != after.cutTimeFixed)
     EMIT_CHANGE(cutTimeFixed);
-  if (before.backfireMode != after.backfireMode)
-    EMIT_CHANGE(backfireMode);
-  if (before.backfireProfile != after.backfireProfile)
-    EMIT_CHANGE(backfireProfile);
-  if (before.backfireAddMs != after.backfireAddMs)
-    EMIT_CHANGE(backfireAddMs);
-  if (before.backfireRpmThreshold != after.backfireRpmThreshold)
-    EMIT_CHANGE(backfireRpmThreshold);
-  if (before.backfireCooldownMs != after.backfireCooldownMs)
-    EMIT_CHANGE(backfireCooldownMs);
-  if (before.backfireBurstWindowMs != after.backfireBurstWindowMs)
-    EMIT_CHANGE(backfireBurstWindowMs);
-  if (before.backfireBurstMax != after.backfireBurstMax)
-    EMIT_CHANGE(backfireBurstMax);
-  if (before.backfireBurstExtraMs != after.backfireBurstExtraMs)
-    EMIT_CHANGE(backfireBurstExtraMs);
-  if (before.backfireIgnExtraMs != after.backfireIgnExtraMs)
-    EMIT_CHANGE(backfireIgnExtraMs);
-  if (before.backfireDecelHighRpm != after.backfireDecelHighRpm)
-    EMIT_CHANGE(backfireDecelHighRpm);
-  if (before.backfireDecelDropRpm != after.backfireDecelDropRpm)
-    EMIT_CHANGE(backfireDecelDropRpm);
-  if (before.backfireDecelPulseMs != after.backfireDecelPulseMs)
-    EMIT_CHANGE(backfireDecelPulseMs);
-  if (before.backfireDecelOffMs != after.backfireDecelOffMs)
-    EMIT_CHANGE(backfireDecelOffMs);
-  if (before.backfireDecelPulseCount != after.backfireDecelPulseCount)
-    EMIT_CHANGE(backfireDecelPulseCount);
+  if (before.allow_double_click != after.allow_double_click)
+    EMIT_CHANGE(allow_double_click);
+  if (before.limiter_enable != after.limiter_enable)
+    EMIT_CHANGE(limiter_enable);
+  if (before.target_rpm != after.target_rpm)
+    EMIT_CHANGE(target_rpm);
+  if (before.rpm_hysteresis != after.rpm_hysteresis)
+    EMIT_CHANGE(rpm_hysteresis);
+  if (before.hard_cut_ms != after.hard_cut_ms)
+    EMIT_CHANGE(hard_cut_ms);
+  if (before.recovery_spark_ms != after.recovery_spark_ms)
+    EMIT_CHANGE(recovery_spark_ms);
   if (before.apTimeoutMs != after.apTimeoutMs)
     EMIT_CHANGE(apTimeoutMs);
   if (before.minRpm != after.minRpm)
@@ -381,6 +369,7 @@ static void collectConfigChanges(const QSConfig &before, const QSConfig &after, 
   }
 }
 
+
 static void updateAutoMapFromPayload(JsonVariant variant)
 {
   if (!variant.is<JsonArray>())
@@ -399,16 +388,12 @@ static void updateAutoMapFromPayload(JsonVariant variant)
       entry.rpmMin = o["min"] | (cfg.autoMapCount - 1) * 1000;
       entry.rpmMax = o["max"] | (entry.rpmMin + 999);
       entry.cutMs = o["cut"] | 50;
-      entry.backfireAddMs = o["bf"] | 0;
-      entry.backfireEnabled = o.containsKey("bfEnabled") ? o["bfEnabled"].as<bool>() : entry.backfireAddMs > 0;
     }
     else
     {
       entry.rpmMin = (cfg.autoMapCount - 1) * 1000;
       entry.rpmMax = entry.rpmMin + 999;
       entry.cutMs = item.as<int>();
-      entry.backfireAddMs = 0;
-      entry.backfireEnabled = false;
     }
   }
   config_normalize_auto_map();
@@ -601,20 +586,41 @@ void web_init()
     c.rpmOffset = doc["rpmOffset"] | c.rpmOffset;
     c.modeAuto = doc["modeAuto"] | c.modeAuto;
     c.cutTimeFixed = doc["cutTimeFixed"] | c.cutTimeFixed;
-    c.backfireMode = doc["backfireMode"] | c.backfireMode;
-    c.backfireProfile = doc["backfireProfile"] | c.backfireProfile;
-    c.backfireAddMs = doc["backfireAddMs"] | c.backfireAddMs;
-    c.backfireRpmThreshold = doc["backfireRpmThreshold"] | c.backfireRpmThreshold;
-    c.backfireCooldownMs = doc["backfireCooldownMs"] | c.backfireCooldownMs;
-    c.backfireBurstWindowMs = doc["backfireBurstWindowMs"] | c.backfireBurstWindowMs;
-    c.backfireBurstMax = doc["backfireBurstMax"] | c.backfireBurstMax;
-    c.backfireBurstExtraMs = doc["backfireBurstExtraMs"] | c.backfireBurstExtraMs;
-    c.backfireIgnExtraMs = doc["backfireIgnExtraMs"] | c.backfireIgnExtraMs;
-    c.backfireDecelHighRpm = doc["backfireDecelHighRpm"] | c.backfireDecelHighRpm;
-    c.backfireDecelDropRpm = doc["backfireDecelDropRpm"] | c.backfireDecelDropRpm;
-    c.backfireDecelPulseMs = doc["backfireDecelPulseMs"] | c.backfireDecelPulseMs;
-    c.backfireDecelOffMs = doc["backfireDecelOffMs"] | c.backfireDecelOffMs;
-    c.backfireDecelPulseCount = doc["backfireDecelPulseCount"] | c.backfireDecelPulseCount;
+    
+    // Auto RPM Limiter fields
+    if (doc.containsKey("allow_double_click")) {
+      c.allow_double_click = doc["allow_double_click"].as<bool>();
+      allow_double_click = c.allow_double_click;
+    }
+    if (doc.containsKey("limiter_enable")) {
+      c.limiter_enable = doc["limiter_enable"].as<bool>();
+      limiter_enable = c.limiter_enable;
+    }
+    if (doc.containsKey("target_rpm")) {
+      c.target_rpm = doc["target_rpm"].as<int>();
+      if (c.target_rpm < 1000) c.target_rpm = 1000;
+      if (c.target_rpm > 20000) c.target_rpm = 20000;
+      target_rpm = c.target_rpm;
+    }
+    if (doc.containsKey("rpm_hysteresis")) {
+      c.rpm_hysteresis = doc["rpm_hysteresis"].as<int>();
+      if (c.rpm_hysteresis < 10) c.rpm_hysteresis = 10;
+      if (c.rpm_hysteresis > 2000) c.rpm_hysteresis = 2000;
+      rpm_hysteresis = c.rpm_hysteresis;
+    }
+    if (doc.containsKey("hard_cut_ms")) {
+      c.hard_cut_ms = doc["hard_cut_ms"].as<unsigned long>();
+      if (c.hard_cut_ms < 5) c.hard_cut_ms = 5;
+      if (c.hard_cut_ms > 500) c.hard_cut_ms = 500;
+      hard_cut_ms = c.hard_cut_ms;
+    }
+    if (doc.containsKey("recovery_spark_ms")) {
+      c.recovery_spark_ms = doc["recovery_spark_ms"].as<unsigned long>();
+      if (c.recovery_spark_ms < 5) c.recovery_spark_ms = 5;
+      if (c.recovery_spark_ms > 500) c.recovery_spark_ms = 500;
+      recovery_spark_ms = c.recovery_spark_ms;
+    }
+
     c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
     if (doc.containsKey("minRpm")) {
       c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
@@ -738,20 +744,41 @@ void web_init()
     c.rpmOffset = doc["rpmOffset"] | c.rpmOffset;
     c.modeAuto = doc["modeAuto"] | c.modeAuto;
     c.cutTimeFixed = doc["cutTimeFixed"] | c.cutTimeFixed;
-    c.backfireMode = doc["backfireMode"] | c.backfireMode;
-    c.backfireProfile = doc["backfireProfile"] | c.backfireProfile;
-    c.backfireAddMs = doc["backfireAddMs"] | c.backfireAddMs;
-    c.backfireRpmThreshold = doc["backfireRpmThreshold"] | c.backfireRpmThreshold;
-    c.backfireCooldownMs = doc["backfireCooldownMs"] | c.backfireCooldownMs;
-    c.backfireBurstWindowMs = doc["backfireBurstWindowMs"] | c.backfireBurstWindowMs;
-    c.backfireBurstMax = doc["backfireBurstMax"] | c.backfireBurstMax;
-    c.backfireBurstExtraMs = doc["backfireBurstExtraMs"] | c.backfireBurstExtraMs;
-    c.backfireIgnExtraMs = doc["backfireIgnExtraMs"] | c.backfireIgnExtraMs;
-    c.backfireDecelHighRpm = doc["backfireDecelHighRpm"] | c.backfireDecelHighRpm;
-    c.backfireDecelDropRpm = doc["backfireDecelDropRpm"] | c.backfireDecelDropRpm;
-    c.backfireDecelPulseMs = doc["backfireDecelPulseMs"] | c.backfireDecelPulseMs;
-    c.backfireDecelOffMs = doc["backfireDecelOffMs"] | c.backfireDecelOffMs;
-    c.backfireDecelPulseCount = doc["backfireDecelPulseCount"] | c.backfireDecelPulseCount;
+    
+    // Auto RPM Limiter fields
+    if (doc.containsKey("allow_double_click")) {
+      c.allow_double_click = doc["allow_double_click"].as<bool>();
+      allow_double_click = c.allow_double_click;
+    }
+    if (doc.containsKey("limiter_enable")) {
+      c.limiter_enable = doc["limiter_enable"].as<bool>();
+      limiter_enable = c.limiter_enable;
+    }
+    if (doc.containsKey("target_rpm")) {
+      c.target_rpm = doc["target_rpm"].as<int>();
+      if (c.target_rpm < 1000) c.target_rpm = 1000;
+      if (c.target_rpm > 20000) c.target_rpm = 20000;
+      target_rpm = c.target_rpm;
+    }
+    if (doc.containsKey("rpm_hysteresis")) {
+      c.rpm_hysteresis = doc["rpm_hysteresis"].as<int>();
+      if (c.rpm_hysteresis < 10) c.rpm_hysteresis = 10;
+      if (c.rpm_hysteresis > 2000) c.rpm_hysteresis = 2000;
+      rpm_hysteresis = c.rpm_hysteresis;
+    }
+    if (doc.containsKey("hard_cut_ms")) {
+      c.hard_cut_ms = doc["hard_cut_ms"].as<unsigned long>();
+      if (c.hard_cut_ms < 5) c.hard_cut_ms = 5;
+      if (c.hard_cut_ms > 500) c.hard_cut_ms = 500;
+      hard_cut_ms = c.hard_cut_ms;
+    }
+    if (doc.containsKey("recovery_spark_ms")) {
+      c.recovery_spark_ms = doc["recovery_spark_ms"].as<unsigned long>();
+      if (c.recovery_spark_ms < 5) c.recovery_spark_ms = 5;
+      if (c.recovery_spark_ms > 500) c.recovery_spark_ms = 500;
+      recovery_spark_ms = c.recovery_spark_ms;
+    }
+
     c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
     if (doc.containsKey("minRpm")) {
       c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
@@ -800,6 +827,7 @@ void web_init()
     if (apPassChanged) {
       restartAccessPoint();
     } });
+
 
   server.on("/test/cut", HTTP_GET, [](AsyncWebServerRequest *r)
             {
