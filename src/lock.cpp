@@ -205,21 +205,18 @@ static bool spam_block_active() {
 static void log_pass_buffer(const char *label, char bit, unsigned long holdMs) {
   if (!label) label = "PASS_BUF";
   DynamicJsonDocument extra(256);
-  extra["buffer"] = inputBuffer;
   extra["bufLen"] = bufLen;
   if (bit == '0' || bit == '1') extra["bit"] = String(bit);
   if (holdMs) extra["holdMs"] = holdMs;
-  log_event(label, inputBuffer, &extra);
+  log_event(label, "tap", &extra);
 }
 
-static void log_pass_reset(const char *buffer, uint8_t len, unsigned long holdMs) {
+static void log_pass_reset(uint8_t len, unsigned long holdMs) {
   DynamicJsonDocument extra(256);
-  const char *bufferView = buffer ? buffer : "";
-  extra["buffer"] = bufferView;
   extra["bufLen"] = len;
   if (holdMs) extra["holdMs"] = holdMs;
   extra["thresholdMs"] = resetHoldMs;
-  log_event("PASS_RESET", bufferView, &extra);
+  log_event("PASS_RESET", "reset", &extra);
 }
 
 void lock_handle_shift(bool pressed) {
@@ -242,11 +239,7 @@ void lock_handle_shift(bool pressed) {
   unsigned long held = now - pressStart;
   pressStart = 0;
   if (held >= resetHoldMs) {
-    char snapshot[5];
-    strncpy(snapshot, inputBuffer, sizeof(snapshot));
-    snapshot[4] = '\0';
-    uint8_t snapshotLen = bufLen;
-    log_pass_reset(snapshot, snapshotLen, held);
+    log_pass_reset(bufLen, held);
     reset_input(false);
     return;
   }
@@ -256,7 +249,7 @@ void lock_handle_shift(bool pressed) {
   } else if (held >= longMinMs) {
     bit = '1';
   } else {
-    reset_input(true);
+    // Vùng lỡ cỡ (301-499ms): bỏ qua nhịp gõ không rõ ràng thay vì xóa sạch pass
     return;
   }
   if (bufLen < 4) {
@@ -267,13 +260,13 @@ void lock_handle_shift(bool pressed) {
   if (bufLen < 4) return;
   bool success = (strncmp(inputBuffer, lockPass, 4) == 0);
   if (success) {
-    log_event("PASS_OK", inputBuffer);
+    log_event("PASS_OK", "unlocked");
     set_lock_state(false, false, "PASS unlock (volatile)");
     reset_fail_counter();
     reset_input(false);
     return;
   }
-  log_event("PASS_FAIL", inputBuffer);
+  log_event("PASS_FAIL", "invalid");
   bufLen = 0;
   inputBuffer[0] = '\0';
   retryReadyMs = now + RETRY_DELAY;

@@ -6,3 +6,5 @@
 void web_init();
 void web_handle();
 void web_send_limiter_sync(bool enabled);
+void web_wake_ap();
+bool web_is_ap_active();

@@ -9,6 +9,7 @@
 #include "web.h"
 #include "lock.h"
 #include "ota_manager.h"
+#include "fs_updater.h"
 
 // Pin map (per PROJECT OVERVIEW)
 static const uint8_t RPM_PIN = 2;
@@ -179,12 +180,28 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
       if (cfg.manualBackfireMode == 1)
       {
         manualBF.state = SHIFT_MANUAL_MODE1;
+        if (cfg.manualIgnOnly)
+        {
+          cut_trigger_dual(999999, 0, currentRpm); // Chỉ IGN
+        }
+        else
+        {
+          cut_trigger_dual(999999, 999999, currentRpm); // Cả 2
+        }
       }
       else if (cfg.manualBackfireMode == 2)
       {
         manualBF.state = SHIFT_MANUAL_MODE2;
         manualBF.pulseCount = 0;
         manualBF.phase = 0; // bắt đầu ở A (CUT)
+        if (cfg.manualIgnOnly)
+        {
+          cut_trigger_dual_fast(cfg.manualPulseCutMs, 0, currentRpm);
+        }
+        else
+        {
+          cut_trigger_dual_fast(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
+        }
       }
       manualBF.cutStartMs = now;
       manualBF.lastToggleMs = now;
@@ -200,19 +217,7 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
 
   case SHIFT_MANUAL_MODE1:
     // Mode 1: Cắt liên tục cho đến khi nhả
-    if (shift_is_pressed() && canActivate())
-    {
-      // Trigger cut liên tục
-      if (cfg.manualIgnOnly)
-      {
-        cut_trigger_dual(999999, 0, currentRpm); // Chỉ IGN
-      }
-      else
-      {
-        cut_trigger_dual(999999, 999999, currentRpm); // Cả 2
-      }
-    }
-    else
+    if (!shift_is_pressed() || !canActivate())
     {
       // Nhả hoặc không còn điều kiện
       cut_trigger_dual(0, 0, currentRpm);
@@ -248,18 +253,6 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         manualBF.pulseCount = 0; // reset bộ đếm vòng B-C
         manualBF.lastToggleMs = now;
       }
-      else
-      {
-        // Duy trì cắt trong A
-        if (cfg.manualIgnOnly)
-        {
-          cut_trigger_dual_fast(cfg.manualPulseCutMs, 0, currentRpm);
-        }
-        else
-        {
-          cut_trigger_dual_fast(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
-        }
-      }
       break;
 
     case 1: // B: FIRE (không cắt)
@@ -268,11 +261,14 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         // Sang C: CUT ngắn
         manualBF.phase = 2;
         manualBF.lastToggleMs = now;
-        cut_trigger_dual(0, 0, currentRpm); // đảm bảo đang bật lửa trước khi cắt ngắn
-      }
-      else
-      {
-        cut_trigger_dual(0, 0, currentRpm);
+        if (cfg.manualIgnOnly)
+        {
+          cut_trigger_dual_fast(cfg.manualPulseOffMs, 0, currentRpm);
+        }
+        else
+        {
+          cut_trigger_dual_fast(cfg.manualPulseOffMs, cfg.manualPulseOffMs, currentRpm);
+        }
       }
       break;
 
@@ -281,29 +277,25 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
       {
         // Hoàn tất một cặp B-C
         manualBF.pulseCount++;
+        manualBF.lastToggleMs = now;
         if (manualBF.pulseCount >= cfg.manualPulseRepeat)
         {
           // Hết D lần → quay lại A mới
           manualBF.phase = 0;
+          if (cfg.manualIgnOnly)
+          {
+            cut_trigger_dual_fast(cfg.manualPulseCutMs, 0, currentRpm);
+          }
+          else
+          {
+            cut_trigger_dual_fast(cfg.manualPulseCutMs, cfg.manualPulseCutMs, currentRpm);
+          }
         }
         else
         {
-          // Còn lượt → quay lại B tiếp theo
+          // Còn lượt → quay lại B tiếp theo (FIRE)
           manualBF.phase = 1;
-        }
-        manualBF.lastToggleMs = now;
-        cut_trigger_dual(0, 0, currentRpm); // kết thúc C, tắt cắt để chuẩn bị B
-      }
-      else
-      {
-        // Duy trì cắt ngắn trong C
-        if (cfg.manualIgnOnly)
-        {
-          cut_trigger_dual_fast(cfg.manualPulseOffMs, 0, currentRpm);
-        }
-        else
-        {
-          cut_trigger_dual_fast(cfg.manualPulseOffMs, cfg.manualPulseOffMs, currentRpm);
+          cut_trigger_dual(0, 0, currentRpm);
         }
       }
       break;
@@ -336,9 +328,20 @@ void onShiftStateChanged(bool pressed)
 void onShiftPressed()
 {
   unsigned long now = millis();
+  int currentRpm = rpm_get();
+  const QSConfig &cfg = getConfig();
 
-  // 1. Thuật toán Double-Click Toggle Limiter
-  if (allow_double_click)
+  // Đánh thức hoặc gia hạn thời gian mở Wi-Fi AP nếu người dùng thao tác cần số khi dừng xe
+  if (currentRpm <= cfg.minRpm)
+  {
+    web_wake_ap();
+  }
+
+  // 1. Thuật toán Double-Click Toggle Limiter:
+  // Chỉ kích hoạt khi xe dừng hoặc tua máy thấp (<= minRpm).
+  // Khi tua máy cao (đang chạy kéo ga), mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
+  // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp.
+  if (allow_double_click && currentRpm <= cfg.minRpm)
   {
     if (shiftPressCount == 1 && (now - lastShiftPressMs <= DOUBLE_CLICK_TIMEOUT_MS))
     {
@@ -350,9 +353,9 @@ void onShiftPressed()
       DynamicJsonDocument meta(128);
       meta["source"] = "double_click";
       meta["limiter_enable"] = limiter_enable;
-      log_push(rpm_get(), false, "DOUBLE_CLICK", limiter_enable ? "LIMITER_ENABLED" : "LIMITER_DISABLED", &meta, nullptr);
+      log_push(currentRpm, false, "DOUBLE_CLICK", limiter_enable ? "LIMITER_ENABLED" : "LIMITER_DISABLED", &meta, nullptr);
 
-      // Reset bộ đếm click, tuyệt đối không can thiệp ngoại vi
+      // Reset bộ đếm click
       shiftPressCount = 0;
       lastShiftPressMs = 0;
       return;
@@ -363,17 +366,32 @@ void onShiftPressed()
       lastShiftPressMs = now;
     }
   }
+  else
+  {
+    // Nếu tua máy cao, reset trạng thái double-click
+    shiftPressCount = 0;
+    lastShiftPressMs = 0;
+  }
 
   // 2. Logic Quickshifter gốc
+  if (ota_manager_is_active() || fs_updater_is_active())
+    return;
   if (lock_is_engaged())
     return;
   if (shiftCutLatched)
     return;
-  if (cut_is_active())
-    return;
 
-  int currentRpm = rpm_get();
-  const QSConfig &cfg = getConfig();
+  // Nếu Auto Rev Limiter đang cắt lửa (limiterState != LIMITER_STANDBY),
+  // Quickshifter có quyền ưu tiên tuyệt đối (Preemption) ngắt chu kỳ Limiter để thực hiện cắt số.
+  if (limiterState != LIMITER_STANDBY)
+  {
+    limiterState = LIMITER_STANDBY;
+  }
+  else if (cut_is_active())
+  {
+    // Nếu cut đang chạy từ lần đá số trước thì bỏ qua để chống double trigger
+    return;
+  }
 
   if (currentRpm < cfg.minRpm)
     return;
@@ -415,13 +433,12 @@ void setup()
   {
     Serial.println("Failed to load config, using defaults");
   }
+  limiter_enable = false; // Đảm bảo luôn tắt Auto RPM Limiter khi khởi động
 
   log_init();
   ota_manager_init();
   ota_manager_mark_app_valid();
 
-  pinMode(RELAY_IGN, OUTPUT);
-  pinMode(RELAY_INJ, OUTPUT);
   pinMode(TEST_PWM, OUTPUT);
 
   const QSConfig &cfg = getConfig();
@@ -444,6 +461,15 @@ void setup()
 
 void loop()
 {
+  if (ota_manager_is_active() || fs_updater_is_active())
+  {
+    cut_poll();
+    web_handle();
+    ota_manager_loop();
+    delay(1);
+    return;
+  }
+
   rpm_update();
   int loopRpm = rpm_get();
   handle_auto_rev_limiter(loopRpm);

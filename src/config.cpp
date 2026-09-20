@@ -56,6 +56,17 @@ void config_normalize_auto_map() {
     if (entry.cutMs > 200) entry.cutMs = 200;
   }
 
+  // sort ascending by rpmMin
+  for (uint8_t i = 0; i + 1 < cfg.autoMapCount; ++i) {
+    for (uint8_t j = i + 1; j < cfg.autoMapCount; ++j) {
+      if (cfg.autoMap[j].rpmMin < cfg.autoMap[i].rpmMin) {
+        AutoMapEntry tmp = cfg.autoMap[i];
+        cfg.autoMap[i] = cfg.autoMap[j];
+        cfg.autoMap[j] = tmp;
+      }
+    }
+  }
+
   // ensure ordering and no gaps reversal
   for (uint8_t i = 1; i < cfg.autoMapCount; ++i) {
     if (cfg.autoMap[i].rpmMin <= cfg.autoMap[i - 1].rpmMin) {
@@ -204,7 +215,7 @@ bool loadConfig() {
   
   // Auto RPM Limiter load
   cfg.allow_double_click = doc.containsKey("allow_double_click") ? doc["allow_double_click"].as<bool>() : true;
-  cfg.limiter_enable = doc.containsKey("limiter_enable") ? doc["limiter_enable"].as<bool>() : false;
+  cfg.limiter_enable = false; // Luôn tắt khi khởi động để đảm bảo an toàn
   cfg.target_rpm = doc["target_rpm"] | 7000;
   cfg.rpm_hysteresis = doc["rpm_hysteresis"] | 200;
   cfg.hard_cut_ms = doc["hard_cut_ms"] | 30UL;
@@ -222,7 +233,7 @@ bool loadConfig() {
 
   // Sync to globals
   allow_double_click = cfg.allow_double_click;
-  limiter_enable = cfg.limiter_enable;
+  limiter_enable = false; // Luôn tắt khi khởi động
   target_rpm = cfg.target_rpm;
   rpm_hysteresis = cfg.rpm_hysteresis;
   hard_cut_ms = cfg.hard_cut_ms;
@@ -313,7 +324,7 @@ bool saveConfig() {
   
   // Auto RPM Limiter save
   doc["allow_double_click"] = cfg.allow_double_click;
-  doc["limiter_enable"] = cfg.limiter_enable;
+  doc["limiter_enable"] = false; // Luôn lưu false để khởi động lại luôn ở trạng thái tắt
   doc["target_rpm"] = cfg.target_rpm;
   doc["rpm_hysteresis"] = cfg.rpm_hysteresis;
   doc["hard_cut_ms"] = cfg.hard_cut_ms;

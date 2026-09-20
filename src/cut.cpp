@@ -13,16 +13,24 @@ static bool injActive = false;
 static bool lockForced = false;
 static const unsigned long CUT_MIN_INTERVAL_MS = 200;
 
+static bool lastIgnCut = false;
+static bool lastInjCut = false;
+static bool outputStateInitialized = false;
+
+static void refresh_outputs();
+
 void cut_init(uint8_t ignPin, uint8_t injPin, bool polarityHighToCut)
 {
   pinIgn = ignPin;
   pinInj = injPin;
   polHighToCut = polarityHighToCut;
-  pinMode(pinIgn, OUTPUT);
-  pinMode(pinInj, OUTPUT);
-  // set initial to non-cut
+  // Set safe non-cut level BEFORE pinMode to prevent boot glitches
   digitalWrite(pinIgn, polHighToCut ? LOW : HIGH);
   digitalWrite(pinInj, polHighToCut ? LOW : HIGH);
+  pinMode(pinIgn, OUTPUT);
+  pinMode(pinInj, OUTPUT);
+  outputStateInitialized = false;
+  refresh_outputs();
 }
 
 bool cut_is_active()
@@ -30,8 +38,8 @@ bool cut_is_active()
   if (lockForced)
     return true;
   unsigned long now = millis();
-  bool ign = ignActive && now < ignEndMs;
-  bool inj = injActive && now < injEndMs;
+  bool ign = ignActive && ((long)(now - ignEndMs) < 0);
+  bool inj = injActive && ((long)(now - injEndMs) < 0);
   return ign || inj;
 }
 
@@ -50,8 +58,17 @@ static void refresh_outputs()
   const QSConfig &cfg = getConfig();
   bool ignCut = lockForced || (cfg.cutIgnEnabled && ignActive);
   bool injCut = lockForced || (cfg.cutInjEnabled && injActive);
-  drivePin(pinIgn, cfg.cutIgnEnabled || lockForced, ignCut);
-  drivePin(pinInj, cfg.cutInjEnabled || lockForced, injCut);
+  if (!outputStateInitialized || ignCut != lastIgnCut)
+  {
+    drivePin(pinIgn, cfg.cutIgnEnabled || lockForced, ignCut);
+    lastIgnCut = ignCut;
+  }
+  if (!outputStateInitialized || injCut != lastInjCut)
+  {
+    drivePin(pinInj, cfg.cutInjEnabled || lockForced, injCut);
+    lastInjCut = injCut;
+  }
+  outputStateInitialized = true;
 }
 
 static bool cut_trigger_internal(unsigned long ignMs, unsigned long injMs, int currentRpm, bool bypassGuard)
@@ -90,7 +107,10 @@ static bool cut_trigger_internal(unsigned long ignMs, unsigned long injMs, int c
     injEndMs = now;
   }
 
-  lastCutMs = now;
+  if (!bypassGuard && (ignMs > 0 || injMs > 0))
+  {
+    lastCutMs = now;
+  }
   refresh_outputs();
   return true;
 }
@@ -119,11 +139,21 @@ void cut_poll()
     return;
   }
   unsigned long now = millis();
-  if (ignActive && now >= ignEndMs)
+  bool changed = false;
+  if (ignActive && (long)(now - ignEndMs) >= 0)
+  {
     ignActive = false;
-  if (injActive && now >= injEndMs)
+    changed = true;
+  }
+  if (injActive && (long)(now - injEndMs) >= 0)
+  {
     injActive = false;
-  refresh_outputs();
+    changed = true;
+  }
+  if (changed)
+  {
+    refresh_outputs();
+  }
 }
 
 void cut_force_lock(bool locked)

@@ -417,11 +417,12 @@
           </div>
           <div id="calStatus" style="color:var(--text-dim);margin-top:8px"></div>
           <h3 style="margin-top:24px">Wi-Fi Access Point</h3>
-          <p style="color:var(--text-dim);font-size:13px;margin-top:0">Đổi mật khẩu AP và thời gian tự tắt.</p>
+          <p style="color:var(--text-dim);font-size:13px;margin-top:0">Đổi mật khẩu AP và thời gian tự tắt (nhập 0 = luôn bật).</p>
           <label class="field">AP timeout (ms)
-            <input type="number" id="apTimeoutMs" min="1000" max="600000" step="1000" value="120000">
+            <input type="number" id="apTimeoutMs" min="0" max="3600000" step="1000" value="120000">
+            <small class="field-hint">Thời gian tự ngắt AP khi không có kết nối (0 = luôn bật, không tự tắt)</small>
           </label>
-          <label class="field">Mật khẩu Wi-Fi (>=8 ký tự, để trống = mở)
+          <label class="field">Mật khẩu Wi-Fi (≥ 8 ký tự, để trống = mở)
             <input type="password" id="apPassword" maxlength="63" placeholder="vd: quickshift">
           </label>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
@@ -860,7 +861,7 @@
         });
         $("lockPassInput").addEventListener("change", ()=>{
           if (lockHydrating) return;
-          logUiAction("UI_LOCK_PASS_EDIT", {value: $("lockPassInput").value});
+          logUiAction("UI_LOCK_PASS_EDIT");
         });
         $("lockTimingBtn").addEventListener("click", ()=>{
           logUiAction("UI_LOCK_TIMING_BTN", {short: $("lockShortMax").value, long: $("lockLongMin").value});
@@ -1108,7 +1109,14 @@
         const skipTiming = !!opts.skipTiming;
         lockHydrating = true;
         $("lockEnabledToggle").checked = !!state.lock.enabled;
-        if (!skipPass) $("lockPassInput").value = state.lock.pass || "";
+        if (!skipPass) {
+          $("lockPassInput").value = "";
+          if (state.lock.hasPass) {
+            $("lockPassInput").placeholder = "•••• (đã cài, nhập để đổi)";
+          } else {
+            $("lockPassInput").placeholder = "vd: 1001";
+          }
+        }
         if (!skipTiming) {
           if (state.lock.shortMaxMs) $("lockShortMax").value = state.lock.shortMaxMs;
           if (state.lock.longMinMs) $("lockLongMin").value = state.lock.longMinMs;
@@ -1194,15 +1202,15 @@
         const timeoutVal = parseInt($("apTimeoutMs").value,10);
         const passRaw = ($("apPassword").value || "").trim();
         const result = {
-          timeout: Number.isFinite(timeoutVal) ? timeoutVal : null,
+          timeout: Number.isFinite(timeoutVal) ? timeoutVal : 120000,
           pass: passRaw
         };
-        if (result.timeout === null || result.timeout < 1000 || result.timeout > 600000) {
-          result.error = "AP timeout phải trong 1.000-600.000 ms";
+        if (result.timeout < 0 || result.timeout > 3600000) {
+          result.error = "AP timeout phải từ 0 đến 3.600.000 ms (0 = luôn bật, không tự tắt)";
           return result;
         }
         if (passRaw && (passRaw.length < 8 || passRaw.length > 63)) {
-          result.error = "Mật khẩu phải 8-63 ký tự hoặc để trống";
+          result.error = "Mật khẩu Wi-Fi phải từ 8-63 ký tự hoặc để trống";
           return result;
         }
         return result;
@@ -1239,11 +1247,19 @@
             body:JSON.stringify(payload)
           });
           if (!res.ok) throw new Error(await res.text());
-          toast("Đã lưu Wi-Fi (AP sẽ khởi động lại)","success");
-          await loadConfig({silent:true});
+          
+          const currentPass = state.config && state.config.apPassword ? state.config.apPassword : "";
+          const passChanged = (wifi.pass !== currentPass);
+          if (passChanged) {
+            toast("Đã lưu Wi-Fi! AP đang khởi động lại, vui lòng kết nối lại Wi-Fi.","success");
+          } else {
+            toast("Đã lưu cấu hình Wi-Fi thành công!","success");
+            await loadConfig({silent:true});
+          }
+          updateWifiStatus();
         } catch(err){
           console.error(err);
-          toast("Lưu Wi-Fi lỗi","error");
+          toast("Lưu Wi-Fi lỗi: " + (err.message || "Mất kết nối"),"error");
         } finally {
           wifiSaving = false;
           if (btn) btn.disabled = false;
@@ -1923,10 +1939,11 @@
       }
 
       function handleTelemetry(entry){
-        if (entry.limiter !== undefined) {
+        const limiterVal = entry.limiter !== undefined ? entry.limiter : entry.limiter_enable;
+        if (limiterVal !== undefined) {
           const limiterSwitch = $("limiter_enable");
           if (limiterSwitch && !dirty) {
-            limiterSwitch.checked = !!entry.limiter;
+            limiterSwitch.checked = !!limiterVal;
             updateAutoLimiterUi();
           }
         }

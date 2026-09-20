@@ -135,6 +135,7 @@ void web_send_limiter_sync(bool enabled)
 {
   DynamicJsonDocument doc(128);
   doc["type"] = "limiter_sync";
+  doc["limiter"] = enabled;
   doc["limiter_enable"] = enabled;
   String out;
   serializeJson(doc, out);
@@ -165,7 +166,7 @@ static void send_lock_status(AsyncWebServerRequest *r)
   doc["enabled"] = st.enabled;
   doc["unlocked"] = st.unlocked;
   doc["engaged"] = st.engaged;
-  doc["pass"] = st.pass;
+  doc["hasPass"] = (strlen(st.pass) == 4);
   doc["retryHold"] = st.retryHold;
   doc["retryMs"] = st.retryMs;
   doc["spamHold"] = st.spamHold;
@@ -179,6 +180,33 @@ static void send_lock_status(AsyncWebServerRequest *r)
   r->send(200, "application/json", out);
 }
 
+static bool apActive = false;
+static unsigned long apStartTimeMs = 0;
+static unsigned long apLastActiveMs = 0;
+static bool pendingApRestart = false;
+static unsigned long apRestartMs = 0;
+
+bool startAP();
+
+void web_wake_ap()
+{
+  if (!apActive)
+  {
+    Serial.println("[Wi-Fi] Waking up SoftAP from standby...");
+    startAP();
+  }
+  else
+  {
+    apStartTimeMs = millis();
+    apLastActiveMs = millis();
+  }
+}
+
+bool web_is_ap_active()
+{
+  return apActive;
+}
+
 bool startAP()
 {
   const QSConfig &cfg = getConfig();
@@ -187,28 +215,34 @@ bool startAP()
   ssid += String(mac, HEX);
   WiFi.mode(WIFI_AP);
   WiFi.setSleep(false);
+
+  IPAddress local(192, 168, 4, 1);
+  IPAddress gateway(192, 168, 4, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  if (!WiFi.softAPConfig(local, gateway, subnet))
+  {
+    Serial.println("SoftAP config failed, using default IP");
+  }
+  WiFi.softAPsetHostname("qs-esp32c3");
+
   const char *pass = cfg.apPassword;
   bool hasPass = pass && strlen(pass) >= 8;
   bool ok = hasPass ? WiFi.softAP(ssid.c_str(), pass, 1, 0, 4) : WiFi.softAP(ssid.c_str());
   if (ok)
   {
-    IPAddress local(192, 168, 4, 1);
-    IPAddress gateway(192, 168, 4, 1);
-    IPAddress subnet(255, 255, 255, 0);
-    if (!WiFi.softAPConfig(local, gateway, subnet))
-    {
-      Serial.println("SoftAP config failed, using default IP");
-    }
-    WiFi.softAPsetHostname("qs-esp32c3");
     Serial.print("SoftAP started: ");
     Serial.println(ssid);
     Serial.print("AP IP: ");
     Serial.println(WiFi.softAPIP());
     Serial.println(hasPass ? "SoftAP secured with password" : "SoftAP open (no password)");
+    apActive = true;
+    apStartTimeMs = millis();
+    apLastActiveMs = millis();
   }
   else
   {
     Serial.println("SoftAP start failed");
+    apActive = false;
   }
   return ok;
 }
@@ -621,7 +655,13 @@ void web_init()
       recovery_spark_ms = c.recovery_spark_ms;
     }
 
-    c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
+    if (doc.containsKey("apTimeoutMs")) {
+      c.apTimeoutMs = doc["apTimeoutMs"].as<int>();
+      if (c.apTimeoutMs < 0) c.apTimeoutMs = 0;
+      if (c.apTimeoutMs > 3600000) c.apTimeoutMs = 3600000;
+      apStartTimeMs = millis();
+      apLastActiveMs = millis();
+    }
     if (doc.containsKey("minRpm")) {
       c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
     }
@@ -664,7 +704,8 @@ void web_init()
     log_push(0, false, "SYS", "CFG_SAVE", &changesDoc, &c);
     r->send(200, "application/json", "{\"ok\":true}");
     if (apPassChanged) {
-      restartAccessPoint();
+      pendingApRestart = true;
+      apRestartMs = millis() + 800; // Cho 800ms để gói phản hồi HTTP gửi trọn vẹn đến điện thoại trước khi khởi động lại SoftAP
     } });
 
   server.on("/log/ui", HTTP_POST, [](AsyncWebServerRequest *r)
@@ -779,7 +820,13 @@ void web_init()
       recovery_spark_ms = c.recovery_spark_ms;
     }
 
-    c.apTimeoutMs = doc["apTimeoutMs"] | c.apTimeoutMs;
+    if (doc.containsKey("apTimeoutMs")) {
+      c.apTimeoutMs = doc["apTimeoutMs"].as<int>();
+      if (c.apTimeoutMs < 0) c.apTimeoutMs = 0;
+      if (c.apTimeoutMs > 3600000) c.apTimeoutMs = 3600000;
+      apStartTimeMs = millis();
+      apLastActiveMs = millis();
+    }
     if (doc.containsKey("minRpm")) {
       c.minRpm = clampMinRpm(doc["minRpm"].as<int>());
     }
@@ -825,7 +872,8 @@ void web_init()
     log_push(0, false, "SYS", "CFG_IMPORT", &changesDoc, &c);
     r->send(200, "application/json", "{\"ok\":true}");
     if (apPassChanged) {
-      restartAccessPoint();
+      pendingApRestart = true;
+      apRestartMs = millis() + 800;
     } });
 
 
@@ -1158,6 +1206,41 @@ void web_init()
 void web_handle()
 {
   unsigned long now = millis();
+
+  // 1. Thực hiện khởi động lại AP có delay sau khi gửi response thành công
+  if (pendingApRestart && now >= apRestartMs)
+  {
+    pendingApRestart = false;
+    Serial.println("[Wi-Fi] Restarting SoftAP with new credentials...");
+    restartAccessPoint();
+  }
+
+  // 2. Kiểm tra và thực thi AP Timeout (Tự động tắt Wi-Fi khi không có kết nối)
+  const QSConfig &cfg = getConfig();
+  if (apActive && cfg.apTimeoutMs > 0)
+  {
+    uint8_t stationCount = WiFi.softAPgetStationNum();
+    if (stationCount > 0)
+    {
+      // Có điện thoại/máy tính kết nối -> giữ kết nối và làm mới thời gian hoạt động
+      apLastActiveMs = now;
+    }
+    else
+    {
+      // Không có thiết bị kết nối:
+      // Tự tắt AP nếu đã quá apTimeoutMs từ lúc khởi động HOẶC từ lúc client cuối ngắt kết nối
+      if ((now - apStartTimeMs >= (unsigned long)cfg.apTimeoutMs) &&
+          (now - apLastActiveMs >= (unsigned long)cfg.apTimeoutMs))
+      {
+        Serial.println("[Wi-Fi] AP timeout reached with 0 clients -> Turning OFF SoftAP");
+        WiFi.softAPdisconnect(true);
+        WiFi.mode(WIFI_OFF);
+        apActive = false;
+      }
+    }
+  }
+
+  // 3. Gửi Live Telemetry
   if (now - lastTelemetryMs >= 250)
   {
     lastTelemetryMs = now;
