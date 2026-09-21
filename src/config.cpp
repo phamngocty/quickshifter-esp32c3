@@ -7,7 +7,7 @@ const char *CONFIG_PATH = "/config.json";
 const char *CONFIG_TMP_PATH = "/config.tmp";
 const char *CONFIG_BAK_PATH = "/config.bak";
 static const int DEFAULT_BUCKET_WIDTH = 1000;
-static const uint8_t DEFAULT_AUTO_MAP_COUNT = 8;
+static const uint8_t DEFAULT_AUTO_MAP_COUNT = 12;
 static const size_t CONFIG_JSON_CAPACITY = 8192;
 
 // --- Global Auto RPM Limiter Configuration Variables ---
@@ -28,10 +28,10 @@ static bool ensureFsMounted() {
 
 static void setDefaultAutoMap() {
   cfg.autoMapCount = DEFAULT_AUTO_MAP_COUNT;
-  // 150cc baseline default (same as UI 8-band preset): 4000..12500 rpm.
-  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {106, 94, 89, 80, 72, 69, 66, 57};
-  const int mins[DEFAULT_AUTO_MAP_COUNT] = {4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000};
-  const int maxs[DEFAULT_AUTO_MAP_COUNT] = {4999, 5999, 6999, 7999, 8999, 9999, 10999, 12500};
+  // 150cc baseline anti-jerk 12-band default: 2000..14500 rpm.
+  const int defaults[DEFAULT_AUTO_MAP_COUNT] = {135, 128, 120, 112, 105, 98, 92, 86, 80, 75, 70, 65};
+  const int mins[DEFAULT_AUTO_MAP_COUNT] = {2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000};
+  const int maxs[DEFAULT_AUTO_MAP_COUNT] = {2999, 3999, 4999, 5999, 6999, 7999, 8999, 9999, 10999, 11999, 12999, 14500};
   for (uint8_t i = 0; i < cfg.autoMapCount; ++i) {
     cfg.autoMap[i].rpmMin = mins[i];
     cfg.autoMap[i].rpmMax = maxs[i];
@@ -126,15 +126,15 @@ void setDefaults() {
   cfg.cutIgnEnabled = true;
   cfg.cutInjEnabled = false;
 
-  // Manual Backfire defaults
+  // Manual Backfire defaults (Popcorn Formula)
   cfg.manualBackfireEnabled = true;
-  cfg.manualBackfireHoldMs = 1500;
-  cfg.manualBackfireMode = 1;
-  cfg.manualPulseCutMs = 200;
-  cfg.manualPulseFireMs = 50;
-  cfg.manualPulseOffMs = 200;
-  cfg.manualPulseRepeat = 3;
-  cfg.manualMinRpm = 0;
+  cfg.manualBackfireHoldMs = 600;
+  cfg.manualBackfireMode = 2; // 2=Pulse Popcorn A-B-C
+  cfg.manualPulseCutMs = 95;  // A: 95ms tích xăng
+  cfg.manualPulseFireMs = 35; // B: 35ms đốt lửa
+  cfg.manualPulseOffMs = 55;  // C: 55ms ngắt nhịp
+  cfg.manualPulseRepeat = 4;  // D: 4 tiếng nổ mỗi tràng
+  cfg.manualMinRpm = 4000;
   cfg.manualIgnOnly = true;
 }
 
@@ -253,13 +253,13 @@ bool loadConfig() {
   cfg.cutInjEnabled = doc["cutInjEnabled"] | cfg.cutInjEnabled;
 
   cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | cfg.manualBackfireEnabled;
-  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | cfg.manualBackfireHoldMs;
-  cfg.manualBackfireMode = doc["manualBackfireMode"] | 1;
-  cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 200;
-  cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 50;
-  cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 200;
-  cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 3;
-  cfg.manualMinRpm = doc["manualMinRpm"] | cfg.manualMinRpm;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 600;
+  cfg.manualBackfireMode = doc["manualBackfireMode"] | 2;
+  cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 95;
+  cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 35;
+  cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 55;
+  cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 4;
+  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
   cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
 
   if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;

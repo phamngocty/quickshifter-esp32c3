@@ -21,10 +21,10 @@ static const uint8_t TEST_PWM = 8;
 static bool shiftPressed = false;
 static bool shiftCutLatched = false;
 
-// Double-Click tracking variables
+// Shift Lever Multi-Click tracking (3 clicks to Turn ON, 2 clicks to Turn OFF)
 static unsigned long lastShiftPressMs = 0;
 static uint8_t shiftPressCount = 0;
-static const unsigned long DOUBLE_CLICK_TIMEOUT_MS = 500;
+static const unsigned long MULTI_CLICK_TIMEOUT_MS = 500;
 
 // Manual Backfire State Machine
 enum ShiftState
@@ -337,38 +337,71 @@ void onShiftPressed()
     web_wake_ap();
   }
 
-  // 1. Thuật toán Double-Click Toggle Limiter:
+  // 1. Thuật toán điều khiển Auto RPM Limiter qua cần số:
+  // - BẬT: Nhấp 3 cái liên tiếp (Triple-Click) khi Limiter đang TẮT
+  // - TẮT: Nhấp 2 cái liên tiếp (Double-Click) khi Limiter đang BẬT
   // Chỉ kích hoạt khi xe dừng hoặc tua máy thấp (<= minRpm).
   // Khi tua máy cao (đang chạy kéo ga), mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
   // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp.
   if (allow_double_click && currentRpm <= cfg.minRpm)
   {
-    if (shiftPressCount == 1 && (now - lastShiftPressMs <= DOUBLE_CLICK_TIMEOUT_MS))
+    if (now - lastShiftPressMs <= MULTI_CLICK_TIMEOUT_MS)
     {
-      limiter_enable = !limiter_enable;
-      
-      // Đồng bộ Web UI qua SSE
-      web_send_limiter_sync(limiter_enable);
-
-      DynamicJsonDocument meta(128);
-      meta["source"] = "double_click";
-      meta["limiter_enable"] = limiter_enable;
-      log_push(currentRpm, false, "DOUBLE_CLICK", limiter_enable ? "LIMITER_ENABLED" : "LIMITER_DISABLED", &meta, nullptr);
-
-      // Reset bộ đếm click
-      shiftPressCount = 0;
-      lastShiftPressMs = 0;
-      return;
+      shiftPressCount++;
     }
     else
     {
       shiftPressCount = 1;
-      lastShiftPressMs = now;
     }
+    lastShiftPressMs = now;
+
+    if (!limiter_enable)
+    {
+      // Đang TẮT -> Cần nhấp 3 cái để BẬT
+      if (shiftPressCount >= 3)
+      {
+        limiter_enable = true;
+
+        // Đồng bộ Web UI qua SSE
+        web_send_limiter_sync(true);
+
+        DynamicJsonDocument meta(128);
+        meta["source"] = "triple_click";
+        meta["limiter_enable"] = true;
+        log_push(currentRpm, false, "TRIPLE_CLICK", "LIMITER_ENABLED", &meta, nullptr);
+
+        shiftPressCount = 0;
+        lastShiftPressMs = 0;
+        return;
+      }
+    }
+    else
+    {
+      // Đang BẬT -> Cần nhấp 2 cái để TẮT
+      if (shiftPressCount >= 2)
+      {
+        limiter_enable = false;
+
+        // Đồng bộ Web UI qua SSE
+        web_send_limiter_sync(false);
+
+        DynamicJsonDocument meta(128);
+        meta["source"] = "double_click";
+        meta["limiter_enable"] = false;
+        log_push(currentRpm, false, "DOUBLE_CLICK", "LIMITER_DISABLED", &meta, nullptr);
+
+        shiftPressCount = 0;
+        lastShiftPressMs = 0;
+        return;
+      }
+    }
+
+    // Đang trong chuỗi nhấp cần số ở tua thấp, tránh kích hoạt cut ngoài ý muốn
+    return;
   }
   else
   {
-    // Nếu tua máy cao, reset trạng thái double-click
+    // Nếu tua máy cao, reset bộ đếm
     shiftPressCount = 0;
     lastShiftPressMs = 0;
   }
@@ -475,6 +508,10 @@ void loop()
   handle_auto_rev_limiter(loopRpm);
   handle_manual_backfire(loopRpm, getConfig());
   shift_update();
+  if (shiftPressCount > 0 && (millis() - lastShiftPressMs > MULTI_CLICK_TIMEOUT_MS))
+  {
+    shiftPressCount = 0;
+  }
   cut_poll();
   lock_loop();
   web_handle();
