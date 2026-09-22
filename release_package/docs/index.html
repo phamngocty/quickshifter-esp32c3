@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quickshifter TỰ LÀM ĐIỆN TỬ Pro — Hệ Thống Sang Số Nhanh Kỹ Thuật Số Đỉnh Cao</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-panel: #0d131f;
+      --bg-card: rgba(18, 25, 40, 0.85);
+      --border-dim: rgba(0, 240, 255, 0.15);
+      --border-bright: rgba(0, 240, 255, 0.45);
+      --cyan: #00f0ff;
+      --green: #00ff88;
+      --amber: #ffaa00;
+      --red: #ff2a5f;
+      --purple: #b026ff;
+      --text: #f0f4fc;
+      --text-muted: #8ca0ba;
+      --font-main: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 10px 80px;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 90% 40%, rgba(176, 38, 255, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 10% 70%, rgba(0, 255, 136, 0.04) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Container Shell */
+    .manual-shell {
+      width: 100%;
+      max-width: 1220px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Hero Header */
+    .manual-header {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-bright);
+      border-radius: 22px;
+      padding: 26px 28px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.65), 0 0 25px rgba(0, 240, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+    }
+    .manual-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--green));
+    }
+    .header-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(176, 38, 255, 0.25));
+      border: 1px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(0, 240, 255, 0.4);
+      flex-shrink: 0;
+    }
+    .brand-icon svg { width: 32px; height: 32px; fill: var(--cyan); }
+    .brand-titles h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ffffff, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-titles p {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 3px;
+    }
+    .header-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      border: 1px solid transparent;
+    }
+    .badge.green { background: rgba(0, 255, 136, 0.12); border-color: rgba(0, 255, 136, 0.4); color: var(--green); }
+    .badge.cyan { background: rgba(0, 240, 255, 0.12); border-color: rgba(0, 240, 255, 0.4); color: var(--cyan); }
+    .badge.amber { background: rgba(255, 170, 0, 0.12); border-color: rgba(255, 170, 0, 0.4); color: var(--amber); }
+
+    .hero-tagline {
+      font-size: 15.5px;
+      color: #e2e8f0;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    .hero-tagline span.highlight {
+      color: var(--cyan);
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    /* Hero Metrics Bar */
+    .hero-metrics-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      width: 100%;
+    }
+    .metric-card {
+      background: rgba(0, 240, 255, 0.04);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      padding: 14px 16px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .metric-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.15);
+      background: rgba(0, 240, 255, 0.08);
+    }
+    .metric-val {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      line-height: 1.1;
+    }
+    .metric-lbl {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    /* Sticky Navigation Menu */
+    .menu-bar {
+      position: sticky;
+      top: 10px;
+      z-index: 950;
+      background: rgba(13, 19, 31, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 16px rgba(0, 240, 255, 0.15);
+    }
+    .menu-btn {
+      padding: 9px 14px;
+      border-radius: 11px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-main);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      text-decoration: none;
+    }
+    .menu-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .menu-btn.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(0, 136, 255, 0.22));
+      border-color: var(--cyan);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(0, 240, 255, 0.25);
+    }
+
+    /* Sections */
+    .section-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 20px;
+      padding: 26px 28px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+    .section-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 14px;
+    }
+    .section-title span.number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--cyan);
+      color: #030812;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    /* Breakthrough Cards */
+    .breakthrough-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+    .breakthrough-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .breakthrough-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+    }
+    .breakthrough-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-dim);
+    }
+    .breakthrough-card h3 {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .breakthrough-card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .breakthrough-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--cyan);
+      background: rgba(0, 240, 255, 0.1);
+      padding: 3px 8px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+
+    /* 6 Tabs Guide Showcase */
+    .tabs-guide-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+    .tab-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .tab-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 240, 255, 0.15);
+    }
+    .tab-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 14px;
+    }
+    .tab-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tab-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .tab-title-text h3 {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .tab-title-text p {
+      font-size: 12px;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .tab-pill {
+      font-size: 10.5px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .tab-pill.cyan { background: rgba(0, 240, 255, 0.15); color: var(--cyan); border: 1px solid rgba(0, 240, 255, 0.4); }
+    .tab-pill.green { background: rgba(0, 255, 136, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.4); }
+    .tab-pill.amber { background: rgba(255, 170, 0, 0.15); color: var(--amber); border: 1px solid rgba(255, 170, 0, 0.4); }
+    .tab-pill.purple { background: rgba(176, 38, 255, 0.15); color: #d977ff; border: 1px solid rgba(176, 38, 255, 0.4); }
+    .tab-pill.red { background: rgba(255, 42, 95, 0.15); color: var(--red); border: 1px solid rgba(255, 42, 95, 0.4); }
+    .tab-pill.blue { background: rgba(0, 136, 255, 0.15); color: #60a5fa; border: 1px solid rgba(0, 136, 255, 0.4); }
+
+    .tab-feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .tab-feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .tab-feature-list li strong {
+      color: #fff;
+    }
+    .tab-bullet {
+      color: var(--cyan);
+      font-size: 13px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .tab-tip-badge {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: #e2e8f0;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: auto;
+    }
+    .tab-tip-badge strong {
+      color: var(--amber);
+    }
+
+    /* Comparison Table */
+    .compare-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border-dim);
+      border-radius: 16px;
+      background: var(--bg-panel);
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    .compare-table th {
+      padding: 14px 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid var(--border-dim);
+    }
+    .compare-table th.th-feature {
+      background: rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+      width: 28%;
+    }
+    .compare-table th.th-pro {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan);
+      width: 42%;
+      border-left: 2px solid var(--cyan);
+      border-right: 2px solid var(--cyan);
+    }
+    .compare-table th.th-old {
+      background: rgba(255, 42, 95, 0.06);
+      color: #ff859f;
+      width: 30%;
+    }
+    .compare-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      line-height: 1.55;
+    }
+    .compare-table td.td-feature {
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .compare-table td.td-pro {
+      background: rgba(0, 240, 255, 0.05);
+      color: #e6f9ff;
+      border-left: 2px solid var(--border-dim);
+      border-right: 2px solid var(--border-dim);
+    }
+    .compare-table td.td-old {
+      background: rgba(255, 42, 95, 0.02);
+      color: #94a3b8;
+    }
+
+    /* Steps Layout */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .step-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .step-box:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-bright);
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--cyan);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .step-box h3 {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .step-box p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Images Comparison Grid */
+    .hardware-showcase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 18px;
+    }
+    .hw-photo-card {
+      background: #080c14;
+      border: 1px solid var(--border-dim);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+    .hw-photo-box {
+      width: 100%;
+      height: 260px;
+      background: #030508;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .hw-photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+    }
+    .hw-photo-box:hover img {
+      transform: scale(1.04);
+    }
+    .hw-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-bright);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--cyan);
+    }
+    .hw-info {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .hw-info strong {
+      color: #fff;
+      font-size: 14.5px;
+    }
+
+    /* Interactive Wiring Map SVG */
+    .wiring-stage {
+      background: #060910;
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 16px;
+      overflow: hidden;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .wiring-svg {
+      width: 100%;
+      height: 380px;
+    }
+    .wire-line {
+      stroke-width: 4.5;
+      stroke-linecap: round;
+      fill: none;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .wire-line:hover, .wire-line.active {
+      stroke-width: 8 !important;
+      filter: drop-shadow(0 0 10px currentColor);
+    }
+    .wire-line.pulse {
+      stroke-dasharray: 8 8;
+      animation: dashMove 1s linear infinite;
+    }
+    @keyframes dashMove { to { stroke-dashoffset: -16; } }
+
+    /* Callout Alert Boxes */
+    .alert-box {
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .alert-box.info {
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: #d8f6ff;
+    }
+    .alert-box.warning {
+      background: rgba(255, 170, 0, 0.08);
+      border: 1px solid rgba(255, 170, 0, 0.35);
+      color: #ffecc2;
+    }
+    .alert-box.success {
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.35);
+      color: #d1ffea;
+    }
+
+    /* Specs Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .spec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: all 0.2s ease;
+    }
+    .spec-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.12);
+    }
+    .spec-icon {
+      font-size: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .spec-detail {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .spec-detail strong {
+      font-size: 14px;
+      color: #fff;
+    }
+    .spec-detail span {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    /* Tables */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    .data-table th, .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .data-table th {
+      background: rgba(0, 240, 255, 0.08);
+      color: var(--cyan);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+    }
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      font-family: var(--font-main);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), #0077ff);
+      color: #030812;
+      box-shadow: 0 4px 18px rgba(0, 240, 255, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 240, 255, 0.55);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      border: 1px solid var(--border-dim);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--border-bright);
+    }
+
+    /* Lightbox Modal */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(4, 7, 12, 0.94);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .lightbox-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+    .lightbox-content-box {
+      max-width: 95vw;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 82vh;
+      border-radius: 14px;
+      border: 1px solid var(--border-bright);
+      box-shadow: 0 16px 50px rgba(0,0,0,0.9), 0 0 35px rgba(0, 240, 255, 0.25);
+      object-fit: contain;
+    }
+    .lightbox-caption {
+      color: var(--cyan);
+      font-size: 14px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-align: center;
+      background: rgba(13, 19, 31, 0.85);
+      padding: 6px 18px;
+      border-radius: 20px;
+      border: 1px solid var(--border-dim);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: -16px;
+      right: -16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #ff2a5f;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      border: 2px solid #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(255, 42, 95, 0.6);
+      transition: transform 0.15s ease;
+    }
+    .lightbox-close:hover {
+      transform: scale(1.1);
+    }
+
+    /* Print Stylesheet */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0 !important;
+      }
+      .manual-header, .section-card, .step-box, .hw-photo-card, .spec-card, .tab-card, .breakthrough-card {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+      }
+      .brand-titles h1, .section-title, .hw-info strong, .spec-detail strong, .tab-title-text h3 {
+        color: #000 !important;
+        -webkit-text-fill-color: #000 !important;
+      }
+      .menu-bar, button, .lightbox-modal {
+        display: none !important;
+      }
+      .section-card {
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+      }
+    }
+
+    /* Footer */
+    .manual-footer {
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="manual-shell">
+
+    <!-- HERO HEADER (COMMERCIAL SHOWCASE) -->
+    <header class="manual-header">
+      <div class="header-top-row">
+        <div class="brand-group">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <div class="brand-titles">
+            <h1>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</h1>
+            <p>HỆ THỐNG SANG SỐ NHANH KỸ THUẬT SỐ ĐỈNH CAO — BẢN THƯƠNG MẠI 2026</p>
+          </div>
+        </div>
+
+        <div class="header-badges">
+          <span class="badge" style="background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.18); color:#cbd5e1;">📄 DOC ID: QS-PRO-SHOWCASE</span>
+          <span class="badge green">● CHUẨN THƯƠNG MẠI</span>
+          <span class="badge cyan">⚡ 100% PLUG &amp; PLAY</span>
+          <span class="badge amber">🛡️ BẢO HÀNH 12 THÁNG</span>
+          <button class="btn btn-secondary" onclick="window.print()" style="padding:6px 12px; font-size:11.5px; border-radius:16px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+            In / Lưu PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-tagline">
+        🏁 <span class="highlight">ĐÁ SỐ KHÔNG CẦN BÓP CÔN — XÉ GIÓ KHÔNG MẤT ĐÀ.</span> Giải pháp sang số nhanh công nghệ vi xử lý thời gian thực, mở bảng điều khiển Web Cockpit trực tiếp trên điện thoại qua Wi-Fi không cần cài app!
+      </div>
+
+      <!-- Key Metrics Highlight Bar -->
+      <div class="hero-metrics-bar">
+        <div class="metric-card">
+          <div class="metric-val">&lt; 1 ms</div>
+          <div class="metric-lbl">Tốc Độ Ngắt Lửa Realtime</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">1000 Hz</div>
+          <div class="metric-lbl">Tần Số Quét Cảm Biến Cần Số</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">100%</div>
+          <div class="metric-lbl">Cắm Giắc Zin (Không Cắt Dây)</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-val">IP67</div>
+          <div class="metric-lbl">Đúc Khối Keo Chống Nước</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- STICKY CHAPTER NAVIGATION -->
+    <nav class="menu-bar">
+      <a href="#chap-breakthrough" class="menu-btn active">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        1. Đột Phá Công Nghệ
+      </a>
+      <a href="#chap-tabs" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+        2. Khám Phá 6 Tab
+      </a>
+      <a href="#chap-compare" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22V8h-7.01V5L11 9l3.99 4z"/></svg>
+        3. So Sánh Vượt Trội
+      </a>
+      <a href="#chap-wiring" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
+        4. Cắm Giắc &amp; Sơ Đồ
+      </a>
+      <a href="#chap-pedal" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
+        5. Thao Tác Chân Số
+      </a>
+      <a href="#chap-tuning" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        6. Thông Số &amp; Canh Xe
+      </a>
+    </nav>
+
+    <!-- ========================================================
+         CHƯƠNG 1: 🌟 4 ĐỘT PHÁ CÔNG NGHỆ VƯỢT TRỘI
+    ======================================================== -->
+    <section class="section-card" id="chap-breakthrough">
+      <div class="section-title">
+        <span class="number">1</span>
+        4 Đột Phá Công Nghệ Khác Biệt Hoàn Toàn Trên Thị Trường
+      </div>
+      
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">
+        Khác biệt với các dòng Quickshifter trôi nổi dùng rơ-le cơ học đóng cắt thô bạo hoặc biến trở vặn vít lạc hậu, <strong>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</strong> áp dụng những công nghệ điều khiển điện tử xe đua tối tân nhất:
+      </p>
+
+      <div class="breakthrough-grid">
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">⚡</div>
+          <span class="breakthrough-badge">&lt; 1MS REALTIME</span>
+          <h3>Xử Lý Thời Gian Thực Siêu Tốc</h3>
+          <p>Thuật toán kỹ thuật số đo lường chu kỳ đánh lửa liên tục mỗi mili-giây. Thời gian phản hồi và ngắt dập mass chính xác tuyệt đối, loại trừ hoàn toàn độ trễ 20–50ms của rơ-le cơ.</p>
+        </div>
+
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">📱</div>
+          <span class="breakthrough-badge">KHÔNG CẦN CÀI APP</span>
+          <h3>Web Cockpit Wi-Fi Độc Quyền</h3>
+          <p>Mạch tự phát Wi-Fi Access Point độc lập. Mọi điện thoại iPhone, Android chỉ cần kết nối Wi-Fi là mở được bảng điều khiển Racing trực tiếp trên trình duyệt, không lo xung đột ứng dụng hay lỗi hệ điều hành.</p>
+        </div>
+
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">📈</div>
+          <span class="breakthrough-badge">AUTO-MAP 12 BANDS</span>
+          <h3>Bản Đồ Thích Ứng 12 Dải Tua</h3>
+          <p>Tự động nhận diện vòng tua máy để áp dụng thời gian ngắt tối ưu: tua thấp ngắt dài 75–85ms để sang số êm ái đi phố; tua cao ngắt chớp nhoáng 50–55ms để tăng tốc xé gió.</p>
+        </div>
+
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">🛡️</div>
+          <span class="breakthrough-badge">OPTO 1000V ISOLATION</span>
+          <h3>Cách Ly Quang An Toàn Cho ECU</h3>
+          <p>Ngắt trực tiếp trên đường KÍCH ÂM dập mass qua linh kiện cách ly quang Optocoupler công nghiệp 1000V. Không cắt dây zin, bảo vệ an toàn 100% cho ECU và hệ thống phun xăng điện tử FI.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         CHƯƠNG 2: 🚀 KHÁM PHÁ BẢNG ĐIỀU KHIỂN WEB COCKPIT RACING (6 TAB TÍNH NĂNG)
+    ======================================================== -->
+    <section class="section-card" id="chap-tabs">
+      <div class="section-title">
+        <span class="number">2</span>
+        Khám Phá Bảng Điều Khiển Web Cockpit Racing (Trải Nghiệm 6 Tab Đỉnh Cao)
+      </div>
+
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">
+        Khi sở hữu thiết bị, người dùng chỉ cần dùng điện thoại (iPhone hoặc Android) kết nối vào sóng Wi-Fi <strong style="color:var(--cyan);">Quickshifter_AP</strong> là mở ngay bảng điều khiển Web Cockpit tuyệt đẹp với 6 chuyên mục chức năng đua chuyên nghiệp:
+      </p>
+
+      <div class="tabs-guide-grid">
+        
+        <!-- TAB 1: LIVE COCKPIT -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">🏎️</div>
+              <div class="tab-title-text">
+                <h3>Tab 1: Live Cockpit</h3>
+                <p>TELEMETRY THỜI GIAN THỰC</p>
+              </div>
+            </div>
+            <span class="tab-pill cyan">REALTIME SSE</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">⚡</span>
+              <div><strong>Đồng Hồ RPM Kỹ Thuật Số (Digital Tachometer):</strong> Quét và hiển thị dải tua máy thời gian thực 0 – 14.000 RPM với độ trễ cực thấp (&lt; 20ms) qua công nghệ truyền dữ liệu Server-Sent Events. Tự động nhận diện dải tua Low / Mid / High.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🎯</span>
+              <div><strong>Đèn Báo Shift Sensor:</strong> Trạng thái <code>IDLE</code> (tự do) ➜ chuyển sang <code>ACTIVE</code> (xanh neon chớp sáng) ngay khi chân người lái tác động lực vào cần số.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🔥</span>
+              <div><strong>Đèn Báo Cut State:</strong> Trạng thái <code>STANDBY</code> (đang đánh lửa bình thường) ➜ chớp đỏ rực <code>CUTTING</code> khi mạch thực hiện ngắt lửa trung gian (hiển thị mili-giây cắt thực tế).</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🔊</span>
+              <div><strong>Phản Hồi Âm Thanh Thể Thao:</strong> Tích hợp tiếng bíp và hiệu ứng âm thanh ngắt lửa xe đua giúp người dùng thử nghiệm chân số ngay tại chỗ mà không cần nhìn chăm chú vào màn hình.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>Trải nghiệm độc quyền:</strong> Khi nổ máy chạy thử trên chân chống đứng, người dùng có thể kẹp điện thoại lên ghi-đông để theo dõi trực tiếp sự tương quan giữa vòng tua máy và thời điểm ngắt lửa.</span>
+          </div>
+        </div>
+
+        <!-- TAB 2: SHIFT & CUT -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">⚡</div>
+              <div class="tab-title-text">
+                <h3>Tab 2: Shift &amp; Cut</h3>
+                <p>THUẬT TOÁN CẮT LỬA CĂN BẢN</p>
+              </div>
+            </div>
+            <span class="tab-pill green">CORE LOGIC</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">⚙️</span>
+              <div><strong>Shift Switch Mode (NO / NC):</strong> Chọn <code>Normally Open (Thường mở)</code> hoặc <code>Normally Closed (Thường đóng)</code> để tương thích 100% với mọi loại cảm biến tiệm cận kim loại, công tắc cơ học hoặc cảm biến áp lực loadcell.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🚦</span>
+              <div><strong>Min RPM Threshold (Ngưỡng tua tối thiểu):</strong> Cài đặt từ <code>2.500 – 3.500 RPM</code>. Ngăn chặn triệt để hiện tượng giật cục hoặc tắt máy khi đi phố tốc độ rùa, lùi dắt xe hoặc dừng chờ đèn đỏ garanty.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🛡️</span>
+              <div><strong>Max Safe RPM (Ngưỡng tua an toàn):</strong> Giới hạn bảo vệ động cơ (mặc định 13.500 RPM). Tự động vô hiệu hóa Quickshifter nếu vòng tua vượt quá ngưỡng để bảo vệ xupap và tay dên.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">⏱️</span>
+              <div><strong>Base Cut Time (Thời gian ngắt chuẩn):</strong> Khuyến nghị <code>60 – 70 ms</code> (Xe zin: 65ms; Xe độ nhẹ: 60ms; Xe trường: 55ms). Giảm 5ms nếu bị khựng giật, tăng 5ms nếu bị sượng nặng chân số.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🛡️</span>
+              <div><strong>Debounce &amp; Cooldown:</strong> <code>Debounce (15ms)</code> chống rung nảy cần số khi qua ổ gà; <code>Cooldown (250ms)</code> bảo vệ hộp số, bắt buộc nhả dứt điểm cần số mới cho phép lần cắt tiếp theo.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>Quy tắc vàng:</strong> Luôn cài <code>Min RPM</code> cao hơn tốc độ Garanty của xe ít nhất 1.000 RPM (Ví dụ garanty 1.500 RPM thì cài Min RPM từ 2.800 – 3.000 RPM).</span>
+          </div>
+        </div>
+
+        <!-- TAB 3: AUTO MAP CURVE -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">📈</div>
+              <div class="tab-title-text">
+                <h3>Tab 3: Auto Map Curve</h3>
+                <p>BẢN ĐỒ CẮT LỬA ĐA ĐIỂM THÔNG MINH</p>
+              </div>
+            </div>
+            <span class="tab-pill amber">ADAPTIVE MAP</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">📉</span>
+              <div><strong>Đường Cong Thích Ứng Theo Quán Tính Động Cơ:</strong> Vòng tua càng cao, bánh răng hộp số quay càng nhanh nên thời gian ngắt cần ngắn hơn; ngược lại tua thấp cần thời gian cắt dài hơn để triệt tiêu tải trọng.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🟢</span>
+              <div><strong>Dải Tua Thấp (3.000 – 6.000 RPM):</strong> Thời gian cắt dài <code>75 – 85 ms</code>. Giúp sang số êm ái khi đi dạo phố, chở người ngồi sau không bị chồm giật.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🟡</span>
+              <div><strong>Dải Tua Trung (6.000 – 9.000 RPM):</strong> Thời gian cắt tiêu chuẩn <code>65 – 70 ms</code>. Tăng tốc liền mạch, bắt số ngọt ngào trên đường trường.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🔴</span>
+              <div><strong>Dải Tua Cao Racing (9.000 – 13.000+ RPM):</strong> Thời gian cắt chớp nhoáng <code>50 – 58 ms</code>. Xe bắn đi như mũi tên, không một mili-giây bị hụt hơi, duy trì lực kéo mô-men xoắn tối đa.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🎚️</span>
+              <div><strong>12 Nấc Tinh Chỉnh Độc Lập:</strong> Mỗi nấc 1.000 RPM có một thanh trượt riêng kèm đồ thị trực quan, cho phép thợ máy tinh chỉnh từng dải tua theo bài độ xe.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>Kinh nghiệm canh map:</strong> Đồ thị lý tưởng luôn là một đường dốc thoai thoải đi xuống từ tua thấp đến tua cao, không nên tạo bước nhảy đột ngột giữa 2 nấc tua liền kề.</span>
+          </div>
+        </div>
+
+        <!-- TAB 4: TEST BENCH -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">🧪</div>
+              <div class="tab-title-text">
+                <h3>Tab 4: Test Bench</h3>
+                <p>BÀN THỬ NGHIỆM MÔ PHỎNG AN TOÀN</p>
+              </div>
+            </div>
+            <span class="tab-pill purple">SAFE SIMULATOR</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">🔘</span>
+              <div><strong>Kích Thử Ngắt Mạch Thủ Công (Manual Cut Test):</strong> Các nút kích thử xung ngắt <code>40ms</code>, <code>65ms</code>, <code>90ms</code>. Dùng ngay sau khi lắp mạch (chưa cần nổ máy) để nghe tiếng rơ-le nhảy và kiểm tra đèn LED, xác nhận mạch đã thông suốt 100%.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">📡</span>
+              <div><strong>Phát Xung Giả Lập Vòng Tua (RPM Simulator):</strong> Tự động phát xung điện giả lập các mức tua <code>3.000 RPM</code>, <code>6.000 RPM</code>, <code>9.000 RPM</code>, <code>12.000 RPM</code> mà không cần nổ máy, không gây tiếng ồn, kiểm tra đồng hồ hiển thị hoàn hảo.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🎯</span>
+              <div><strong>Căn Chỉnh Độ Nhạy &amp; Vị Trí Cảm Biến:</strong> Đẩy nhẹ cần số bằng tay, quan sát đèn báo tiếp điểm trên màn hình để canh chỉnh khoảng cách pát ốc tiệm cận (chuẩn 1 – 3mm) đến vị trí bánh răng số vừa chớm ăn khớp.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🛡️</span>
+              <div><strong>An Toàn Tuyệt Đối Cho Xe:</strong> Mọi thử nghiệm đều có thể thực hiện khi xe tắt máy (chỉ cần bật khóa điện), loại trừ hoàn toàn nguy cơ hư hại máy móc do thao tác thử nghiệm.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>Bước kiểm tra xuất xưởng:</strong> Trước khi bàn giao xe cho khách, thợ máy bấm nút <code>Test Cut 65ms</code>: nếu nghe tiếng "tách" dứt khoát trên hộp điều khiển là hệ thống đã sẵn sàng 100%!</span>
+          </div>
+        </div>
+
+        <!-- TAB 5: TOOLS, CALIB & LOG -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">🛠️</div>
+              <div class="tab-title-text">
+                <h3>Tab 5: Tools, Calib &amp; Log</h3>
+                <p>HIỆU CHUẨN, KHÓA SỐ &amp; HỘP ĐEN</p>
+              </div>
+            </div>
+            <span class="tab-pill red">ADVANCED UTILS</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">🎯</span>
+              <div><strong>Hiệu Chuẩn Tua Máy (RPM Calibration):</strong>
+                • <em>Calibrate 1 Điểm:</em> Giữ đều ga cố định (ví dụ 4.000 RPM), bấm nút để hệ thống tự tính <code>Scale Factor</code> khớp 100% với đồng hồ xe.<br>
+                • <em>Calibrate 2 Điểm (Scale &amp; Offset):</em> Đo tại dải tua thấp và tua cao để tuyến tính hóa hoàn hảo cho các dòng xe có tín hiệu xung đặc thù.
+              </div>
+            </li>
+            <li>
+              <span class="tab-bullet">🔒</span>
+              <div><strong>Khóa Chống Trộm Bằng Cần Số (Morse Pedal Lock):</strong> Khóa ngắt toàn bộ mạch đánh lửa bằng thao tác chân bí mật (ví dụ đạp giữ cần số 3 giây khi tắt máy). Khi đã khóa, trộm dù có bẻ khóa xe cũng không thể nổ máy! Nhập đúng nhịp cần số để mở khóa.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">💥</span>
+              <div><strong>Launch Control &amp; Popcorn Backfire Studio:</strong> Cài đặt vòng tua đề-pa xuất phát không bị bốc đầu; tùy chọn thuật toán băm tia lửa ngắt quãng tạo âm thanh nổ pô bắp rang giòn tan uy lực.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">📋</span>
+              <div><strong>Nhật Ký Sự Kiện Hộp Đen (Telemetry Event Log):</strong> Ghi lại chính xác đến từng mili-giây: thời điểm đá số, tua máy lúc đá số, thời gian ngắt thực tế và mã sự kiện để phân tích và tối ưu hóa chuyên sâu.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>Tính năng độc quyền:</strong> Khóa chống trộm bàn đạp số hoạt động độc lập ngay trên mạch đánh lửa, không cần remote phụ, không lo hết pin remote giữa đường.</span>
+          </div>
+        </div>
+
+        <!-- TAB 6: OTA & CẤU HÌNH -->
+        <div class="tab-card">
+          <div class="tab-card-header">
+            <div class="tab-title-group">
+              <div class="tab-icon-box">☁️</div>
+              <div class="tab-title-text">
+                <h3>Tab 6: OTA &amp; Cấu Hình</h3>
+                <p>CẬP NHẬT KHÔNG DÂY &amp; SAO LƯU</p>
+              </div>
+            </div>
+            <span class="tab-pill blue">WIRELESS OTA</span>
+          </div>
+
+          <ul class="tab-feature-list">
+            <li>
+              <span class="tab-bullet">🚀</span>
+              <div><strong>Nâng Cấp Firmware Không Dây (Firmware OTA):</strong> Nạp file <code>firmware.bin</code> chính hãng trực tiếp qua sóng Wi-Fi trong 10 giây. Không cần tháo hộp mạch, không cần cắm cáp nạp, thiết bị tự động khởi động lại sau khi nạp xong.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🌐</span>
+              <div><strong>Cập Nhật Giao Diện Web UI (UI Image OTA):</strong> Dễ dàng nâng cấp toàn bộ giao diện Web Cockpit sang phiên bản mới nhất do nhà sản xuất phát hành qua khe nạp UI Image.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">💾</span>
+              <div><strong>Sao Lưu Cấu Hình (Export JSON Snapshot):</strong> Tải toàn bộ thông số canh chỉnh về điện thoại thành 1 file lưu trữ dự phòng, an tâm thử nghiệm các thiết lập mới.</div>
+            </li>
+            <li>
+              <span class="tab-bullet">🔄</span>
+              <div><strong>Khôi Phục &amp; Chia Sẻ Cấu Hình (Import Profile):</strong> Nạp lại file cấu hình chuẩn trong 1 chạm. Dễ dàng chia sẻ file map canh sẵn giữa các xe trong cùng đội đua hoặc bạn bè cùng bài độ máy.</div>
+            </li>
+          </ul>
+
+          <div class="tab-tip-badge">
+            <span>💡 <strong>An toàn nâng cấp:</strong> Quá trình nạp OTA có thanh đo tiến trình (%) thời gian thực và cơ chế kiểm tra tính toàn vẹn mã băm CRC32, tự động hủy bỏ nếu file bị lỗi hoặc đứt quãng Wi-Fi.</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================================
+         CHƯƠNG 3: ⚖️ BẢNG SO SÁNH VƯỢT TRỘI
+    ======================================================== -->
+    <section class="section-card" id="chap-compare">
+      <div class="section-title">
+        <span class="number">3</span>
+        Bảng So Sánh Vượt Trội: Quickshifter Pro vs Quickshifter Truyền Thống
+      </div>
+
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">
+        Bảng đối chiếu minh bạch dưới đây giải thích vì sao <strong>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</strong> vượt trội hoàn toàn so với các loại mạch cơ trôi nổi:
+      </p>
+
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th class="th-feature">Tiêu Chí Kỹ Thuật</th>
+              <th class="th-pro">⭐ Quickshifter TỰ LÀM ĐIỆN TỬ Pro</th>
+              <th class="th-old">❌ Quickshifter Cơ / Giá Rẻ Trôi Nổi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-feature">An Toàn Điện &amp; Lắp Đặt</td>
+              <td class="td-pro">✅ <strong>100% Cắm giắc Plug &amp; Play</strong>, ngắt đường kích âm cách ly quang 1000V, giữ nguyên zin dây điện xe.</td>
+              <td class="td-old">❌ Phải cắt nối dây zin, cắt nguồn 12V thô bạo dễ chập cháy cầu chì hoặc chết MOSFET của ECU.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Giao Diện &amp; Cài Đặt</td>
+              <td class="td-pro">✅ <strong>Web Cockpit Wi-Fi trực quan</strong>, màn hình đo tua máy, đồ thị trực tiếp trên điện thoại (không cần app).</td>
+              <td class="td-old">❌ Vặn biến trở cơ học bằng tuốc-nơ-vít mù quáng, không biết thông số đang ở mức bao nhiêu ms.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Tốc Độ Xử Lý &amp; Độ Trễ</td>
+              <td class="td-pro">✅ <strong>Bộ xử lý kỹ thuật số &lt; 1ms</strong>, phản hồi chớp nhoáng theo thời gian thực vòng tua máy.</td>
+              <td class="td-old">❌ Dùng rơ-le cơ hoặc mạch định thời 555 trễ nải 20–50ms, dễ nhảy số ảo khi tua máy cao.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Bản Đồ Cắt Lửa</td>
+              <td class="td-pro">✅ <strong>Auto-Map 12 dải tua độc lập</strong>: Đi phố tua thấp êm ái, kéo ga tua cao sang số cực nhanh không hụt đà.</td>
+              <td class="td-old">❌ Chỉ có 1 mức cố định cho mọi dải tua: Cài êm tua thấp thì tua cao bị sượng; cài nhanh tua cao thì đi phố bị giật khựng.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Mô Phỏng Thử Nghiệm</td>
+              <td class="td-pro">✅ <strong>Bàn Test Bench thông minh</strong>: Thử rơ-le và giả lập tua máy trong nhà mà không cần nổ máy, không ồn ào.</td>
+              <td class="td-old">❌ Không có mô phỏng, bắt buộc phải nổ máy nẹt pô ầm ĩ ngoài đường mới biết mạch có hoạt động hay không.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Chống Trộm Bàn Đạp Số</td>
+              <td class="td-pro">✅ <strong>Khóa Morse Lock bằng chân số</strong>: Đạp giữ cần số 3 giây để khóa lửa xe bí mật, trộm bẻ khóa cũng không thể nổ máy.</td>
+              <td class="td-old">❌ Không có tính năng chống trộm.</td>
+            </tr>
+            <tr>
+              <td class="td-feature">Nâng Cấp Phần Mềm</td>
+              <td class="td-pro">✅ <strong>Cập nhật không dây OTA</strong> qua Wi-Fi trong 10 giây; xuất file lưu trữ và chia sẻ map xe.</td>
+              <td class="td-old">❌ Mạch kín cố định, lỗi là phải vứt bỏ hoặc mua cục mới.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         CHƯƠNG 4: 🔌 HƯỚNG DẪN CẤP ĐIỆN & ĐẤU NỐI CẮM GIẮC 100% PLUG & PLAY
+    ======================================================== -->
+    <section class="section-card" id="chap-wiring">
+      <div class="section-title">
+        <span class="number">4</span>
+        Hướng Dẫn Cấp Điện &amp; Đấu Nối Cắm Giắc 100% Plug &amp; Play
+      </div>
+
+      <!-- Real Photos & Schematics Display (6 Items Grid) -->
+      <div class="hardware-showcase-grid">
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/control-box.jpg', 'Ảnh 1: Hộp điều khiển trung tâm Quickshifter Pro hoàn thiện đặt trên xe')">
+            <span class="hw-tag">Ảnh 1: Hộp Điều Khiển Thực Tế</span>
+            <img src="images/control-box.jpg" alt="Hộp điều khiển Quickshifter Pro trên xe">
+          </div>
+          <div class="hw-info">
+            <strong>Hộp Điều Khiển Quickshifter Pro Hoàn Thiện:</strong>
+            • Vỏ hộp đúc khối nguyên chiếc, kích thước siêu nhỏ gọn đặt dưới yên hoặc trong cốp xe.<br>
+            • Chuẩn chống nước, chống bụi IP67 chịu mưa bão và xịt rửa áp lực cao.<br>
+            • Dây dẫn bọc dù chống cháy, cụm giắc cắm chống nước cam chịu nhiệt cao cấp.
+          </div>
+        </div>
+
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/sensor-install.jpg', 'Ảnh 2: Cảm biến tiệm cận ROKO SN04-N bắt thực tế tại gác chân xe')">
+            <span class="hw-tag">Ảnh 2: Vị Trí Cảm Biến Cần Số</span>
+            <img src="images/sensor-install.jpg" alt="Cảm biến cần số bắt thực tế tại gác chân">
+          </div>
+          <div class="hw-info">
+            <strong>Cảm Biến Tiệm Cận ROKO SN04-N Tại Gác Chân:</strong>
+            • Bắt 2 ốc siết cố định chắc chắn vào pát gác chân xe máy.<br>
+            • Khoảng cách nhận diện vàng <strong>1.5mm – 2.5mm</strong> đối diện mũi gạt cần số.<br>
+            • Phản hồi cực nhạy trong <strong>&lt; 1 mili-giây</strong>, không sợ rung lắc hay trễ số.
+          </div>
+        </div>
+
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/wiring-overview.jpg', 'Ảnh 3: Trọn bộ linh kiện phần cứng Quickshifter')">
+            <span class="hw-tag">Ảnh 3: Trọn Bộ Phụ Kiện</span>
+            <img src="images/wiring-overview.jpg" alt="Trọn bộ mạch Quickshifter và sơ đồ">
+          </div>
+          <div class="hw-info">
+            <strong>Trọn Bộ Thiết Bị Sẵn Sàng Lắp Đặt:</strong>
+            • Hộp điều khiển kỹ thuật số Pro hoàn thiện kèm dây bọc dù cao cấp.<br>
+            • Cặp dây tín hiệu mobin (bấm sẵn 2 đầu cos đực / cái).<br>
+            • Cảm biến tiệm cận kim loại ROKO chống nước.<br>
+            • Cụm dây nguồn: Dây đỏ <strong>12V (+)</strong> và dây đen <strong>GND (-)</strong>.
+          </div>
+        </div>
+
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/spade-connectors.jpg', 'Ảnh 4: Hai đầu cos bấm sẵn can thiệp đường kích âm')">
+            <span class="hw-tag">Ảnh 4: Hai Đầu Cos Bấm Sẵn</span>
+            <img src="images/spade-connectors.jpg" alt="Cận cảnh 2 đầu cos mobin và ecu">
+          </div>
+          <div class="hw-info">
+            <strong>Cận Cảnh 2 Đầu Cos Can Thiệp Đường Kích Âm:</strong>
+            • Cos cái <strong>[mobin]</strong>: Cắm vào cọc KÍCH ÂM trên Mobin sườn.<br>
+            • Cos đực <strong>[ecu]</strong>: Cắm vào đầu giắc zin tín hiệu âm từ ECU.<br>
+            👉 <em>100% Cắm giắc Plug &amp; Play, tuyệt đối không cắt dây zin của xe!</em>
+          </div>
+        </div>
+
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/oem-schematic.png', 'Ảnh 5: Cận cảnh cuộn đánh lửa (Mobin sườn xe Fi)')">
+            <span class="hw-tag">Ảnh 5: Cận Cảnh Cuộn Đánh Lửa</span>
+            <img src="images/oem-schematic.png" alt="Sơ đồ mạch điện zin cuộn đánh lửa">
+          </div>
+          <div class="hw-info">
+            <strong>Cuộn Đánh Lửa (Mobin Sườn Xe Fi):</strong>
+            • <strong>Dây 1 (Bl/W - Đen/Trắng)</strong>: Nối THẲNG nguồn +12V sau khóa.<br>
+            • <strong>Dây 2 (P/Bu - Hồng/Xanh)</strong>: Tín hiệu KÍCH ÂM (GND) từ ECU.<br>
+            👉 <em>Quickshifter can thiệp ngắt trực tiếp trên đường KÍCH ÂM này!</em>
+          </div>
+        </div>
+
+        <div class="hw-photo-card">
+          <div class="hw-photo-box" style="cursor:zoom-in;" onclick="openLightbox('images/winner-full-schematic.png', 'Ảnh 6: Sơ đồ điện toàn bộ xe Honda Winner 150 (FS150F)')">
+            <span class="hw-tag">Ảnh 6: Sơ Đồ Hãng Winner 150</span>
+            <img src="images/winner-full-schematic.png" alt="Sơ đồ mạch điện toàn bộ xe Honda Winner 150 FS150F">
+          </div>
+          <div class="hw-info">
+            <strong>Sơ Đồ Hãng Honda Winner 150 (FS150F/FA-L):</strong>
+            • Chân <strong>Số 18: IGPLS</strong> trên giắc 36P của ECM ➜ Dây màu <strong>P/Bu</strong> (Hồng/Xanh).<br>
+            • Nguồn cấp <strong>Bl/W</strong> (Đen/Trắng) từ cầu chì FI 10A.<br>
+            👉 <span style="color:var(--cyan); font-weight:bold; cursor:pointer;" onclick="openLightbox('images/winner-full-schematic.png', 'Sơ đồ hãng Honda Winner 150 Full HD')">[🔍 Bấm vào ảnh để phóng to toàn màn hình]</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Quick Steps -->
+      <div class="steps-grid">
+        <div class="step-box">
+          <span class="step-badge">Bước 1 • Xác Định Dây</span>
+          <h3>Xác Định 2 Dây Mobin Sườn</h3>
+          <p>Trên Winner 150, Exciter, Raider: Cọc nhận dây +12V thường trực (Đen/Trắng <code>Bl/W</code>) ➜ <strong>GIỮ NGUYÊN</strong>. Cọc nhận dây tín hiệu Kích Âm từ chân 18 IGPLS của ECU (Hồng/Xanh <code>P/Bu</code>) ➜ Rút đầu giắc zin này ra.</p>
+        </div>
+
+        <div class="step-box">
+          <span class="step-badge">Bước 2 • Ghim Cos [ecu]</span>
+          <h3>Cắm Đầu Giắc Zin Vào Cos [ecu]</h3>
+          <p>Lấy đầu giắc zin tín hiệu âm vừa rút ở bước 1, cắm chặt vào đầu cos đực <strong>[ecu]</strong> của bộ Quickshifter. Bọc gen cách điện an toàn.</p>
+        </div>
+
+        <div class="step-box">
+          <span class="step-badge">Bước 3 • Cắm Cos [mobin]</span>
+          <h3>Ghim Cos [mobin] Vào Mobin Sườn</h3>
+          <p>Lấy đầu cos cái <strong>[mobin]</strong> của bộ Quickshifter cắm thẳng vào cọc chân kích âm trên Mobin sườn xe. Chu trình ngắt lửa trung gian đã sẵn sàng!</p>
+        </div>
+
+        <div class="step-box">
+          <span class="step-badge">Bước 4 • Cấp Nguồn &amp; Cảm Biến</span>
+          <h3>Đấu Nguồn 12V &amp; Cần Số</h3>
+          <p>• Dây Đỏ: Đấu vào nguồn dương +12V sau chìa khóa xe.<br>• Dây Đen: Bắt chặt vào ốc mass sườn xe.<br>• Cảm biến tiệm cận: Cố định pát giữ cách cần số 1-3mm.</p>
+        </div>
+      </div>
+
+      <!-- Interactive SVG Schematic (CORRECT 2-WIRE IGNITION COIL TOPOLOGY) -->
+      <div class="wiring-stage">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <strong style="color:var(--cyan); font-size:14.5px;">⚡ Sơ Đồ Nguyên Lý Chuẩn: Mobin Sườn Có 12V Thường Trực &amp; Đường Kích Âm Qua Quickshifter</strong>
+          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Click đường dây để xem giải thích</span>
+        </div>
+
+        <svg class="wiring-svg" viewBox="0 0 780 400" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="boxGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#152136"/>
+              <stop offset="100%" stop-color="#0a0f1c"/>
+            </linearGradient>
+            <filter id="neonGlow2" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- 12V MAIN BUS RAIL (Top line) -->
+          <path d="M 40 40 L 740 40" stroke="#ff2a5f" stroke-width="4" stroke-linecap="round"/>
+          <text x="80" y="30" fill="#ff2a5f" font-size="12" font-weight="bold" font-family="JetBrains Mono">+12V THƯỜNG TRỰC SAU Ổ KHÓA XE</text>
+
+          <!-- Wire Direct 12V to Mobin (+ terminal cọc xanh) -->
+          <path d="M 600 40 L 600 180" stroke="#ff2a5f" stroke-width="4" fill="none"/>
+          <circle cx="600" cy="180" r="5" fill="#00ff88"/>
+          <text x="610" y="80" fill="#ff2a5f" font-size="11" font-weight="bold" font-family="JetBrains Mono">Dây 1: +12V (Bl/W)</text>
+          <text x="610" y="95" fill="#8ca0ba" font-size="9.5" font-family="Outfit">(Cắm cọc Xanh Mobin)</text>
+
+          <!-- Wire Direct 12V to Quickshifter Red wire -->
+          <path d="M 370 40 L 370 250" stroke="#ff2a5f" stroke-width="3" stroke-dasharray="6 4" fill="none"/>
+          <circle cx="370" cy="250" r="4" fill="#ff2a5f"/>
+          <text x="320" y="160" fill="#ff2a5f" font-size="10" font-weight="bold" font-family="JetBrains Mono">Dây Đỏ Nuôi Mạch (+12V)</text>
+
+          <!-- ECU Box -->
+          <rect x="30" y="100" width="135" height="90" rx="10" fill="url(#boxGrad2)" stroke="#ff4444" stroke-width="2"/>
+          <text x="97" y="138" fill="#ff6666" font-size="15" font-weight="bold" text-anchor="middle" font-family="Outfit">ECU / IC ZIN</text>
+          <text x="97" y="158" fill="#8ca0ba" font-size="10.5" text-anchor="middle" font-family="JetBrains Mono">DẬP MASS KÍCH LỬA</text>
+          <circle cx="165" cy="145" r="5" fill="#ff9900"/>
+          
+          <!-- Wire 2: ECU to QS (ecu cos) - Signal Trigger Ground -->
+          <path id="svg-wire-ecu" class="wire-line pulse" d="M 165 145 L 245 145 L 245 280 L 325 280" stroke="#ff9900" onclick="alert('DÂY [ecu]: Cos đực nhận tín hiệu kích âm dập mass từ chân P/Bu của ECU.')"/>
+          <g transform="translate(245, 210)">
+            <rect x="-24" y="-12" width="48" height="24" rx="4" fill="#000" stroke="#ff9900" stroke-width="1.5"/>
+            <text x="0" y="4" fill="#ff9900" font-size="10" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">cos ecu</text>
+          </g>
+          <text x="252" y="190" fill="#ff9900" font-size="10" font-weight="bold" font-family="JetBrains Mono">Tín Hiệu Âm (P/Bu)</text>
+
+          <!-- Quickshifter Box -->
+          <rect x="325" y="240" width="165" height="120" rx="12" fill="#0d1424" stroke="#00f0ff" stroke-width="2.5" filter="url(#neonGlow2)"/>
+          <text x="407" y="275" fill="#00f0ff" font-size="14" font-weight="900" text-anchor="middle" font-family="Outfit">QUICKSHIFTER</text>
+          <text x="407" y="295" fill="#fff" font-size="11" font-weight="bold" text-anchor="middle" font-family="Outfit">TỰ LÀM ĐIỆN TỬ PRO</text>
+          <text x="407" y="315" fill="#00ff88" font-size="10" text-anchor="middle" font-family="JetBrains Mono">NGẮT ĐƯỜNG KÍCH ÂM</text>
+          <circle cx="407" cy="335" r="5" fill="#00ff88"/>
+
+          <!-- Wire 3: QS to Mobin (mobin cos) - Controlled Ground -->
+          <path id="svg-wire-mobin" class="wire-line pulse" d="M 490 280 L 680 280 L 680 230" stroke="#ffea00" onclick="alert('DÂY [mobin]: Cos cái cấp đường kích âm từ Quickshifter cắm vào cọc đen của Mobin sườn.')"/>
+          <g transform="translate(585, 280)">
+            <rect x="-28" y="-12" width="56" height="24" rx="4" fill="#000" stroke="#ffea00" stroke-width="1.5"/>
+            <text x="0" y="4" fill="#ffea00" font-size="10" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">cos mobin</text>
+          </g>
+          <circle cx="680" cy="230" r="5" fill="#ffea00"/>
+          <text x="690" y="255" fill="#ffea00" font-size="10" font-weight="bold" font-family="JetBrains Mono">Dây 2: Kích Âm</text>
+
+          <!-- REAL MOBIN SƯỜN PHOTO EMBEDDED IN DIAGRAM -->
+          <g id="real-mobin-node" transform="translate(540, 60)" style="cursor:pointer;" onclick="alert('MOBIN SƯỜN THỰC TẾ: Có 2 chân giắc (Cọc xanh nhận 12V thường trực, Cọc đen nhận tín hiệu kích âm từ Quickshifter).')">
+            <!-- Background Container -->
+            <rect x="0" y="0" width="220" height="175" rx="14" fill="#070b14" stroke="#ffcc00" stroke-width="2.5" filter="url(#neonGlow2)"/>
+            
+            <!-- Title -->
+            <text x="110" y="20" fill="#ffd166" font-size="13" font-weight="bold" text-anchor="middle" font-family="Outfit">MOBIN SƯỜN THỰC TẾ (CUỘN LỬA)</text>
+            
+            <!-- Real Mobin Photo -->
+            <image href="images/mobin-real.png" x="25" y="24" width="170" height="105" preserveAspectRatio="xMidYMid meet"/>
+            
+            <!-- Terminal Callout Badges -->
+            <!-- Cọc Xanh (+12V) -->
+            <g transform="translate(10, 134)">
+              <rect x="0" y="0" width="95" height="28" rx="6" fill="#140a0e" stroke="#00ff88" stroke-width="1.5"/>
+              <circle cx="12" cy="14" r="5" fill="#00ff88"/>
+              <text x="22" y="18" fill="#00ff88" font-size="9.5" font-weight="bold" font-family="JetBrains Mono">Cọc Xanh (+12V)</text>
+            </g>
+
+            <!-- Cọc Đen (-KÍCH) -->
+            <g transform="translate(115, 134)">
+              <rect x="0" y="0" width="95" height="28" rx="6" fill="#101826" stroke="#ffea00" stroke-width="1.5"/>
+              <circle cx="12" cy="14" r="5" fill="#ffea00"/>
+              <text x="22" y="18" fill="#ffea00" font-size="9.5" font-weight="bold" font-family="JetBrains Mono">Cọc Đen (-KÍCH)</text>
+            </g>
+          </g>
+
+          <!-- High Tension Spark Wire to Plug -->
+          <path d="M 760 110 Q 775 140 770 190 Q 765 240 730 260" stroke="#00ff88" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <polygon points="725,255 715,265 730,270" fill="#00ff88"/>
+          <text x="735" y="295" fill="#00ff88" font-size="12" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">⚡ BUGI ĐÁNH LỬA</text>
+
+          <!-- Ground Wire from QS to Frame -->
+          <path d="M 407 360 L 407 385 L 180 385" stroke="#4a5568" stroke-width="3.5"/>
+          <circle cx="180" cy="385" r="4" fill="#4a5568"/>
+          <text x="190" y="375" fill="#8ca0ba" font-size="11" font-weight="bold" font-family="JetBrains Mono">Dây Đen Bắt Mass Sườn (-)</text>
+
+          <!-- Proximity Sensor Wire -->
+          <path d="M 680 340 L 490 340" stroke="#00f0ff" stroke-width="3" stroke-dasharray="4 4"/>
+          <circle cx="680" cy="340" r="16" fill="#16253d" stroke="#00f0ff" stroke-width="2"/>
+          <text x="680" y="345" fill="#00f0ff" font-size="14" text-anchor="middle">🎯</text>
+          <text x="680" y="375" fill="#00f0ff" font-size="10.5" font-weight="bold" text-anchor="middle" font-family="Outfit">Cảm biến cần số</text>
+        </svg>
+      </div>
+
+      <div class="alert-box success">
+        <span style="font-size:20px;">🛡️</span>
+        <div>
+          <strong>Nguyên Lý Chuẩn Xe Máy Phun Xăng Điện Tử (FI):</strong> Mobin sườn xe máy có 2 cọc: Cọc 1 nối thẳng nguồn 12V thường trực sau khóa (dây Đen/Trắng `Bl/W`); Cọc 2 là đường tín hiệu KÍCH ÂM (dây Hồng/Xanh `P/Bu`) do transistor/MOSFET của ECU dập mass để đánh lửa. Bộ Quickshifter của chúng ta ngắt trực tiếp trên đường KÍCH ÂM này, đảm bảo cách ly quang tuyệt đối, an toàn 100% cho ECU và hệ thống điện của xe!
+        </div>
+      </div>
+
+      <!-- 3 Bước Kết Nối Điện Thoại Vào Mạch -->
+      <h3 style="font-size:16.5px; font-weight:800; color:#fff; margin-top:8px;">📱 3 Bước Kết Nối Điện Thoại Mở Web Cockpit</h3>
+      <div class="steps-grid">
+        <div class="step-box" style="border-color:rgba(0, 255, 136, 0.4);">
+          <span class="step-badge" style="color:var(--green);">Bước 1 • Cấp Điện</span>
+          <h3>Bật Chìa Khóa Xe Máy</h3>
+          <p>Bật chìa khóa xe (hoặc bật công tắc phụ nếu có). Hộp Quickshifter nhận nguồn 12V, đèn LED trạng thái sẽ sáng xanh báo hiệu hệ thống đã khởi động và phát sóng Wi-Fi cấu hình.</p>
+        </div>
+
+        <div class="step-box" style="border-color:rgba(0, 240, 255, 0.4);">
+          <span class="step-badge" style="color:var(--cyan);">Bước 2 • Dò Sóng</span>
+          <h3>Dò Wi-Fi: Quickshifter_AP</h3>
+          <p>Mở điện thoại (iPhone hoặc Android), vào mục <strong>Cài đặt ➜ Wi-Fi</strong>. Tìm và kết nối vào mạng Wi-Fi có tên:<br><strong style="color:var(--cyan); font-family:var(--font-mono); font-size:14px;">Quickshifter_AP</strong><br><em>(Mặc định là Wi-Fi mở không cần mật khẩu)</em>.</p>
+        </div>
+
+        <div class="step-box" style="border-color:rgba(255, 170, 0, 0.4);">
+          <span class="step-badge" style="color:var(--amber);">Bước 3 • Mở Trình Duyệt</span>
+          <h3>Gõ Địa Chỉ: 192.168.4.1</h3>
+          <p>Mở trình duyệt web bất kỳ và gõ vào thanh địa chỉ:<br><strong style="color:var(--amber); font-family:var(--font-mono); font-size:16px;">http://192.168.4.1</strong><br>Màn hình Web Cockpit Racing sẽ hiển thị ngay tức thì!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         CHƯƠNG 5: 👟 HƯỚNG DẪN THAO TÁC CẦN SỐ THÔNG MINH
+    ======================================================== -->
+    <section class="section-card" id="chap-pedal">
+      <div class="section-title">
+        <span class="number">5</span>
+        Thao Tác Cần Số Thông Minh (Không Cần Chạm Vào Điện Thoại)
+      </div>
+
+      <!-- Sensor Installation Real Photo & Guide -->
+      <div style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:18px; padding:20px; display:flex; gap:22px; align-items:center; flex-wrap:wrap; margin-bottom:14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+        <div style="flex:1; min-width:280px; max-width:380px; height:240px; border-radius:14px; overflow:hidden; position:relative; cursor:zoom-in; border:1px solid var(--border-dim);" onclick="openLightbox('images/sensor-install.jpg', 'Ảnh thực tế: Cảm biến tiệm cận ROKO SN04-N lắp tại pát gác chân xe')">
+          <img src="images/sensor-install.jpg" alt="Vị trí lắp đặt cảm biến cần số thực tế" style="width:100%; height:100%; object-fit:cover; transition:transform 0.3s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+          <span class="hw-tag" style="top:10px; left:10px;">🔍 Bấm để phóng to</span>
+        </div>
+        <div style="flex:1.4; min-width:280px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span class="tab-pill green">LẮP ĐẶT THỰC TẾ TRÊN XE</span>
+            <span class="tab-pill cyan">CẢM BIẾN ROKO SN04-N</span>
+          </div>
+          <h3 style="color:#fff; font-size:17.5px; font-weight:800;">Vị Trí Cố Định Cảm Biến Cần Số Tại Gác Chân</h3>
+          <p style="font-size:13.5px; color:var(--text-muted); line-height:1.65;">
+            • <strong>Vị trí bắt pát:</strong> Bắt 2 ốc siết chắc chắn xuyên qua tai cảm biến vào pát gác chân xe (như hình chụp thực tế). Cảm biến nằm gọn gàng, thẩm mỹ, không gây vướng víu mũi giày khi lái xe.<br>
+            • <strong>Khe hở tiêu chuẩn:</strong> Đặt đầu cảm biến cách mấu gạt của cần số khoảng <strong>1.5mm – 2.5mm</strong>. Khi người lái gạt cần số lên, cần số lướt qua mặt cảm biến ➜ Mạch kích hoạt ngắt lửa tức thì trong <strong>&lt; 1 mili-giây</strong>.<br>
+            • <strong>Độ bền công nghiệp:</strong> Cảm biến tiệm cận từ tính không tiếp xúc cơ học, không mòn lờn theo thời gian, chống nước mưa và bùn cát tuyệt đối.
+          </p>
+        </div>
+      </div>
+
+      <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">
+        Sau khi đã cài đặt cấu hình ban đầu, bạn không cần phải rút điện thoại ra khi đang lái xe. Toàn bộ tính năng cao cấp đều có thể điều khiển trực tiếp bằng chân:
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tính Năng</th>
+            <th>Thao Tác Chân Số</th>
+            <th>Điều Kiện Kích Hoạt</th>
+            <th>Phản Hồi Động Cơ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:var(--cyan);">Sang Số Nhanh (Quickshift)</strong></td>
+            <td>Đá dứt khoát cần số lên (không bóp côn)</td>
+            <td>Vòng tua máy lớn hơn <code>Min RPM</code> (Mặc định &gt; 2500 RPM)</td>
+            <td>Ngắt lửa chớp nhoáng (55-135ms theo Auto-Map), số nhảy êm ru như xe đua</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--green);">BẬT Launch Limiter</strong></td>
+            <td>Nhấp cần số <strong>3 cái liên tiếp</strong> (Triple-Click)</td>
+            <td>Xe đang đứng yên hoặc tua máy dưới 3000 RPM (thao tác trong 0.8s)</td>
+            <td>Tiếng bíp bíp xác nhận. Vặn hết ga xe hãm đúng tua mục tiêu (ví dụ 7000 RPM)</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--amber);">TẮT Launch Limiter</strong></td>
+            <td>Nhấp cần số <strong>2 cái liên tiếp</strong> (Double-Click)</td>
+            <td>Sau khi xe đã đề-pa xuất phát xong</td>
+            <td>Xe trở về trạng thái vòng tua tự do bình thường</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--red);">Khóa Xe Chống Trộm (Morse Lock)</strong></td>
+            <td>Đạp giữ cần số <strong>trên 3 giây</strong> khi tắt máy</td>
+            <td>Tính năng Lock Mode đã được bật trong cấu hình</td>
+            <td>Hộp Quickshifter ngắt hoàn toàn mạch đánh lửa, trộm bẻ khóa không thể nổ máy</td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--purple);">Mở Khóa Xe</strong></td>
+            <td>Đạp nhịp cần số theo mật mã (Ví dụ: Ngắn - Dài - Ngắn)</td>
+            <td>Bật khóa điện xe và gõ mật mã trong vòng 10 giây</td>
+            <td>Đúng mật mã ➜ Mạch cấp lại nguồn lửa, xe nổ máy bình thường</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ========================================================
+         CHƯƠNG 6: ⚙️ BẢNG THÔNG SỐ KỸ THUẬT & CANH CHỈNH THEO DÒNG XE
+    ======================================================== -->
+    <section class="section-card" id="chap-tuning">
+      <div class="section-title">
+        <span class="number">6</span>
+        Thông Số Kỹ Thuật Tiêu Chuẩn &amp; Gợi Ý Canh Chỉnh Theo Dòng Xe
+      </div>
+
+      <!-- Specs Grid -->
+      <div class="specs-grid">
+        <div class="spec-card">
+          <div class="spec-icon">⚡</div>
+          <div class="spec-detail">
+            <strong>Điện Áp Vận Hành</strong>
+            <span>9V – 16V DC (Ắc quy xe máy 12V)</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">⏱️</div>
+          <div class="spec-detail">
+            <strong>Tốc Độ Xử Lý</strong>
+            <span>Thời gian thực kỹ thuật số &lt; 1ms</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">🎯</div>
+          <div class="spec-detail">
+            <strong>Tần Số Đo Cảm Biến</strong>
+            <span>1000 Hz (Quét vị trí cần số 1000 lần/s)</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">🛡️</div>
+          <div class="spec-detail">
+            <strong>Công Nghệ Cách Ly</strong>
+            <span>Optocoupler cách ly quang cao tần 1000V</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">💧</div>
+          <div class="spec-detail">
+            <strong>Chuẩn Chống Nước</strong>
+            <span>Đúc khối keo chuyên dụng chống nước IP67</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">💾</div>
+          <div class="spec-detail">
+            <strong>Lưu Trữ Cấu Hình</strong>
+            <span>Bộ nhớ vĩnh viễn (Tháo bình không mất dữ liệu)</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">📶</div>
+          <div class="spec-detail">
+            <strong>Kết Nối Cấu Hình</strong>
+            <span>Wi-Fi Web Cockpit (Không cần cài app)</span>
+          </div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-icon">🏍️</div>
+          <div class="spec-detail">
+            <strong>Dòng Xe Tương Thích</strong>
+            <span>Winner, Exciter, Raider, Sonic, CBR, Satria...</span>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px; font-weight:800; color:#fff; margin-top:12px;">🏍️ Cấu Hình Khuyên Dùng Theo Từng Dòng Xe</h3>
+      <div class="steps-grid">
+        <div class="step-box">
+          <span class="step-badge">Exciter / Winner 150cc</span>
+          <h3>Xe Phổ Thông Đi Phố &amp; Tour</h3>
+          <p>
+            • Chế độ: <strong>Auto-Map 12 Bands (Bật)</strong><br>
+            • Preset: <strong>Chuẩn Phố 150cc</strong><br>
+            • Vòng tua tối thiểu: <strong>2500 RPM</strong><br>
+            • Thời gian ngắt cơ bản: <strong>65 ms</strong><br>
+            • Lọc rung cần số: <strong>15 ms</strong><br>
+            • Đảm bảo êm ái khi đi phố, tăng tốc mượt mà
+          </p>
+        </div>
+
+        <div class="step-box">
+          <span class="step-badge">Raider / Satria Fi DOHC</span>
+          <h3>Máy Cam Đôi Tua Cao</h3>
+          <p>
+            • Chế độ: <strong>Auto-Map 12 Bands (Bật)</strong><br>
+            • Preset: <strong>Raider / Satria DOHC</strong><br>
+            • Dải tua cao 10000+: <strong>55 – 60 ms</strong><br>
+            • Vòng tua tối thiểu: <strong>3000 RPM</strong><br>
+            • Giúp số nhảy cực nhẹ, không sượng vú số
+          </p>
+        </div>
+
+        <div class="step-box">
+          <span class="step-badge">Xe Độ Máy &amp; Drag Track</span>
+          <h3>Xe Đua Tối Đa Tốc Độ</h3>
+          <p>
+            • Chế độ: <strong>Auto-Map / Fixed 50ms</strong><br>
+            • Preset: <strong>Drag 400m</strong><br>
+            • Launch Limiter: <strong>Cài 7500 RPM</strong><br>
+            • Nổ pô Popcorn: <strong>Chế độ băm xung thể thao</strong><br>
+            • Tăng tốc xé gió không hẫng vòng tua
+          </p>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px; font-weight:800; color:#fff; margin-top:10px;">🛠️ Bảng Chẩn Đoán Khắc Phục Nhanh</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Hiện Tượng</th>
+            <th>Nguyên Nhân Chính</th>
+            <th>Cách Xử Lý Dứt Điểm</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Đá cần số không có tác dụng cắt lửa</td>
+            <td>Tua máy đang thấp hơn <code>Min RPM</code>, hoặc cảm biến số cắm lỏng</td>
+            <td>Kiểm tra vòng tua trên xe; vào tab Shift &amp; Cut kiểm tra cảm biến số; bấm <strong>Lưu Cấu Hình</strong></td>
+          </tr>
+          <tr>
+            <td>Sang số bị khựng giật, chồm xe</td>
+            <td>Thời gian cắt số (Cut Time) đang để quá dài</td>
+            <td>Vào tab <strong>Auto Map Curve</strong>, giảm bớt 5-10ms ở dải tua bị giật rồi bấm Lưu</td>
+          </tr>
+          <tr>
+            <td>Sang số bị sượng, nặng chân số</td>
+            <td>Thời gian cắt số quá ngắn, nhông chưa kịp ăn khớp</td>
+            <td>Tăng thêm 5-10ms ở dải tua đó để nhông số vào khớp êm ái</td>
+          </tr>
+          <tr>
+            <td>Không dò thấy Wi-Fi <code>Quickshifter_AP</code></td>
+            <td>Đã hết thời gian chờ phát sóng Wi-Fi (AP Timeout)</td>
+            <td>Tắt khóa xe và bật lại để thiết bị mở lại Wi-Fi. Cài <code>AP Timeout = 0</code> nếu muốn Wi-Fi luôn bật</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="manual-footer">
+      <p><strong>QUICKSHIFTER TỰ LÀM ĐIỆN TỬ PRO — HỆ THỐNG SANG SỐ NHANH THÔNG MINH</strong></p>
+      <p>Bảo hành chính hãng 12 tháng 1 đổi 1 • Hỗ trợ kỹ thuật 24/7 • Tiêu chuẩn an toàn cách ly điện xe máy</p>
+      <p style="margin-top:6px; color:#596d85;">Thiết kế &amp; Tối ưu thương mại dành cho cộng đồng xe côn tay Việt Nam © 2026</p>
+    </footer>
+
+  </div>
+
+  <!-- LIGHTBOX MODAL FOR HD IMAGES -->
+  <div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox(event)">
+    <div class="lightbox-content-box" onclick="event.stopPropagation()">
+      <button class="lightbox-close" onclick="closeLightbox()" title="Đóng">&times;</button>
+      <img src="" alt="" class="lightbox-img" id="lightboxImg">
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
+
+  <script>
+    function openLightbox(src, caption) {
+      const modal = document.getElementById('lightboxModal');
+      const img = document.getElementById('lightboxImg');
+      const cap = document.getElementById('lightboxCaption');
+      if (!modal || !img) return;
+      img.src = src;
+      img.alt = caption || 'Chi tiết hình ảnh';
+      cap.innerText = caption || '';
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(e) {
+      const modal = document.getElementById('lightboxModal');
+      if (!modal) return;
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Active Navigation Highlighting on Scroll
+    window.addEventListener('scroll', function() {
+      const sections = document.querySelectorAll('section.section-card[id]');
+      const navLinks = document.querySelectorAll('.menu-btn');
+      let currentId = '';
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (window.pageYOffset >= top) {
+          currentId = sec.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentId) {
+          link.classList.add('active');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

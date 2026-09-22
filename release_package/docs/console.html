@@ -1,0 +1,3474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quickshifter Racing Cockpit Pro — Bảng Điều Khiển Kỹ Thuật Số</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Theme 1: Cyber Neon (Mặc định) */
+      --bg-void: #05070c;
+      --bg-panel: #0c111a;
+      --bg-panel-alt: #131926;
+      --bg-card: rgba(16, 23, 36, 0.75);
+      --border-dim: rgba(0, 240, 255, 0.12);
+      --border-bright: rgba(0, 240, 255, 0.4);
+      --accent-cyan: #00f0ff;
+      --accent-green: #00ff88;
+      --accent-amber: #ffaa00;
+      --accent-red: #ff2a5f;
+      --accent-purple: #b026ff;
+      --accent-glow: 0 0 24px rgba(0, 240, 255, 0.35);
+      --text-main: #f3f6fa;
+      --text-muted: #8595aa;
+      --text-dark: #4d5c70;
+      --gauge-track: #151e2e;
+      --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.6);
+      --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="racing-red"] {
+      --bg-void: #080405;
+      --bg-panel: #140b0e;
+      --bg-panel-alt: #1f1116;
+      --bg-card: rgba(28, 16, 21, 0.78);
+      --border-dim: rgba(255, 42, 95, 0.16);
+      --border-bright: rgba(255, 42, 95, 0.45);
+      --accent-cyan: #ff2a5f;
+      --accent-green: #ff6b35;
+      --accent-amber: #ffd166;
+      --accent-red: #ff0044;
+      --accent-purple: #9d0208;
+      --accent-glow: 0 0 24px rgba(255, 42, 95, 0.4);
+      --gauge-track: #26141a;
+    }
+
+    [data-theme="gold-hrc"] {
+      --bg-void: #060606;
+      --bg-panel: #12110e;
+      --bg-panel-alt: #1c1913;
+      --bg-card: rgba(26, 22, 16, 0.8);
+      --border-dim: rgba(245, 178, 30, 0.18);
+      --border-bright: rgba(245, 178, 30, 0.45);
+      --accent-cyan: #f5b21e;
+      --accent-green: #00ffbb;
+      --accent-amber: #ff8800;
+      --accent-red: #ff3344;
+      --accent-purple: #c59b27;
+      --accent-glow: 0 0 24px rgba(245, 178, 30, 0.4);
+      --gauge-track: #242016;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 14px 100px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.07) 0%, transparent 60%),
+        radial-gradient(circle at 10% 40%, rgba(176, 38, 255, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 90% 70%, rgba(0, 255, 136, 0.04) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Ambient Viewport Bar */
+    .viewport-control-bar {
+      width: 100%;
+      max-width: 1220px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 14px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
+      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-dim);
+    }
+    .badge-pill.active {
+      background: rgba(0, 255, 136, 0.12);
+      border-color: rgba(0, 255, 136, 0.35);
+      color: var(--accent-green);
+    }
+    .badge-pill.warning {
+      background: rgba(255, 170, 0, 0.12);
+      border-color: rgba(255, 170, 0, 0.35);
+      color: var(--accent-amber);
+    }
+    .dot-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: pulseAnim 1.6s infinite ease-in-out;
+    }
+    @keyframes pulseAnim {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    .device-switcher-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-pill {
+      background: transparent;
+      border: 1px solid var(--border-dim);
+      color: var(--text-muted);
+      padding: 4px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn-pill:hover, .btn-pill.active {
+      background: var(--bg-panel-alt);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    /* Main Container Shell */
+    .app-shell {
+      width: 100%;
+      max-width: 1220px;
+      transition: max-width 0.35s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .app-shell.phone-frame {
+      max-width: 440px;
+      border: 7px solid #1c2536;
+      border-radius: 40px;
+      box-shadow: 0 0 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 240, 255, 0.15);
+      background: var(--bg-void);
+      position: relative;
+    }
+    .app-shell.phone-frame::before {
+      content: '';
+      display: block;
+      width: 120px;
+      height: 18px;
+      background: #1c2536;
+      border-radius: 0 0 14px 14px;
+      margin: 0 auto 8px;
+    }
+
+    /* Cockpit Header */
+    .cockpit-header {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 20px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cockpit-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    }
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(176, 38, 255, 0.2));
+      border: 1px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--accent-glow);
+    }
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--accent-cyan);
+    }
+    .brand-meta h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ffffff, var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-meta p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 9px 16px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: none;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      font-family: var(--font-body);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-cyan), #0088ff);
+      color: #030a14;
+      box-shadow: 0 4px 18px rgba(0, 240, 255, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 240, 255, 0.55);
+    }
+    .btn-secondary {
+      background: var(--bg-panel-alt);
+      color: var(--text-main);
+      border: 1px solid var(--border-dim);
+    }
+    .btn-secondary:hover {
+      border-color: var(--border-bright);
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px dashed var(--border-dim);
+    }
+    .btn-ghost:hover {
+      color: var(--text-main);
+      border-color: var(--border-bright);
+    }
+    .btn-danger {
+      background: rgba(255, 42, 95, 0.15);
+      border: 1px solid rgba(255, 42, 95, 0.4);
+      color: var(--accent-red);
+    }
+    .btn-danger:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+    .btn-save-dirty {
+      animation: pulseGlow 1.8s infinite alternate;
+    }
+    @keyframes pulseGlow {
+      from { box-shadow: 0 0 8px rgba(255, 170, 0, 0.4); border-color: var(--accent-amber); }
+      to { box-shadow: 0 0 22px rgba(255, 170, 0, 0.8); border-color: #ffe066; }
+    }
+
+    /* Sticky Persistent Action Bar */
+    .sticky-control-bar {
+      position: sticky;
+      top: 8px;
+      z-index: 950;
+      background: rgba(12, 17, 26, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 9px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75), 0 0 18px rgba(0, 240, 255, 0.18);
+      transition: all 0.25s ease;
+    }
+    .sticky-status-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge-dirty-pulse {
+      animation: badgeDirtyPulse 1.4s infinite alternate ease-in-out;
+      border-color: rgba(255, 170, 0, 0.85) !important;
+      box-shadow: 0 0 14px rgba(255, 170, 0, 0.5);
+    }
+    @keyframes badgeDirtyPulse {
+      0% {
+        box-shadow: 0 0 6px rgba(255, 170, 0, 0.3);
+        transform: scale(1);
+      }
+      100% {
+        box-shadow: 0 0 18px rgba(255, 170, 0, 0.85);
+        transform: scale(1.02);
+      }
+    }
+    @media (max-width: 640px) {
+      .sticky-control-bar {
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .sticky-control-bar .btn {
+        padding: 7px 12px;
+        font-size: 12px;
+      }
+    }
+
+    /* Tabs Navigation */
+    .cockpit-tabs {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 16px;
+      padding: 6px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .cockpit-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .tab-item {
+      padding: 10px 16px;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s;
+    }
+    .tab-item svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+    .tab-item:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .tab-item.active {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 136, 255, 0.2));
+      color: var(--accent-cyan);
+      border: 1px solid var(--border-bright);
+      box-shadow: 0 4px 16px rgba(0, 240, 255, 0.15);
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      animation: fadeIn 0.25s ease-out;
+    }
+    .tab-pane.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card Panels & Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .card-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--text-main);
+    }
+    .card-title svg {
+      width: 17px;
+      height: 17px;
+      fill: var(--accent-cyan);
+    }
+
+    /* Form Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 13px;
+    }
+    .form-group label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-group input[type="number"],
+    .form-group input[type="text"],
+    .form-group input[type="password"],
+    .form-group select {
+      background: var(--bg-void);
+      border: 1px solid var(--border-dim);
+      border-radius: 10px;
+      padding: 10px 13px;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+    }
+    .form-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .form-hint.warn {
+      color: var(--accent-amber);
+    }
+    .form-hint.error {
+      color: var(--accent-red);
+    }
+
+    /* Switch Toggles */
+    .toggle-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 15px;
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .toggle-bar.compact {
+      padding: 8px 12px;
+      margin-bottom: 6px;
+    }
+    .toggle-bar .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .toggle-bar .subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .switch-wrap {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .switch-wrap input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #1e2838;
+      transition: 0.25s;
+      border-radius: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #e2e8f0;
+      transition: 0.25s;
+      border-radius: 50%;
+    }
+    input:checked + .slider-toggle {
+      background-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+    input:checked + .slider-toggle:before {
+      transform: translateX(22px);
+      background-color: #030a14;
+    }
+
+    /* Tooltip Helper */
+    .tooltip-icon {
+      cursor: help;
+      margin-left: 5px;
+      opacity: 0.7;
+      font-size: 13px;
+      color: var(--accent-cyan);
+    }
+
+    /* TAB 1: COCKPIT GAUGE & TELEMETRY */
+    .cockpit-hero-card {
+      background: linear-gradient(180deg, #0e1522 0%, #070b12 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), var(--accent-glow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .shift-light-bar {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      padding: 6px 12px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      justify-content: space-between;
+    }
+    .led-bulb {
+      flex: 1;
+      height: 11px;
+      border-radius: 6px;
+      background: #172130;
+      transition: all 0.08s ease;
+      opacity: 0.25;
+    }
+    .led-bulb.green.on {
+      background: #00ff88;
+      box-shadow: 0 0 14px #00ff88, 0 0 22px #00ff88;
+      opacity: 1;
+    }
+    .led-bulb.amber.on {
+      background: #ffb703;
+      box-shadow: 0 0 14px #ffb703, 0 0 22px #ffb703;
+      opacity: 1;
+    }
+    .led-bulb.red.on {
+      background: #ff0044;
+      box-shadow: 0 0 16px #ff0044, 0 0 26px #ff0044;
+      opacity: 1;
+    }
+    .led-bulb.purple.on {
+      background: #d900ff;
+      box-shadow: 0 0 18px #d900ff, 0 0 28px #d900ff;
+      opacity: 1;
+    }
+    .led-flashing {
+      animation: flashRapid 0.12s infinite alternate;
+    }
+    @keyframes flashRapid {
+      from { opacity: 1; transform: scale(1.05); }
+      to { opacity: 0.1; transform: scale(0.95); }
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 290px;
+      height: 175px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .gauge-svg {
+      width: 290px;
+      height: 175px;
+      overflow: visible;
+    }
+    .gauge-bg-arc {
+      fill: none;
+      stroke: var(--gauge-track);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 377;
+    }
+    .gauge-fill-arc {
+      fill: none;
+      stroke: url(#rpmGradient);
+      stroke-width: 15;
+      stroke-linecap: round;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 377;
+      transition: stroke-dashoffset 0.08s cubic-bezier(0.1, 0.9, 0.2, 1);
+      filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.6));
+    }
+    .gauge-center-content {
+      position: absolute;
+      bottom: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .gauge-rpm-number {
+      font-family: var(--font-mono);
+      font-size: 46px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+    }
+    .gauge-rpm-unit {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent-cyan);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .gauge-peak-rpm {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Telemetry Metrics 4-Box */
+    .metrics-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+    .metric-card {
+      background: rgba(14, 20, 31, 0.85);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .metric-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+    .metric-value {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .metric-value.cut-active {
+      color: var(--accent-red);
+      text-shadow: 0 0 15px var(--accent-red);
+      animation: pulseRed 0.3s infinite alternate;
+    }
+    @keyframes pulseRed {
+      from { opacity: 0.8; }
+      to { opacity: 1; }
+    }
+    .metric-value.shift-active {
+      color: var(--accent-cyan);
+      text-shadow: 0 0 15px var(--accent-cyan);
+    }
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+
+    /* TAB 3: AUTO MAP & DYNO CURVE */
+    .dyno-chart-card {
+      background: #080c14;
+      border: 1px solid var(--border-bright);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .chart-container {
+      width: 100%;
+      height: 150px;
+    }
+    .chart-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .auto-map-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .band-item-card {
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .band-adjust-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-dim);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-step:hover {
+      background: var(--accent-cyan);
+      color: #000;
+    }
+    .band-cut-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      min-width: 58px;
+      text-align: center;
+    }
+
+    /* TAB 4: LIMITER VISUALIZER */
+    .limiter-pulse-visualizer {
+      width: 100%;
+      height: 44px;
+      background: #090c13;
+      border-radius: 10px;
+      border: 1px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      gap: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .pulse-block-cut {
+      background: var(--accent-red);
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .pulse-block-spark {
+      background: var(--accent-green);
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: #000;
+      text-transform: uppercase;
+    }
+
+    /* TAB 5: MANUAL BACKFIRE TIMELINE */
+    .timeline-container {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+      margin: 14px 0;
+    }
+    .timeline-stage {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-dim);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .timeline-stage.stage-a { border-color: var(--accent-cyan); background: rgba(0, 240, 255, 0.06); }
+    .timeline-stage.stage-b { border-color: var(--accent-amber); background: rgba(255, 170, 0, 0.08); }
+    .timeline-stage.stage-c { border-color: var(--accent-green); background: rgba(0, 255, 136, 0.06); }
+
+    /* TAB 6: LOCK MODE & TAP TRAINER */
+    .morse-tap-trainer {
+      background: #080d16;
+      border: 2px dashed var(--accent-cyan);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      margin: 14px 0;
+      user-select: none;
+    }
+    .btn-big-lever {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 3px solid var(--accent-cyan);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-big-lever:active {
+      transform: scale(0.92);
+      background: var(--accent-cyan);
+      color: #030a14;
+    }
+    .morse-code-display {
+      display: flex;
+      gap: 8px;
+    }
+    .morse-char-box {
+      width: 40px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--bg-panel-alt);
+      border: 2px solid var(--border-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+    }
+    .morse-char-box.filled {
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      background: rgba(0, 255, 136, 0.1);
+    }
+    .lock-pass-feed {
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      background: #050a12;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    /* REALTIME LOG STREAM */
+    .log-list {
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 12px;
+      background: #050912;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .log-line {
+      display: grid;
+      grid-template-columns: 70px 80px 80px 1fr 60px;
+      gap: 8px;
+      padding-bottom: 4px;
+    }
+    .log-line .cut {
+      color: var(--accent-red);
+      font-weight: 700;
+    }
+
+    /* PROGRESS & OTA */
+    .progress {
+      width: 100%;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: var(--accent-cyan);
+      transition: width 0.2s ease;
+    }
+    .ota-box {
+      border: 1px dashed rgba(0, 240, 255, 0.35);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(0, 240, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* CONFIG SNAPSHOT SUMMARY TABLE */
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .config-row {
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-dim);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .config-row strong {
+      font-family: var(--font-mono);
+      color: var(--text-main);
+    }
+
+    /* TOAST & TICKER */
+    .toast-popup {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0c1422;
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      padding: 12px 18px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 13px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), var(--accent-glow);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 9999;
+    }
+    .toast-popup.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .cockpit-ticker {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(5, 7, 12, 0.94);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(0, 240, 255, 0.15);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      z-index: 900;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VIEWPORT TOP BAR -->
+  <div class="viewport-control-bar">
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <span class="badge-pill active" id="badgeStream">
+        <span class="dot-pulse"></span>
+        <span id="txtConnectionStatus">Wi-Fi AP: Quickshifter_AP (192.168.4.1)</span>
+      </span>
+      <span class="badge-pill" id="configMeta">System Profile v2.4</span>
+    </div>
+
+    <div class="device-switcher-btns">
+      <button class="btn-pill active" onclick="switchTheme('cyber-neon')">Cyber Neon</button>
+      <button class="btn-pill" onclick="switchTheme('racing-red')">Racing Red</button>
+      <button class="btn-pill" onclick="switchTheme('gold-hrc')">Gold HRC</button>
+      <button class="btn-pill" id="btnToggleFrame" onclick="togglePhoneFrame()">📱 Khung Điện Thoại</button>
+    </div>
+  </div>
+
+  <!-- MAIN SHELL -->
+  <div class="app-shell" id="appShell">
+    
+    <!-- COCKPIT HEADER -->
+    <header class="cockpit-header">
+      <div class="brand-title">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="brand-meta">
+          <h1>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</h1>
+          <p>Hệ Thống Sang Số Kỹ Thuật Số • Wi-Fi Web Cockpit • Realtime Telemetry</p>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-pill active" style="font-size: 11px;">
+          <span class="dot-pulse"></span>
+          <span>DEVICE ONLINE</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- STICKY PERSISTENT CONTROL BAR: Tải Lại, Lưu Cấu Hình & Trạng Thái Luôn Hiện Không Biến Mất -->
+    <div class="sticky-control-bar" id="stickyControlBar">
+      <div class="sticky-status-wrap">
+        <span class="badge-pill active" id="badgeDirty" style="display: inline-flex;">
+          <span class="dot-pulse" id="dotDirtyStatus"></span>
+          <span id="txtDirtyStatus">✅ Đã đồng bộ cấu hình</span>
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" id="reloadBtn" onclick="handleReloadConfig()" title="Tải lại thông số từ thiết bị">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Tải Lại
+        </button>
+        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ vĩnh viễn của thiết bị">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+          Lưu Cấu Hình
+        </button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <nav class="cockpit-tabs">
+      <button class="tab-item active" onclick="switchTab('live')">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        Live Cockpit
+      </button>
+      <button class="tab-item" onclick="switchTab('shift')">
+        <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+        Shift &amp; Cut
+      </button>
+      <button class="tab-item" onclick="switchTab('map')">
+        <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+        Auto Map Curve
+      </button>
+      <button class="tab-item" onclick="switchTab('test')">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Test Bench
+      </button>
+      <button class="tab-item" onclick="switchTab('tools')">
+        <svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+        Tools, Calib &amp; Log
+      </button>
+      <button class="tab-item" onclick="switchTab('config')">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        OTA &amp; Snapshot
+      </button>
+    </nav>
+
+    <!-- TAB 1: LIVE COCKPIT -->
+    <section class="tab-pane active" id="pane-live">
+      <div class="cockpit-hero-card">
+        
+        <!-- F1 / MotoGP Shift Lights -->
+        <div class="shift-light-bar" id="shiftLightBar">
+          <div class="led-bulb green" id="led0"></div>
+          <div class="led-bulb green" id="led1"></div>
+          <div class="led-bulb green" id="led2"></div>
+          <div class="led-bulb amber" id="led3"></div>
+          <div class="led-bulb amber" id="led4"></div>
+          <div class="led-bulb amber" id="led5"></div>
+          <div class="led-bulb red" id="led6"></div>
+          <div class="led-bulb red" id="led7"></div>
+          <div class="led-bulb purple" id="led8"></div>
+          <div class="led-bulb purple" id="led9"></div>
+        </div>
+
+        <!-- RADIAL TACHOMETER -->
+        <div class="gauge-wrapper">
+          <svg class="gauge-svg" viewBox="0 0 240 150">
+            <defs>
+              <linearGradient id="rpmGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="var(--accent-cyan)" />
+                <stop offset="60%" stop-color="var(--accent-green)" />
+                <stop offset="85%" stop-color="var(--accent-amber)" />
+                <stop offset="100%" stop-color="var(--accent-red)" />
+              </linearGradient>
+            </defs>
+            <path class="gauge-bg-arc" d="M 20 135 A 100 100 0 0 1 220 135" />
+            <path class="gauge-fill-arc" id="gaugeArc" d="M 20 135 A 100 100 0 0 1 220 135" />
+          </svg>
+          <div class="gauge-center-content">
+            <div class="gauge-rpm-number" id="rpmValue">0</div>
+            <div class="gauge-rpm-unit">RPM • VÒNG/PHÚT</div>
+            <div class="gauge-peak-rpm" id="rpmMeta">Raw: 0 RPM • Đợi stream</div>
+          </div>
+        </div>
+
+        <!-- 4 METRICS BOXES (Từ index.html gốc) -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-title">Cut State</span>
+            <span class="metric-value" id="cutState">Standby</span>
+            <span class="metric-sub" id="cutHint">IGN+INJ</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Shift Sensor</span>
+            <span class="metric-value" id="shiftState">---</span>
+            <span class="metric-sub" id="bucketMeta">Band: --</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Auto Limiter</span>
+            <span class="metric-value" id="valLimiter" style="color: var(--accent-amber);">OFF (7000)</span>
+            <span class="metric-sub" id="limiterSubMode">Nhấp 3 Bật • 2 Tắt</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Realtime Logs</span>
+            <span class="metric-value" id="logCount">0</span>
+            <span class="metric-sub" id="logSummary">waiting stream...</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: SHIFT & CUT -->
+    <section class="tab-pane" id="pane-shift">
+      <div class="grid-2">
+        
+        <!-- Cột 1: Cấu hình Công tắc & Relay -->
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              Cấu Hình Relay &amp; Cảm Biến Đá Số
+            </div>
+          </div>
+
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Auto Map Mode</div>
+              <div class="subtitle">Bật tính năng cắt theo bảng ánh xạ RPM thông minh</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="modeAuto" class="switch" checked onchange="markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Shift active LOW (GND)</div>
+              <div class="subtitle">Cảm biến NPN kéo GND khi đá số (SN04-N / Switch)</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="shiftActiveLow" class="switch" checked onchange="markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Relay HIGH = cut</div>
+              <div class="subtitle">Mức logic kích Relay (Đảo cực bảo vệ)</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="relayPolarityHighToCut" class="switch" onchange="markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Cắt Đánh Lửa (IGN)</div>
+              <div class="subtitle">Ngắt nguồn Mobin sườn qua Relay 1</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="cutIgnEnabled" class="switch" checked onchange="updateCutHint(); markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Cắt Kim Phun (INJ)</div>
+              <div class="subtitle">Ngắt nguồn kim phun Fi qua Relay 2</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="cutInjEnabled" class="switch" checked onchange="updateCutHint(); markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Cột 2: Các tham số thời gian & RPM -->
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+              Thời Gian Cắt &amp; Đọc Xung RPM
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Fixed cut (ms) <span class="tooltip-icon" title="Thời gian cắt cố định nếu tắt Auto Map">ⓘ</span></label>
+            <input type="number" id="cutTimeFixed" min="5" max="250" step="1" value="50" onchange="markDirty()">
+          </div>
+
+          <div class="form-group">
+            <label>Shift debounce (ms) <span class="tooltip-icon" title="Thời gian lọc chống rung tiếp điểm cần số">ⓘ</span></label>
+            <input type="number" id="shiftDebounceMs" min="0" max="200" step="1" value="30" onchange="markDirty()">
+          </div>
+
+          <div class="form-group">
+            <label>Min RPM to cut <span class="tooltip-icon" title="Vòng tua tối thiểu cho phép cắt, dưới mức này sẽ bỏ qua để chống chết máy">ⓘ</span></label>
+            <input type="number" id="minRpm" min="0" max="20000" step="50" value="1500" onchange="markDirty()">
+          </div>
+
+          <div class="form-group">
+            <label>PPR (PC817) <span class="tooltip-icon" title="Số xung đếm trên 1 vòng quay cốt máy (Pulses Per Revolution)">ⓘ</span></label>
+            <input type="number" id="ppr" min="0.1" max="6" step="0.1" value="1.0" onchange="markDirty()">
+          </div>
+
+          <div class="form-group">
+            <label>RPM scale factor</label>
+            <input type="number" id="rpmScaleFactor" min="0.1" max="5" step="0.01" value="1.0" onchange="markDirty()">
+          </div>
+
+          <div class="form-group">
+            <label>RPM offset</label>
+            <input type="number" id="rpmOffset" min="-5000" max="5000" step="1" value="0" onchange="markDirty()">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- AUTO RPM LIMITER SECTION -->
+      <div class="card-box" style="margin-top: 16px;">
+        <div class="card-header-row">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+            Auto RPM Limiter (Hard Cut)
+          </div>
+        </div>
+
+        <div class="toggle-bar">
+          <div>
+            <div class="title">Bật Auto RPM Limiter <span class="tooltip-icon" title="Bật/Tắt tính năng ngắt lửa tại chỗ">ⓘ</span></div>
+            <div class="subtitle">Tự động ngắt lửa tuyệt đối khi tua máy vượt ngưỡng Target</div>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="limiter_enable" class="switch" onchange="updateAutoLimiterUi(); markDirty()">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div class="toggle-bar">
+          <div>
+            <div class="title">Điều Khiển Bằng Cần Số <span class="tooltip-icon" title="Khi dừng/tua thấp: Nhấp cần số 3 lần để BẬT, nhấp 2 lần để TẮT Hard Cut">ⓘ</span></div>
+            <div class="subtitle">Bật: Nhấp 3 cái • Tắt: Nhấp 2 cái (chỉ nhận lệnh khi dừng/tua thấp &le; Min RPM)</div>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="allow_double_click" class="switch" checked onchange="markDirty()">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div id="autoLimiterFields" style="display:none; margin-top: 14px;">
+          <div style="padding:12px 14px; border-radius:12px; background:rgba(0,240,255,0.06); border:1px solid var(--border-dim); font-size:13px; line-height:1.6; margin-bottom:14px;">
+            💡 <strong>Nguyên lý Hard Cut:</strong> Khi tua máy &ge; <span id="hintTargetRpm" style="color:var(--accent-red); font-weight:700;">7000</span> RPM, ngắt lửa trong <span id="hintCutMs" style="font-weight:700;">30</span>ms và trả lửa <span id="hintSparkMs" style="font-weight:700;">20</span>ms. Thoát cắt khi tua máy rớt dưới <span id="hintExitRpm" style="color:var(--accent-green); font-weight:700;">6800</span> RPM (<span id="hintExitCalc">7000 - 200 = 6800</span> RPM).
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Target RPM (Vòng tua cắt)</label>
+              <input type="number" id="target_rpm" min="1000" max="20000" step="100" value="7000" oninput="updateAutoLimiterHints(); markDirty()">
+            </div>
+
+            <div class="form-group">
+              <label>RPM Hysteresis (Biên độ trễ thoát)</label>
+              <input type="number" id="rpm_hysteresis" min="10" max="2000" step="50" value="200" oninput="updateAutoLimiterHints(); markDirty()">
+            </div>
+
+            <div class="form-group">
+              <label>Hard Cut Time (ms) <span class="tooltip-icon" title="Thời gian ngắt lửa tuyệt đối trong 1 chu kỳ">ⓘ</span></label>
+              <input type="number" id="hard_cut_ms" min="5" max="500" step="1" value="30" oninput="updateAutoLimiterHints(); markDirty()">
+            </div>
+
+            <div class="form-group">
+              <label>Recovery Spark Time (ms) <span class="tooltip-icon" title="Thời gian trả lửa bắt buộc hồi buồng đốt">ⓘ</span></label>
+              <input type="number" id="recovery_spark_ms" min="5" max="500" step="1" value="20" oninput="updateAutoLimiterHints(); markDirty()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANUAL BACKFIRE SECTION -->
+      <div class="card-box" style="margin-top: 16px;">
+        <div class="card-header-row">
+          <div class="card-title" style="color: var(--accent-amber);">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            🍿 Studio Bắn Bắp Rang / Nổ Pô (Popcorn Backfire)
+          </div>
+        </div>
+
+        <div class="toggle-bar">
+          <div>
+            <div class="title">Bật Tính Năng Bắn Bắp Rang (Popcorn Backfire)</div>
+            <div class="subtitle">Đang kéo ga tua cao, đạp giữ cần số > 0.6s để kích nổ pô liên thanh ròn rã</div>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="manualBackfireEnabled" class="switch" checked onchange="updateManualBackfireUi(); markDirty()">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div id="manualBackfireFields" style="margin-top: 14px;">
+          <!-- 4 Preset Chọn Nhanh -->
+          <div style="margin-bottom: 14px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">⚡ Chọn Nhanh Kiểu Nổ Pô Bắp Rang:</span>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:6px;">
+              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('motogp')">
+                🍿 <strong>Bắp Rang MotoGP</strong> (95ms/35ms/55ms)
+              </button>
+              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('cannon')">
+                💣 <strong>Đại Bác Khạc Lửa</strong> (150ms/45ms/75ms)
+              </button>
+              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('ak47')">
+                🔫 <strong>Súng Máy AK47</strong> (75ms/30ms/45ms)
+              </button>
+              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('gentle')">
+                🛡️ <strong>Êm Dịu / Pô Zin</strong> (85ms/40ms/65ms)
+              </button>
+            </div>
+          </div>
+
+          <!-- Cấu hình ngưỡng kích hoạt -->
+          <div class="grid-3">
+            <div class="form-group">
+              <label>Thời Gian Giữ Cần Số Để Kích (Hold ms)</label>
+              <input type="number" id="manualBackfireHoldMs" min="300" max="3000" step="50" value="600" onchange="markDirty()">
+              <small style="color:var(--text-muted); font-size:11px;">Mặc định: 600ms (giữ hơn nửa giây)</small>
+            </div>
+
+            <div class="form-group">
+              <label>Vòng Tua Tối Thiểu (Min RPM)</label>
+              <input type="number" id="manualMinRpm" min="2000" max="10000" step="100" value="4000" onchange="markDirty()">
+              <small style="color:var(--text-muted); font-size:11px;">Khuyên dùng: ≥ 4,000 RPM (pô đủ nóng)</small>
+            </div>
+
+            <div class="form-group">
+              <label>Chế Độ Hoạt Động (Mode)</label>
+              <select id="manualBackfireMode" onchange="updateManualBackfireUi(); markDirty()">
+                <option value="2" selected>Băm Xung Popcorn (A-B-C) - Khuyên dùng</option>
+                <option value="1">Continuous (Cắt lửa liên tục đến khi nhả)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toggle-bar compact" style="margin-top:8px;">
+            <div>
+              <div class="title" style="color:var(--accent-green);">🔥 IGN Only: BẮT BUỘC ĐỂ NỔ PÔ</div>
+              <div class="subtitle">Chỉ ngắt tia lửa buồng đốt, GIỮ NGUYÊN KIM PHUN XĂNG để tích hơi xăng tươi vào cổ pô</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="manualIgnOnly" class="switch" checked onchange="markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <!-- TIMELINE A-B-C -->
+          <div id="manualPulseFields" style="margin-top: 14px;">
+            <p style="color:var(--accent-amber); font-weight:700; font-size:13px; margin-bottom:8px;">⚙️ Công Thức Chu Kỳ Băm Xung Bắp Rang (A - B - C):</p>
+            <div class="timeline-container">
+              <div class="timeline-stage stage-a">
+                <strong style="color:var(--accent-cyan);">A: Tích Xăng (Cut ms)</strong>
+                <input type="number" id="manualPulseCutMs" min="30" max="500" step="5" value="95" oninput="updateManualPulseCycle(); markDirty()">
+                <small style="font-size:10px; color:var(--text-muted);">Ngắt lửa dồn xăng vào pô (70-150ms)</small>
+              </div>
+              <div class="timeline-stage stage-b">
+                <strong style="color:var(--accent-amber);">B: Đốt Lửa (Fire ms)</strong>
+                <input type="number" id="manualPulseFireMs" min="15" max="200" step="5" value="35" oninput="updateManualPulseCycle(); markDirty()">
+                <small style="font-size:10px; color:var(--text-muted);">Kích nổ đom đóm pô (30-50ms)</small>
+              </div>
+              <div class="timeline-stage stage-c">
+                <strong style="color:var(--accent-green);">C: Giãn Cách (Pause ms)</strong>
+                <input type="number" id="manualPulseOffMs" min="20" max="500" step="5" value="55" oninput="updateManualPulseCycle(); markDirty()">
+                <small style="font-size:10px; color:var(--text-muted);">Ngắt nhịp tạo tiếng ròn rã (40-80ms)</small>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; flex-wrap:wrap; gap:10px;">
+              <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                <label>Số Tiếng Nổ Mỗi Tràng (Lặp D lần)</label>
+                <input type="number" id="manualPulseRepeat" min="1" max="10" step="1" value="4" oninput="updateManualPulseCycle(); markDirty()">
+              </div>
+              <div id="manualPulseCycleInfo" style="flex:1.5; min-width:260px; padding:10px 14px; border-radius:10px; background:rgba(255,170,0,0.08); border:1px solid rgba(255,170,0,0.35); font-size:13px;">
+                <strong>⏱️ Một Tràng Nổ:</strong> <span id="manualCycleTime" style="color:var(--accent-amber); font-weight:700;">455</span> ms 
+                <div style="font-size:11px; color:var(--text-muted); margin-top:2px;" id="manualCycleStatus">Nhịp bắn bắp rang ròn tan, cực nhạy</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 3: AUTO MAP CURVE -->
+    <section class="tab-pane" id="pane-map">
+      
+      <!-- DYNO CHART -->
+      <div class="dyno-chart-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong style="color:var(--accent-cyan); font-size:15px; text-transform:uppercase;">📈 Đồ Thị Đường Cong Cắt Số (Dyno Cut Time Curve)</strong>
+            <p style="font-size:12px; color:var(--text-muted);">Hiển thị trực quan thời gian cắt giảm dần theo từng dải RPM</p>
+          </div>
+          <button class="btn btn-secondary" onclick="renderDynoChart()">Vẽ Lại Đồ Thị</button>
+        </div>
+        <div class="chart-container">
+          <svg class="chart-svg" id="dynoChartSvg" viewBox="0 0 800 150"></svg>
+        </div>
+      </div>
+
+      <!-- EXPERT TUNING GUIDE & PRINCIPLES -->
+      <div class="card-box" style="background: linear-gradient(135deg, rgba(0,240,255,0.06), rgba(16,23,36,0.85)); border-color: rgba(0,240,255,0.3);">
+        <div class="card-header-row">
+          <div class="card-title" style="color: var(--accent-cyan);">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            Chuyên Gia Khuyên Dùng: Nguyên Lý Cut Time Theo Vòng Tua (RPM)
+          </div>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 8px;">
+          <div>
+            • <strong>Tua Thấp (2,000 – 4,500 RPM):</strong> Cần thời gian cắt dài hơn (<strong>65ms – 75ms</strong>). Lý do: Bánh răng quay chậm, lực mô-men xoắn ghì lớn, vấu chó hộp số (dog rings) cần thời gian nhả tải hoàn toàn để càng lừa kéo số vào khớp êm ái, tránh bị cạ mẻ vấu số.
+          </div>
+          <div>
+            • <strong>Tua Trung Bình (5,000 – 8,500 RPM):</strong> Vùng chạy tour &amp; đường trường tối ưu (<strong>52ms – 62ms</strong>). Đảm bảo xe sang số dứt khoát, không bị hẫng ga hay giật xích.
+          </div>
+          <div>
+            • <strong>Tua Cao &amp; Đỉnh Công Suất (9,000 – 14,500 RPM):</strong> Cần thời gian cắt ngắn (<strong>35ms – 46ms</strong>). Lý do: Cốt máy và nhông số quay siêu nhanh, chỉ cần nhấp ngắt đánh lửa tức thì là số đã sang. Nếu để cut time quá dài (&gt;60ms) xe sẽ bị hẫng, khựng đầu (bogging) làm mất gia tốc!
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESET THƯ VIỆN CHUẨN CHUYÊN GIA -->
+      <div class="card-box">
+        <div class="card-header-row">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Thư Viện Preset Chuẩn Đua &amp; Phố (Expert Tuned Presets)
+          </div>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Nhấp chọn một Preset dưới đây để nạp nhanh cấu hình tối ưu sẵn theo từng dòng xe và mục đích sử dụng:</p>
+        
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-bottom:16px;">
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('street150')">
+            <div>
+              <div style="color:var(--accent-green); font-weight:700;">🏍️ 1. Xe 150cc Đi Phố Êm Ái (12 Band)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Chống giật cục triệt để, êm như bóp côn (135ms ➔ 65ms)</div>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('racing150')">
+            <div>
+              <div style="color:var(--accent-cyan); font-weight:700;">🏁 2. Xe 150cc Sân Đua &amp; Bào Tour (12 Band)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Dứt khoát, chắc số, tối ưu gia tốc (125ms ➔ 58ms)</div>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('raiderDohc')">
+            <div>
+              <div style="color:var(--accent-amber); font-weight:700;">🚀 3. Raider / Satria 150 DOHC (12 Band)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Tua cao 13,500 - 14,500 RPM (122ms ➔ 54ms)</div>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('antishock')">
+            <div>
+              <div style="color:#00e5ff; font-weight:700;">🛡️ 4. Chống Sốc Hộp Số &amp; Chở Nặng (12 Band)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Bảo vệ vấu chó &amp; xích sên tối đa (140ms ➔ 68ms)</div>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('drag400')">
+            <div>
+              <div style="color:var(--accent-red); font-weight:700;">🏆 5. Đua Drag 201m / 400m 150cc (12 Band)</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Sang số chớp nhoáng tua cao (110ms ➔ 46ms)</div>
+            </div>
+          </button>
+
+          <button class="btn btn-secondary" style="justify-content:flex-start; text-align:left; padding:12px;" onclick="applyPreset('preset12band')">
+            <div>
+              <div style="color:var(--accent-purple); font-weight:700;">📊 6. Bản Đồ Dyno Pro 12 Band Chuẩn Hãng</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Chia đều 1,000 RPM/nấc từ 2k-14.5k (130ms ➔ 62ms)</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- QUẢN LÝ PRESET TÙY BIẾN (LƯU / THÊM PRESET CỦA BẠN) -->
+      <div class="card-box" style="border: 1px solid rgba(0, 255, 136, 0.3);">
+        <div class="card-header-row">
+          <div class="card-title" style="color: var(--accent-green);">
+            <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            Quản Lý &amp; Lưu Preset Tùy Biến Của Bạn
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="exportCustomPresets()">📤 Xuất File Presets (.json)</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importPresetsInput').click()">📥 Nạp File Presets</button>
+            <input type="file" id="importPresetsInput" hidden accept="application/json" onchange="importCustomPresetsFile(this)">
+          </div>
+        </div>
+
+        <!-- FORM LƯU PRESET MỚI -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+          <input type="text" id="newPresetName" placeholder="Nhập tên Preset mới (VD: Map Pô Akrapovic Tour, Map Đi Đèo...)" style="flex:1; min-width:260px; background:var(--bg-void); border:1px solid var(--border-dim); border-radius:10px; padding:10px 14px; color:#fff; font-size:14px; outline:none;">
+          <button class="btn btn-primary" onclick="saveCurrentAsPreset()">
+            💾 Lưu Bản Đồ Hiện Tại Thành Preset Mới
+          </button>
+        </div>
+
+        <!-- DANH SÁCH CÁC PRESET ĐÃ LƯU -->
+        <div id="customPresetsList" style="display:flex; flex-direction:column; gap:8px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- AUTO MAP TABLE & CHỈNH TỪNG BAND -->
+      <div class="card-box">
+        <div class="card-header-row">
+          <div>
+            <strong style="font-size: 15px;">Bảng Chi Tiết Từng Dải Vòng Tua (Active Auto Map)</strong>
+            <div style="color:var(--text-muted); font-size:12px;">Thêm band, chỉnh ngưỡng RPM và ms cắt ngay trên từng hàng (tối đa 12 band).</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="addMapBtn" onclick="addAutoMapBand()">+ Thêm Band RPM</button>
+          </div>
+        </div>
+
+        <div class="auto-map-list" id="autoMapList">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: TEST BENCH -->
+    <section class="tab-pane" id="pane-test">
+      <div class="grid-2">
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">Test Cut Relay</div>
+          </div>
+          <label class="form-group">
+            <span style="font-size:13px; font-weight:600; color:var(--text-muted);">Thời gian ms</span>
+            <input type="number" id="testCutMs" min="5" max="250" step="1" value="60">
+          </label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button class="btn btn-primary" id="testCutBtn" onclick="triggerTestCut(document.getElementById('testCutMs').value)">Kích cut theo cài đặt</button>
+            <button class="btn btn-secondary" onclick="triggerTestCut(40)">40ms</button>
+            <button class="btn btn-secondary" onclick="triggerTestCut(60)">60ms</button>
+            <button class="btn btn-secondary" onclick="triggerTestCut(80)">80ms</button>
+          </div>
+          <p style="color:var(--text-muted); font-size:12px; margin-top:10px;">Cut sẽ tôn trọng lựa chọn IGN / INJ bên tab Shift.</p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">Test RPM PWM (GPIO8)</div>
+          </div>
+          <label class="form-group">
+            <span style="font-size:13px; font-weight:600; color:var(--text-muted);">Target RPM</span>
+            <input type="number" id="testRpmInput" min="0" max="15000" step="100" value="6000">
+          </label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button class="btn btn-primary" id="testRpmBtn" onclick="startTestPwm()">Start PWM</button>
+            <button class="btn btn-ghost" id="stopRpmBtn" onclick="stopTestPwm()">Stop PWM</button>
+          </div>
+          <p style="color:var(--text-muted); font-size:12px; margin-top:10px;">Phát xung vuông 50% duty ra chân GPIO8 để kiểm tra mạch đọc Opto PC817.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: TOOLS, CALIB, WIFI, LOCK & LOG -->
+    <section class="tab-pane" id="pane-tools">
+      <div class="grid-2">
+        
+        <!-- Cột 1: Import/Export, Calibrate & Wi-Fi -->
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">Import / Export Cấu Hình JSON</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;">
+            <button class="btn btn-secondary" id="exportBtn" onclick="exportConfigJson()">Export JSON</button>
+            <button class="btn btn-secondary" id="importBtn" onclick="document.getElementById('importInput').click()">Import JSON</button>
+            <input type="file" id="importInput" hidden accept="application/json" onchange="importConfigFile(this)">
+          </div>
+
+          <div class="card-header-row">
+            <div class="card-title">Calibrate RPM (Cân Chỉnh Vòng Tua)</div>
+          </div>
+          <div class="form-group">
+            <label>Target RPM (1 điểm)</label>
+            <input type="number" id="calTarget" placeholder="VD: 5000">
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;">
+              <label>Target thấp (2 điểm)</label>
+              <input type="number" id="calTargetLow" placeholder="VD: 2500">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>Target cao (2 điểm)</label>
+              <input type="number" id="calTargetHigh" placeholder="VD: 7000">
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="form-group" style="flex:1;">
+              <label>Samples</label>
+              <input type="number" id="calSamples" min="3" max="40" value="12">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>Interval (ms)</label>
+              <input type="number" id="calInterval" min="50" max="500" value="150">
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+            <button class="btn btn-secondary" id="sampleRpmBtn" onclick="sampleCurrentRpm()">Sample current RPM</button>
+            <button class="btn btn-primary" id="calibrateBtn" onclick="runAutoCalibrate()">Calibrate (auto)</button>
+            <button class="btn btn-secondary" id="calibrate2Btn" onclick="runAutoCalibrate2Point()">Calibrate 2 điểm</button>
+          </div>
+          <div id="calStatus" style="color:var(--accent-cyan); font-size:12px; margin-top:8px;"></div>
+
+          <div class="card-header-row" style="margin-top:20px;">
+            <div class="card-title">Wi-Fi Access Point</div>
+          </div>
+          <p style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">Đổi mật khẩu AP và thời gian tự tắt (nhập 0 = luôn bật).</p>
+          <div class="form-group">
+            <label>AP timeout (ms)</label>
+            <input type="number" id="apTimeoutMs" min="0" max="3600000" step="1000" value="120000" onchange="markDirty()">
+            <span class="form-hint">Thời gian tự ngắt AP khi không kết nối (0 = luôn bật)</span>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu Wi-Fi (≥ 8 ký tự, để trống = mở)</label>
+            <input type="password" id="apPassword" maxlength="63" placeholder="vd: quickshift" onchange="markDirty()">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-secondary" id="wifiSaveBtn" onclick="handleSaveWifi()">Lưu Wi-Fi</button>
+            <button class="btn btn-ghost" id="wifiToggleBtn" type="button" onclick="toggleWifiPassword()">Hiện mật khẩu</button>
+          </div>
+          <p id="wifiStatus" style="color:var(--text-muted); font-size:12px; margin-top:6px;">AP đang mở (không mật khẩu).</p>
+        </div>
+
+        <!-- Cột 2: Realtime Log & Lock Mode -->
+        <div class="card-box">
+          <div class="card-header-row">
+            <div class="card-title">Realtime Log Stream</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-ghost" onclick="clearLogList()">Xóa Log</button>
+              <button class="btn btn-ghost" onclick="exportLogs()">Xuất Log</button>
+            </div>
+          </div>
+          <div class="log-list" id="logList">
+            <div class="log-entry">
+              <div class="log-line">
+                <span>0.00s</span>
+                <span>0 RPM</span>
+                <span class="cut">STANDBY</span>
+                <span>Hệ thống khởi động</span>
+                <span>SYS</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-header-row" style="margin-top:20px;">
+            <div class="card-title">Lock Mode (Mật Khẩu Cần Số Morse)</div>
+          </div>
+          <div class="toggle-bar">
+            <div>
+              <div class="title">Bật Lock Mode</div>
+              <div class="subtitle">Relay cưỡng bức ngắt (xe không thể nổ) cho đến khi nhập đúng mã</div>
+            </div>
+            <label class="switch-wrap">
+              <input type="checkbox" id="lockEnabledToggle" class="switch" onchange="markDirty()">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>PASS (4 ký tự 0/1)</label>
+            <input type="text" id="lockPassInput" maxlength="4" pattern="[01]{4}" value="1001" style="letter-spacing:0.2em; font-size:18px; text-align:center;" onchange="markDirty()">
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <button class="btn btn-primary" id="lockSaveBtn" onclick="handleSaveLock()">Lưu Lock Mode</button>
+            <button class="btn btn-ghost" id="lockRefreshBtn" onclick="refreshLockStatus()">Refresh trạng thái</button>
+          </div>
+
+          <!-- BÀN TẬP NHẤN MORSE -->
+          <div class="morse-tap-trainer">
+            <div style="font-size:13px; font-weight:700; color:var(--accent-cyan);">🖐️ Bàn Thử Nghiệm Nhịp Bấm Cần Số:</div>
+            <button class="btn-big-lever" id="btnMorseLever" onmousedown="handleMorseLeverPress(true)" onmouseup="handleMorseLeverPress(false)" ontouchstart="handleMorseLeverPress(true)" ontouchend="handleMorseLeverPress(false)">
+              GIỮ CẦN SỐ
+            </button>
+            <div style="font-size:12px; color:var(--text-muted);" id="txtMorseDuration">Nhấn giữ để đo thời gian nhịp tay...</div>
+            <div class="morse-code-display">
+              <div class="morse-char-box filled" id="morseBox0">1</div>
+              <div class="morse-char-box filled" id="morseBox1">0</div>
+              <div class="morse-char-box filled" id="morseBox2">0</div>
+              <div class="morse-char-box filled" id="morseBox3">1</div>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label>Nhấn ngắn max (ms)</label>
+              <input type="number" id="lockShortMax" min="120" max="600" step="10" value="280" onchange="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Nhấn dài min (ms)</label>
+              <input type="number" id="lockLongMin" min="350" max="2000" step="10" value="550" onchange="markDirty()">
+            </div>
+            <div class="form-group">
+              <label>Giữ để xóa (ms)</label>
+              <input type="number" id="lockResetHold" min="1000" max="6000" step="50" value="2000" onchange="markDirty()">
+            </div>
+          </div>
+
+          <p id="lockStatusLabel" style="color:var(--text-main); font-weight:700; margin:6px 0;">Trạng thái: UNLOCKED</p>
+          <p id="lockHint" style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">Hệ thống đang mở khóa.</p>
+
+          <p style="color:var(--text-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.08em; margin:10px 0 4px;">Pass gần nhất</p>
+          <div class="lock-pass-feed" id="lockPassFeed">
+            <div style="color:var(--text-muted); text-align:center; padding:10px 0;">Chưa có lần nhập nào</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 6: OTA & SNAPSHOT -->
+    <section class="tab-pane" id="pane-config">
+      <div class="card-box">
+        <div class="card-header-row">
+          <div class="card-title">Cập Nhật Firmware Không Dây (OTA)</div>
+        </div>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Chỉ tải file firmware định dạng chuẩn .bin chính hãng. Thiết bị sẽ tự reboot sau khi nạp thành công.</p>
+
+        <div class="grid-2">
+          <!-- Firmware OTA -->
+          <div class="ota-box">
+            <div style="display:flex; justify-content:space-between;">
+              <strong>Firmware Hệ Thống (.bin)</strong>
+              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">SYSTEM SLOT</span>
+            </div>
+            <p style="color:var(--text-muted); font-size:12px;">Nạp file firmware.bin cập nhật thuật toán xử lý cốt lõi.</p>
+            <input type="file" id="fwFileInput" hidden accept=".bin" onchange="onOtaFileSelected('fw', this)">
+            <div style="display:flex; gap:8px; margin-top:4px;">
+              <button class="btn btn-secondary" id="fwPickBtn" onclick="document.getElementById('fwFileInput').click()">Chọn file</button>
+              <button class="btn btn-primary" id="fwUploadBtn" disabled onclick="startOtaUpload('fw')">Upload firmware</button>
+            </div>
+            <div class="progress"><span id="fwProgressBar"></span></div>
+            <div style="font-size:12px; color:var(--text-muted);" id="fwProgressText">Tiến trình: 0%</div>
+            <div style="font-size:12px; color:var(--accent-cyan);" id="fwStatus">Chưa chọn file.</div>
+          </div>
+
+          <!-- Web UI OTA -->
+          <div class="ota-box">
+            <div style="display:flex; justify-content:space-between;">
+              <strong>Giao Diện Web UI (.bin)</strong>
+              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">UI SLOT</span>
+            </div>
+            <p style="color:var(--text-muted); font-size:12px;">Nạp file image để nâng cấp giao diện Web Cockpit mới nhất.</p>
+            <input type="file" id="fsFileInput" hidden accept=".bin" onchange="onOtaFileSelected('fs', this)">
+            <div style="display:flex; gap:8px; margin-top:4px;">
+              <button class="btn btn-secondary" id="fsPickBtn" onclick="document.getElementById('fsFileInput').click()">Chọn file</button>
+              <button class="btn btn-primary" id="fsUploadBtn" disabled onclick="startOtaUpload('fs')">Upload Web UI</button>
+            </div>
+            <div class="progress"><span id="fsProgressBar"></span></div>
+            <div style="font-size:12px; color:var(--text-muted);" id="fsProgressText">Tiến trình: 0%</div>
+            <div style="font-size:12px; color:var(--accent-cyan);" id="fsStatus">Chưa chọn file.</div>
+          </div>
+        </div>
+
+        <p style="color:var(--accent-amber); font-size:12px; margin-top:12px;">⚠️ Lưu ý: Tuyệt đối không rút nguồn khi đang nạp OTA.</p>
+
+        <!-- Config Snapshot Table -->
+        <div class="card-header-row" style="margin-top:24px;">
+          <div class="card-title">Config Snapshot (Toàn Bộ Tham Số Đang Chạy)</div>
+        </div>
+        <div id="configSummary" class="config-summary">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- FLOATING BOTTOM TICKER -->
+  <div class="cockpit-ticker" id="liveTicker">
+    <div style="display:flex; gap:6px;">
+      <span style="color:var(--text-muted);">SHIFT:</span>
+      <span id="tickerShift" style="color:#fff; font-weight:700;">---</span>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <span style="color:var(--text-muted);">CUT:</span>
+      <span id="tickerCut" style="color:var(--accent-green); font-weight:700;">Standby</span>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <span style="color:var(--text-muted);">RPM:</span>
+      <span id="tickerRpm" style="color:var(--accent-cyan); font-weight:700;">0</span>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <span style="color:var(--text-muted);">EVENT:</span>
+      <span id="tickerEvent" style="color:var(--text-main); font-weight:600;">Stream online</span>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-popup" id="toastBox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent-cyan)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    <span id="toastMsg">Thông báo hệ thống</span>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // Audio Synth
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+    function playBeep(freq, type, dur) {
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq || 600;
+        g.gain.setValueAtTime(0.08, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + dur);
+      } catch(e) {}
+    }
+    function playCutSound() {
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.08);
+        g.gain.setValueAtTime(0.2, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.09);
+      } catch(e) {}
+    }
+    function playBackfirePop() {
+      try {
+        const ctx = getAudioContext();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(450, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 0.12);
+        g.gain.setValueAtTime(0.3, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } catch(e) {}
+    }
+
+    // STATE
+    let currentRpm = 0;
+    let peakRpm = 0;
+    let isDirty = false;
+    let isPhoneFrame = false;
+    let autoMapEntries = [
+      { min: 2000, max: 2999, cut: 135 },
+      { min: 3000, max: 3999, cut: 128 },
+      { min: 4000, max: 4999, cut: 120 },
+      { min: 5000, max: 5999, cut: 112 },
+      { min: 6000, max: 6999, cut: 105 },
+      { min: 7000, max: 7999, cut: 98 },
+      { min: 8000, max: 8999, cut: 92 },
+      { min: 9000, max: 9999, cut: 86 },
+      { min: 10000, max: 10999, cut: 80 },
+      { min: 11000, max: 11999, cut: 75 },
+      { min: 12000, max: 12999, cut: 70 },
+      { min: 13000, max: 14500, cut: 65 }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderAutoMapList();
+      renderDynoChart();
+      renderConfigSnapshot();
+      renderCustomPresetsList();
+      updateCutHint();
+      updateAutoLimiterHints();
+      updateManualPulseCycle();
+      updateGauge(0);
+      initRealtimeEvents();
+      if (window.location.protocol.startsWith('http')) {
+        handleReloadConfig(true);
+        refreshLockStatus();
+      } else {
+        updateDirtyUi(false, '✅ Cấu hình mô phỏng sẵn sàng');
+      }
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+      const activeBtn = Array.from(document.querySelectorAll('.tab-item')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const targetPane = document.getElementById(`pane-${tabId}`);
+      if (targetPane) targetPane.classList.add('active');
+
+      if (tabId === 'map') {
+        setTimeout(renderDynoChart, 50);
+      }
+    }
+
+    function switchTheme(theme) {
+      if (theme === 'cyber-neon') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+      document.querySelectorAll('.device-switcher-btns .btn-pill').forEach(b => {
+        if (!b.id.includes('ToggleFrame')) {
+          b.classList.toggle('active', b.getAttribute('onclick').includes(theme));
+        }
+      });
+      renderDynoChart();
+    }
+
+    function togglePhoneFrame() {
+      isPhoneFrame = !isPhoneFrame;
+      const shell = document.getElementById('appShell');
+      const btn = document.getElementById('btnToggleFrame');
+      if (isPhoneFrame) {
+        shell.classList.add('phone-frame');
+        btn.classList.add('active');
+        btn.innerText = '🖥️ Toàn Màn Hình';
+      } else {
+        shell.classList.remove('phone-frame');
+        btn.classList.remove('active');
+        btn.innerText = '📱 Khung Điện Thoại';
+      }
+      setTimeout(renderDynoChart, 350);
+    }
+
+    function updateDirtyUi(dirty, customMsg) {
+      isDirty = dirty;
+      const badge = document.getElementById('badgeDirty');
+      const txt = document.getElementById('txtDirtyStatus');
+      const saveBtn = document.getElementById('saveBtn');
+      if (!badge || !txt) return;
+
+      badge.style.display = 'inline-flex'; // Luôn luôn hiển thị, không bao giờ ẩn
+
+      if (dirty) {
+        badge.className = 'badge-pill warning badge-dirty-pulse';
+        txt.innerText = customMsg || '⚠️ Chưa lưu cấu hình (Chưa ghi vào thiết bị)';
+        if (saveBtn) saveBtn.classList.add('btn-save-dirty');
+      } else {
+        badge.className = 'badge-pill active';
+        txt.innerText = customMsg || '✅ Đã lưu cấu hình (Đã ghi nhớ)';
+        if (saveBtn) saveBtn.classList.remove('btn-save-dirty');
+      }
+    }
+
+    function markDirty() {
+      updateDirtyUi(true, '⚠️ Chưa lưu cấu hình');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBox');
+      const txt = document.getElementById('toastMsg');
+      txt.innerText = msg;
+      toast.classList.add('visible');
+      setTimeout(() => { toast.classList.remove('visible'); }, 2500);
+    }
+
+    function updateGauge(rpm) {
+      currentRpm = Math.max(0, Math.min(15000, rpm));
+      if (currentRpm > peakRpm) peakRpm = currentRpm;
+
+      document.getElementById('rpmValue').innerText = currentRpm;
+      document.getElementById('tickerRpm').innerText = currentRpm;
+      document.getElementById('rpmMeta').innerText = `Raw: ${currentRpm} RPM • Band: ${resolveBandLabel(currentRpm)}`;
+
+      const ratio = currentRpm / 15000;
+      const dashoffset = 377 - (377 * ratio);
+      document.getElementById('gaugeArc').style.strokeDashoffset = dashoffset;
+
+      const activeLeds = Math.min(10, Math.floor(ratio * 11));
+      const leds = document.querySelectorAll('#shiftLightBar .led-bulb');
+      leds.forEach((led, idx) => {
+        led.classList.toggle('on', idx < activeLeds);
+      });
+
+      const isRedline = currentRpm >= 11500;
+      document.getElementById('led8').classList.toggle('led-flashing', isRedline);
+      document.getElementById('led9').classList.toggle('led-flashing', isRedline);
+
+      const limiterEnabled = document.getElementById('limiter_enable').checked;
+      const targetRpm = parseInt(document.getElementById('target_rpm').value) || 7000;
+      if (limiterEnabled && currentRpm >= targetRpm) {
+        triggerLimiterHardCutVisual();
+      }
+    }
+
+    function resolveBandLabel(rpm) {
+      const match = autoMapEntries.find(b => rpm >= b.min && rpm <= b.max);
+      return match ? `${match.min}-${match.max} (${match.cut}ms)` : '--';
+    }
+
+    function handleThrottleInput(val) {
+      const rpm = parseInt(val);
+      document.getElementById('simRpmDisplay').innerText = `Kéo ga: ${rpm} RPM`;
+      updateGauge(rpm);
+    }
+
+    function handleShiftPedalInput(shift) {
+      const isPressed = (shift === 'PRESSED' || shift === true || shift === 1);
+      const valShift = document.getElementById('shiftState');
+      const tickerShift = document.getElementById('tickerShift');
+
+      if (valShift) {
+        valShift.innerText = isPressed ? 'PRESSED' : 'RELEASED';
+        if (isPressed) {
+          valShift.classList.add('shift-active');
+          valShift.style.color = 'var(--accent-red)';
+        } else {
+          valShift.classList.remove('shift-active');
+          valShift.style.color = 'var(--accent-cyan)';
+        }
+      }
+
+      if (tickerShift) {
+        tickerShift.innerText = isPressed ? 'PRESSED' : 'RELEASED';
+        tickerShift.style.color = isPressed ? 'var(--accent-red)' : '#fff';
+      }
+    }
+
+    function updateCutStateDisplay(cut) {
+      const isCutting = (cut === true || cut === 'CUTTING' || cut === 1);
+      const valCut = document.getElementById('cutState');
+      const tickerCut = document.getElementById('tickerCut');
+      if (valCut) {
+        valCut.innerText = isCutting ? 'CUTTING' : 'Standby';
+        valCut.style.color = isCutting ? 'var(--accent-red)' : 'var(--accent-green)';
+        if (isCutting) valCut.classList.add('cut-active');
+        else valCut.classList.remove('cut-active');
+      }
+      if (tickerCut) {
+        tickerCut.innerText = isCutting ? 'CUTTING' : 'Standby';
+        tickerCut.style.color = isCutting ? 'var(--accent-red)' : 'var(--accent-green)';
+      }
+    }
+
+    function handleShiftPressSim(isPressed) {
+      handleShiftPedalInput(isPressed);
+      const valShift = document.getElementById('shiftState');
+      const valCut = document.getElementById('cutState');
+      const tickerShift = document.getElementById('tickerShift');
+      const tickerCut = document.getElementById('tickerCut');
+
+      if (isPressed) {
+        valShift.innerText = 'PRESSED';
+        valShift.classList.add('shift-active');
+        tickerShift.innerText = 'PRESSED';
+
+        const minRpm = parseInt(document.getElementById('minRpm').value) || 1500;
+        if (currentRpm >= minRpm) {
+          playCutSound();
+          valCut.innerText = 'CUTTING';
+          valCut.classList.add('cut-active');
+          tickerCut.innerText = 'CUTTING';
+          tickerCut.style.color = 'var(--accent-red)';
+
+          let cutMs = parseInt(document.getElementById('cutTimeFixed').value) || 50;
+          if (document.getElementById('modeAuto').checked) {
+            const entry = autoMapEntries.find(e => currentRpm >= e.min && currentRpm <= e.max);
+            if (entry) cutMs = entry.cut;
+          }
+
+          showToast(`⚡ CẮT LỬA QUICKSHIFT: ${cutMs}ms (ở ${currentRpm} RPM)`);
+          addLogEntry(currentRpm, 'CUTTING', 'SHIFT_CUT', `Cut ${cutMs}ms`);
+
+          setTimeout(() => {
+            valCut.innerText = 'Standby';
+            valCut.classList.remove('cut-active');
+            tickerCut.innerText = 'Standby';
+            tickerCut.style.color = 'var(--accent-green)';
+          }, cutMs);
+        }
+      } else {
+        valShift.innerText = 'RELEASED';
+        valShift.classList.remove('shift-active');
+        tickerShift.innerText = 'RELEASED';
+      }
+    }
+
+    function triggerLimiterHardCutVisual() {
+      const valCut = document.getElementById('cutState');
+      valCut.innerText = 'HARD_CUT';
+      valCut.classList.add('cut-active');
+      playCutSound();
+      setTimeout(() => {
+        valCut.innerText = 'Standby';
+        valCut.classList.remove('cut-active');
+      }, 35);
+    }
+
+    function simulateHardCutBurst() {
+      document.getElementById('throttleSlider').value = 8500;
+      handleThrottleInput(8500);
+      document.getElementById('limiter_enable').checked = true;
+      updateAutoLimiterUi();
+
+      showToast('⚡ Nẹt pô Hard Cut 8500 RPM!');
+      let c = 0;
+      const t = setInterval(() => {
+        playCutSound();
+        c++;
+        if (c > 8) {
+          clearInterval(t);
+          document.getElementById('throttleSlider').value = 3500;
+          handleThrottleInput(3500);
+        }
+      }, 70);
+    }
+
+    function simulateBackfireBurst() {
+      showToast('🔥 Bắn bắp rang Backfire (A-B-C Cycle)!');
+      playBackfirePop();
+      setTimeout(playBackfirePop, 180);
+      setTimeout(playBackfirePop, 360);
+      addLogEntry(currentRpm, 'BACKFIRE', 'MANUAL_BF', 'Burst 3 pulses');
+    }
+
+    // AUTO MAP RENDERING
+    function renderAutoMapList() {
+      const container = document.getElementById('autoMapList');
+      container.innerHTML = '';
+      autoMapEntries.forEach((entry, idx) => {
+        const row = document.createElement('div');
+        row.className = 'band-item-card';
+        row.innerHTML = `
+          <div style="font-family:var(--font-mono); font-weight:700;">
+            <span style="color:var(--text-muted);">#${idx + 1}:</span>
+            <span>${entry.min} → ${entry.max} RPM</span>
+          </div>
+          <div class="band-adjust-controls">
+            <button class="btn-step" onclick="adjustBandCut(${idx}, -5)">-</button>
+            <span class="band-cut-val" id="cutVal-${idx}">${entry.cut} ms</span>
+            <button class="btn-step" onclick="adjustBandCut(${idx}, 5)">+</button>
+            <button class="btn-step" style="color:var(--accent-red); margin-left:6px;" onclick="removeAutoMapBand(${idx})">✕</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      document.getElementById('bucketMeta').innerText = `Total: ${autoMapEntries.length} bands`;
+    }
+
+    function adjustBandCut(idx, delta) {
+      autoMapEntries[idx].cut = Math.max(10, Math.min(150, autoMapEntries[idx].cut + delta));
+      document.getElementById(`cutVal-${idx}`).innerText = `${autoMapEntries[idx].cut} ms`;
+      renderDynoChart();
+      renderConfigSnapshot();
+      markDirty();
+      playBeep(400 + idx * 40, 'sine', 0.05);
+    }
+
+    function addAutoMapBand() {
+      if (autoMapEntries.length >= 12) {
+        showToast('⚠️ Tối đa 12 band (MAX_AUTO_MAP = 12)');
+        return;
+      }
+      const last = autoMapEntries[autoMapEntries.length - 1];
+      const newMin = last ? last.max + 1 : 2000;
+      const newMax = newMin + 999;
+      autoMapEntries.push({ min: newMin, max: newMax, cut: 50 });
+      renderAutoMapList();
+      renderDynoChart();
+      renderConfigSnapshot();
+      markDirty();
+      showToast(`✅ Đã thêm Band #${autoMapEntries.length}`);
+    }
+
+    function removeAutoMapBand(idx) {
+      if (autoMapEntries.length <= 2) {
+        showToast('⚠️ Cần giữ tối thiểu 2 band');
+        return;
+      }
+      autoMapEntries.splice(idx, 1);
+      renderAutoMapList();
+      renderDynoChart();
+      renderConfigSnapshot();
+      markDirty();
+    }
+
+    // HỆ THỐNG 6 BỘ PRESET CHUẨN CHUYÊN GIA (100% ĐỦ 12 BAND CHO XE 150CC)
+    function applyPreset(type) {
+      if (type === 'street150') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 135 },
+          { min: 3000, max: 3999, cut: 128 },
+          { min: 4000, max: 4999, cut: 120 },
+          { min: 5000, max: 5999, cut: 112 },
+          { min: 6000, max: 6999, cut: 105 },
+          { min: 7000, max: 7999, cut: 98 },
+          { min: 8000, max: 8999, cut: 92 },
+          { min: 9000, max: 9999, cut: 86 },
+          { min: 10000, max: 10999, cut: 80 },
+          { min: 11000, max: 11999, cut: 75 },
+          { min: 12000, max: 12999, cut: 70 },
+          { min: 13000, max: 14500, cut: 65 }
+        ];
+        showToast('🏍️ Đã nạp Preset 1: Xe 150cc Đi Phố Êm Ái (12 Band, 135ms ➔ 65ms)');
+      } else if (type === 'racing150') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 125 },
+          { min: 3000, max: 3999, cut: 118 },
+          { min: 4000, max: 4999, cut: 110 },
+          { min: 5000, max: 5999, cut: 102 },
+          { min: 6000, max: 6999, cut: 95 },
+          { min: 7000, max: 7999, cut: 88 },
+          { min: 8000, max: 8999, cut: 82 },
+          { min: 9000, max: 9999, cut: 76 },
+          { min: 10000, max: 10999, cut: 71 },
+          { min: 11000, max: 11999, cut: 66 },
+          { min: 12000, max: 12999, cut: 62 },
+          { min: 13000, max: 14500, cut: 58 }
+        ];
+        showToast('🏁 Đã nạp Preset 2: Xe 150cc Sân Đua & Bào Tour (12 Band, 125ms ➔ 58ms)');
+      } else if (type === 'raiderDohc') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 122 },
+          { min: 3000, max: 3999, cut: 115 },
+          { min: 4000, max: 4999, cut: 106 },
+          { min: 5000, max: 5999, cut: 98 },
+          { min: 6000, max: 6999, cut: 90 },
+          { min: 7000, max: 7999, cut: 83 },
+          { min: 8000, max: 8999, cut: 77 },
+          { min: 9000, max: 9999, cut: 71 },
+          { min: 10000, max: 10999, cut: 66 },
+          { min: 11000, max: 11999, cut: 61 },
+          { min: 12000, max: 12999, cut: 57 },
+          { min: 13000, max: 14500, cut: 54 }
+        ];
+        showToast('🚀 Đã nạp Preset 3: Raider / Satria 150 DOHC (12 Band, 122ms ➔ 54ms)');
+      } else if (type === 'antishock') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 140 },
+          { min: 3000, max: 3999, cut: 132 },
+          { min: 4000, max: 4999, cut: 125 },
+          { min: 5000, max: 5999, cut: 118 },
+          { min: 6000, max: 6999, cut: 110 },
+          { min: 7000, max: 7999, cut: 102 },
+          { min: 8000, max: 8999, cut: 95 },
+          { min: 9000, max: 9999, cut: 88 },
+          { min: 10000, max: 10999, cut: 82 },
+          { min: 11000, max: 11999, cut: 77 },
+          { min: 12000, max: 12999, cut: 73 },
+          { min: 13000, max: 14500, cut: 68 }
+        ];
+        showToast('🛡️ Đã nạp Preset 4: Chống Sốc Hộp Số & Chở Nặng (12 Band, 140ms ➔ 68ms)');
+      } else if (type === 'drag400') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 110 },
+          { min: 3000, max: 3999, cut: 102 },
+          { min: 4000, max: 4999, cut: 94 },
+          { min: 5000, max: 5999, cut: 86 },
+          { min: 6000, max: 6999, cut: 78 },
+          { min: 7000, max: 7999, cut: 70 },
+          { min: 8000, max: 8999, cut: 64 },
+          { min: 9000, max: 9999, cut: 58 },
+          { min: 10000, max: 10999, cut: 54 },
+          { min: 11000, max: 11999, cut: 50 },
+          { min: 12000, max: 12999, cut: 48 },
+          { min: 13000, max: 14500, cut: 46 }
+        ];
+        showToast('🏆 Đã nạp Preset 5: Đua Drag 150cc Tối Ưu Nước Đề (12 Band, 110ms ➔ 46ms)');
+      } else if (type === 'preset12band') {
+        autoMapEntries = [
+          { min: 2000, max: 2999, cut: 130 },
+          { min: 3000, max: 3999, cut: 122 },
+          { min: 4000, max: 4999, cut: 115 },
+          { min: 5000, max: 5999, cut: 107 },
+          { min: 6000, max: 6999, cut: 100 },
+          { min: 7000, max: 7999, cut: 93 },
+          { min: 8000, max: 8999, cut: 86 },
+          { min: 9000, max: 9999, cut: 80 },
+          { min: 10000, max: 10999, cut: 75 },
+          { min: 11000, max: 11999, cut: 70 },
+          { min: 12000, max: 12999, cut: 65 },
+          { min: 13000, max: 14500, cut: 62 }
+        ];
+        showToast('📊 Đã nạp Preset 6: Bản đồ Dyno Pro 12 band chuẩn hãng (130ms ➔ 62ms)');
+      }
+      renderAutoMapList();
+      renderDynoChart();
+      renderConfigSnapshot();
+      markDirty();
+    }
+
+    // ========================================================
+    // QUẢN LÝ PRESET TÙY BIẾN (CUSTOM PRESETS MANAGEMENT)
+    // ========================================================
+    const PRESETS_STORAGE_KEY = 'qs_user_custom_presets_v1';
+
+    function getStoredCustomPresets() {
+      try {
+        const raw = localStorage.getItem(PRESETS_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveStoredCustomPresets(list) {
+      try {
+        localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+
+    function saveCurrentAsPreset() {
+      const input = document.getElementById('newPresetName');
+      const name = (input.value || '').trim();
+      if (!name) {
+        showToast('⚠️ Vui lòng nhập tên cho Preset mới');
+        input.focus();
+        return;
+      }
+
+      const list = getStoredCustomPresets();
+      const newPreset = {
+        id: 'preset_' + Date.now(),
+        name: name,
+        createdAt: new Date().toLocaleString('vi-VN'),
+        bands: JSON.parse(JSON.stringify(autoMapEntries))
+      };
+
+      list.unshift(newPreset);
+      saveStoredCustomPresets(list);
+      input.value = '';
+      renderCustomPresetsList();
+      playBeep(900, 'triangle', 0.15);
+      showToast(`💾 Đã lưu thành công Preset: "${name}"`);
+    }
+
+    function renderCustomPresetsList() {
+      const container = document.getElementById('customPresetsList');
+      if (!container) return;
+      const list = getStoredCustomPresets();
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div style="color:var(--text-muted); font-size:12px; text-align:center; padding:14px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px dashed var(--border-dim);">
+            Chưa có Preset tùy biến nào được lưu. Bạn hãy chỉnh thông số các band rồi nhập tên để lưu vào đây!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map((item, idx) => {
+        const bandCount = item.bands ? item.bands.length : 0;
+        const minRpm = item.bands && item.bands[0] ? item.bands[0].min : 0;
+        const maxRpm = item.bands && item.bands[bandCount - 1] ? item.bands[bandCount - 1].max : 0;
+        const avgCut = item.bands ? Math.round(item.bands.reduce((sum, b) => sum + b.cut, 0) / (bandCount || 1)) : 0;
+
+        return `
+          <div style="background:var(--bg-panel-alt); border:1px solid var(--border-dim); border-radius:10px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="color:var(--text-main); font-weight:700; font-size:13px; display:flex; align-items:center; gap:8px;">
+                <span style="color:var(--accent-green);">★</span>
+                <span>${item.name}</span>
+                <span style="font-size:11px; font-weight:400; color:var(--text-muted); font-family:var(--font-mono);">(${item.createdAt})</span>
+              </div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                ${bandCount} bands • Dải RPM: ${minRpm} - ${maxRpm} RPM • Cut trung bình: ~${avgCut}ms
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="applyCustomPreset(${idx})">
+                ⚡ Áp Dụng
+              </button>
+              <button class="btn btn-ghost" style="padding:6px 10px; font-size:12px; color:var(--accent-red);" onclick="deleteCustomPreset(${idx})">
+                ✕ Xóa
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyCustomPreset(idx) {
+      const list = getStoredCustomPresets();
+      const target = list[idx];
+      if (target && target.bands && target.bands.length) {
+        autoMapEntries = JSON.parse(JSON.stringify(target.bands));
+        renderAutoMapList();
+        renderDynoChart();
+        renderConfigSnapshot();
+        markDirty();
+        playBeep(850, 'triangle', 0.15);
+        showToast(`⚡ Đã nạp Preset cá nhân: "${target.name}"`);
+      }
+    }
+
+    function deleteCustomPreset(idx) {
+      const list = getStoredCustomPresets();
+      const target = list[idx];
+      if (!target) return;
+      if (confirm(`Bạn có chắc muốn xóa Preset "${target.name}" khỏi danh sách lưu?`)) {
+        list.splice(idx, 1);
+        saveStoredCustomPresets(list);
+        renderCustomPresetsList();
+        showToast(`🗑️ Đã xóa Preset: "${target.name}"`);
+      }
+    }
+
+    function exportCustomPresets() {
+      const list = getStoredCustomPresets();
+      if (list.length === 0) {
+        showToast('⚠️ Bạn chưa có Preset tùy biến nào để xuất');
+        return;
+      }
+      const b = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = `quickshifter-custom-presets-${Date.now()}.json`;
+      a.click();
+      showToast('📤 Đã xuất danh sách Preset cá nhân thành công!');
+    }
+
+    function importCustomPresetsFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            const current = getStoredCustomPresets();
+            const merged = [...imported, ...current];
+            saveStoredCustomPresets(merged);
+            renderCustomPresetsList();
+            showToast(`📥 Đã nạp thành công ${imported.length} Preset vào thư viện!`);
+          } else {
+            showToast('⚠️ Định dạng file Preset JSON không hợp lệ');
+          }
+        } catch (err) {
+          showToast('❌ Lỗi đọc file JSON');
+        }
+      };
+      reader.readAsText(file);
+      input.value = '';
+    }
+
+    function renderDynoChart() {
+      const svg = document.getElementById('dynoChartSvg');
+      if (!svg) return;
+      svg.innerHTML = '';
+      const w = 800, h = 140, pad = 35;
+
+      for (let y = 40; y <= 140; y += 30) {
+        const lineY = h - ((y - 30) / 120) * (h - pad);
+        const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', '30'); l.setAttribute('y1', lineY);
+        l.setAttribute('x2', w - 20); l.setAttribute('y2', lineY);
+        l.setAttribute('stroke', 'rgba(255,255,255,0.06)');
+        l.setAttribute('stroke-dasharray', '4');
+        svg.appendChild(l);
+
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', '4'); t.setAttribute('y', lineY + 4);
+        t.setAttribute('fill', '#64748b'); t.setAttribute('font-size', '10');
+        t.textContent = `${y}ms`;
+        svg.appendChild(t);
+      }
+
+      if (autoMapEntries.length === 0) return;
+      const pts = [];
+      const stepX = (w - 70) / (autoMapEntries.length - 1 || 1);
+      autoMapEntries.forEach((e, i) => {
+        const x = 45 + i * stepX;
+        const normCut = Math.max(30, Math.min(150, e.cut));
+        const y = h - ((normCut - 30) / 120) * (h - pad);
+        pts.push({ x, y, e });
+      });
+
+      let pathD = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 1; i < pts.length; i++) {
+        const p = pts[i - 1], c = pts[i];
+        const cp1x = p.x + (c.x - p.x) / 2, cp1y = p.y;
+        const cp2x = p.x + (c.x - p.x) / 2, cp2y = c.y;
+        pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${c.x} ${c.y}`;
+      }
+
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', 'var(--accent-cyan)');
+      path.setAttribute('stroke-width', '3.5');
+      svg.appendChild(path);
+
+      pts.forEach(p => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); c.setAttribute('r', '5.5');
+        c.setAttribute('fill', '#fff'); c.setAttribute('stroke', 'var(--accent-cyan)'); c.setAttribute('stroke-width', '2.5');
+        svg.appendChild(c);
+
+        const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        lbl.setAttribute('x', p.x); lbl.setAttribute('y', p.y - 10);
+        lbl.setAttribute('fill', '#f3f6fa'); lbl.setAttribute('font-size', '11'); lbl.setAttribute('font-weight', '700');
+        lbl.setAttribute('text-anchor', 'middle');
+        lbl.textContent = `${p.e.cut}ms`;
+        svg.appendChild(lbl);
+      });
+    }
+
+    // UPDATE UI HELPERS
+    function updateCutHint() {
+      const ign = document.getElementById('cutIgnEnabled').checked;
+      const inj = document.getElementById('cutInjEnabled').checked;
+      let label = 'Disabled';
+      if (ign && inj) label = 'IGN+INJ';
+      else if (ign) label = 'IGN only';
+      else if (inj) label = 'INJ only';
+      document.getElementById('cutHint').textContent = label;
+    }
+
+    function updateAutoLimiterUi() {
+      const en = document.getElementById('limiter_enable').checked;
+      document.getElementById('autoLimiterFields').style.display = en ? 'block' : 'none';
+      document.getElementById('valLimiter').innerText = en ? `ACTIVE (${document.getElementById('target_rpm').value})` : `OFF (${document.getElementById('target_rpm').value})`;
+      document.getElementById('valLimiter').style.color = en ? 'var(--accent-green)' : 'var(--accent-amber)';
+      updateAutoLimiterHints();
+    }
+
+    function updateAutoLimiterHints() {
+      const target = Number(document.getElementById('target_rpm').value || 7000);
+      const hyst = Number(document.getElementById('rpm_hysteresis').value || 200);
+      const cut = Number(document.getElementById('hard_cut_ms').value || 30);
+      const spark = Number(document.getElementById('recovery_spark_ms').value || 20);
+      const exit = Math.max(0, target - hyst);
+
+      document.getElementById('hintTargetRpm').textContent = target;
+      document.getElementById('hintCutMs').textContent = cut;
+      document.getElementById('hintSparkMs').textContent = spark;
+      document.getElementById('hintExitRpm').textContent = exit;
+      document.getElementById('hintExitCalc').textContent = `${target} - ${hyst} = ${exit}`;
+    }
+
+    function updateManualBackfireUi() {
+      const en = document.getElementById('manualBackfireEnabled').checked;
+      document.getElementById('manualBackfireFields').style.display = en ? 'block' : 'none';
+      const mode = Number(document.getElementById('manualBackfireMode').value || 2);
+      document.getElementById('manualPulseFields').style.display = (en && mode === 2) ? 'block' : 'none';
+    }
+
+    function applyBackfirePreset(type) {
+      if (type === 'motogp') {
+        document.getElementById('manualPulseCutMs').value = 95;
+        document.getElementById('manualPulseFireMs').value = 35;
+        document.getElementById('manualPulseOffMs').value = 55;
+        document.getElementById('manualPulseRepeat').value = 4;
+        document.getElementById('manualBackfireHoldMs').value = 600;
+        showToast('🍿 Đã nạp Preset Backfire MotoGP (95ms - 35ms - 55ms, 4 lần)');
+      } else if (type === 'cannon') {
+        document.getElementById('manualPulseCutMs').value = 150;
+        document.getElementById('manualPulseFireMs').value = 45;
+        document.getElementById('manualPulseOffMs').value = 75;
+        document.getElementById('manualPulseRepeat').value = 2;
+        document.getElementById('manualBackfireHoldMs').value = 700;
+        showToast('💣 Đã nạp Preset Đại Bác Khạc Lửa (150ms - 45ms - 75ms, 2 lần)');
+      } else if (type === 'ak47') {
+        document.getElementById('manualPulseCutMs').value = 75;
+        document.getElementById('manualPulseFireMs').value = 30;
+        document.getElementById('manualPulseOffMs').value = 45;
+        document.getElementById('manualPulseRepeat').value = 6;
+        document.getElementById('manualBackfireHoldMs').value = 500;
+        showToast('🔫 Đã nạp Preset Súng Máy AK47 (75ms - 30ms - 45ms, 6 lần)');
+      } else if (type === 'gentle') {
+        document.getElementById('manualPulseCutMs').value = 85;
+        document.getElementById('manualPulseFireMs').value = 40;
+        document.getElementById('manualPulseOffMs').value = 65;
+        document.getElementById('manualPulseRepeat').value = 3;
+        document.getElementById('manualBackfireHoldMs').value = 800;
+        showToast('🛡️ Đã nạp Preset Êm Dịu / Pô Zin (85ms - 40ms - 65ms, 3 lần)');
+      }
+      document.getElementById('manualIgnOnly').checked = true;
+      document.getElementById('manualBackfireMode').value = 2;
+      updateManualPulseCycle();
+      renderConfigSnapshot();
+      markDirty();
+    }
+
+    function updateManualPulseCycle() {
+      const a = Number(document.getElementById('manualPulseCutMs').value || 95);
+      const b = Number(document.getElementById('manualPulseFireMs').value || 35);
+      const c = Number(document.getElementById('manualPulseOffMs').value || 55);
+      const d = Number(document.getElementById('manualPulseRepeat').value || 4);
+      const tot = a + (b + c) * d;
+      document.getElementById('manualCycleTime').textContent = tot;
+      const status = document.getElementById('manualCycleStatus');
+      if (a < 60) {
+        status.textContent = '⚠️ Thời gian A hơi ngắn, có thể xăng chưa kịp dồn vào pô';
+        status.style.color = 'var(--accent-amber)';
+      } else if (a > 200) {
+        status.textContent = '⚠️ Thời gian A hơi dài, xe dễ bị hụt tua sâu trước khi nổ';
+        status.style.color = 'var(--accent-amber)';
+      } else {
+        status.textContent = `🍿 Nhịp bắn bắp rang lý tưởng (${d} tiếng nổ giòn mỗi tràng)`;
+        status.style.color = 'var(--accent-green)';
+      }
+    }
+
+    // MORSE LEVER TAP TRAINER
+    let morseStart = 0;
+    let morseBuf = [];
+    function handleMorseLeverPress(isDown) {
+      if (isDown) {
+        morseStart = Date.now();
+        document.getElementById('txtMorseDuration').innerText = 'Đang giữ cần số...';
+        playBeep(440, 'sine', 0.8);
+      } else {
+        if (!morseStart) return;
+        const dur = Date.now() - morseStart;
+        const shortMax = parseInt(document.getElementById('lockShortMax').value) || 280;
+        const longMin = parseInt(document.getElementById('lockLongMin').value) || 550;
+
+        let bit = null;
+        if (dur <= shortMax) {
+          bit = '0';
+          playBeep(750, 'sine', 0.08);
+        } else if (dur >= longMin) {
+          bit = '1';
+          playBeep(350, 'sine', 0.25);
+        } else {
+          showToast(`⚠️ Thời gian giữ ${dur}ms nằm giữa ngưỡng. Vui lòng bấm dứt khoát!`);
+        }
+
+        if (bit !== null) {
+          morseBuf.push(bit);
+          if (morseBuf.length > 4) morseBuf = [bit];
+          document.getElementById('txtMorseDuration').innerText = `Nhịp vừa bấm: ${dur}ms → Bit [${bit}] (${bit === '0' ? 'Ngắn' : 'Dài'})`;
+          updateMorseBoxes();
+        }
+        morseStart = 0;
+      }
+    }
+
+    function updateMorseBoxes() {
+      for (let i = 0; i < 4; i++) {
+        const box = document.getElementById(`morseBox${i}`);
+        if (box) {
+          box.innerText = morseBuf[i] !== undefined ? morseBuf[i] : '-';
+          box.classList.toggle('filled', morseBuf[i] !== undefined);
+        }
+      }
+      if (morseBuf.length === 4) {
+        const entered = morseBuf.join('');
+        const actual = document.getElementById('lockPassInput').value;
+        if (entered === actual) {
+          playBeep(880, 'sine', 0.3);
+          showToast(`🔓 [KHỚP MÃ] Đã nhập đúng: ${entered}! Xe mở khóa.`);
+          document.getElementById('lockStatusLabel').innerText = 'Trạng thái: UNLOCKED';
+          document.getElementById('lockStatusLabel').style.color = 'var(--accent-green)';
+          addLockFeed(entered, true);
+        } else {
+          playBeep(200, 'sawtooth', 0.4);
+          showToast(`❌ [SAI MẬT KHẨU] Nhập: ${entered} (Đúng: ${actual})`);
+          addLockFeed(entered, false);
+        }
+        setTimeout(() => { morseBuf = []; updateMorseBoxes(); }, 1800);
+      }
+    }
+
+    function addLockFeed(pass, ok) {
+      const feed = document.getElementById('lockPassFeed');
+      if (feed.querySelector('.log-empty') || feed.innerText.includes('Chưa có')) {
+        feed.innerHTML = '';
+      }
+      const item = document.createElement('div');
+      item.style.padding = '4px 0';
+      item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+      item.style.display = 'flex';
+      item.style.justifyContent = 'space-between';
+      item.innerHTML = `
+        <span>Pass: <strong>${pass}</strong></span>
+        <span style="color:${ok ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight:700;">${ok ? 'OK' : 'FAIL'}</span>
+      `;
+      feed.prepend(item);
+    }
+
+    // LOG STREAM SIMULATOR
+    let logCounter = 1;
+    function addLogEntry(rpm, cutState, event, detail) {
+      const list = document.getElementById('logList');
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+      row.innerHTML = `
+        <div class="log-line">
+          <span>${(Date.now() % 100000 / 1000).toFixed(2)}s</span>
+          <span>${rpm} RPM</span>
+          <span class="${cutState.includes('CUT') ? 'cut' : ''}">${cutState}</span>
+          <span>${detail || event}</span>
+          <span style="color:var(--accent-cyan)">${event}</span>
+        </div>
+      `;
+      list.prepend(row);
+      logCounter++;
+      document.getElementById('logCount').innerText = logCounter;
+      document.getElementById('logSummary').innerText = `${event}: ${detail || ''}`;
+      document.getElementById('tickerEvent').innerText = event;
+    }
+
+    function clearLogList() {
+      document.getElementById('logList').innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px 0;">Đã xóa log</div>';
+      logCounter = 0;
+      document.getElementById('logCount').innerText = '0';
+      showToast('🗑️ Đã xóa sạch danh sách log');
+    }
+
+    function exportLogs() {
+      showToast('📤 Đang xuất file realtime-log.csv...');
+    }
+
+    // CALIBRATION WIZARD LOGIC
+    let isCalibrating = false;
+    let calLowSamples = null;
+    let calHighSamples = null;
+
+    function sampleCurrentRpm() {
+      playBeep(700, 'sine', 0.1);
+      const rpm = currentRpm || 0;
+      if (!document.getElementById('calTarget').value) {
+        document.getElementById('calTarget').value = rpm;
+      }
+      document.getElementById('calStatus').innerText = `📊 Đã lấy mẫu tua máy hiện tại: ${rpm} RPM (PPR: ${document.getElementById('ppr').value || 1})`;
+      showToast(`📊 Đã lấy mẫu: ${rpm} RPM`);
+    }
+
+    async function collectLiveRpmSamples(count, intervalMs, onProgress) {
+      const samples = [];
+      for (let i = 0; i < count; i++) {
+        await new Promise(res => setTimeout(res, intervalMs));
+        const sample = currentRpm;
+        if (typeof sample === 'number' && sample > 0) {
+          samples.push(sample);
+        }
+        if (onProgress) onProgress(i + 1, count, sample);
+      }
+      return samples;
+    }
+
+    async function runAutoCalibrate() {
+      if (isCalibrating) return;
+      const target = parseFloat(document.getElementById('calTarget').value);
+      if (!target || target <= 0) {
+        showToast('⚠️ Vui lòng nhập Target RPM hợp lệ (> 0)');
+        return;
+      }
+      const samplesCount = Math.min(40, Math.max(3, parseInt(document.getElementById('calSamples').value) || 12));
+      const intervalMs = Math.min(500, Math.max(50, parseInt(document.getElementById('calInterval').value) || 150));
+
+      const calBtn = document.getElementById('calibrateBtn');
+      const statusEl = document.getElementById('calStatus');
+      isCalibrating = true;
+      calBtn.disabled = true;
+      statusEl.innerText = `⏳ Đang lấy mẫu... Vui lòng GIỮ ĐỀU GA ở mức ~${target} RPM (0/${samplesCount})`;
+
+      try {
+        const samples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+          statusEl.innerText = `⏳ Đang lấy mẫu... Vui lòng GIỮ ĐỀU GA (~${target} RPM): ${cur}/${total} (Mẫu: ${val || 0} RPM)`;
+        });
+
+        if (samples.length < 3) {
+          statusEl.innerText = '❌ Không đủ mẫu tua máy hợp lệ (>0 RPM). Hãy nổ máy và thử lại!';
+          showToast('❌ Lỗi: Xe chưa nổ máy hoặc không nhận tín hiệu RPM');
+          return;
+        }
+
+        statusEl.innerText = `🔄 Đang gửi ${samples.length} mẫu lên thiết bị để tính toán...`;
+        const res = await fetch('/calibrate/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetRpm: target, measuredSamples: samples })
+        });
+
+        if (!res.ok) {
+          const errTxt = await res.text();
+          throw new Error(errTxt || 'Lỗi phản hồi từ thiết bị');
+        }
+
+        const data = await res.json();
+        const newFactor = parseFloat(data.newFactor);
+        if (!isNaN(newFactor)) {
+          document.getElementById('rpmScaleFactor').value = newFactor.toFixed(3);
+          statusEl.innerHTML = `✅ <strong>Calibrate thành công!</strong><br>` +
+            `• Scale Factor mới: <strong style="color:var(--accent-green);">${newFactor.toFixed(3)}</strong> (cũ: ${data.oldFactor ? data.oldFactor.toFixed(3) : '--'})<br>` +
+            `• Tua máy đo TB: ${data.avgMeasured ? data.avgMeasured.toFixed(0) : '--'} RPM (Target: ${target} RPM, Độ lệch: &plusmn;${data.stdDev ? data.stdDev.toFixed(1) : '0'} RPM)`;
+          playBeep(900, 'triangle', 0.2);
+          showToast(`🎯 Calibrate thành công! Scale: ${newFactor.toFixed(3)}`);
+          markDirty();
+        }
+      } catch (err) {
+        statusEl.innerText = `❌ Thất bại: ${err.message}`;
+        showToast(`❌ Calibrate thất bại: ${err.message}`);
+      } finally {
+        isCalibrating = false;
+        calBtn.disabled = false;
+      }
+    }
+
+    async function runAutoCalibrate2Point() {
+      if (isCalibrating) return;
+      const low = parseFloat(document.getElementById('calTargetLow').value);
+      const high = parseFloat(document.getElementById('calTargetHigh').value);
+      if (!low || !high || high <= low) {
+        showToast('⚠️ Vui lòng nhập Target thấp & Target cao hợp lệ (Cao > Thấp)');
+        return;
+      }
+
+      const samplesCount = Math.min(40, Math.max(3, parseInt(document.getElementById('calSamples').value) || 12));
+      const intervalMs = Math.min(500, Math.max(50, parseInt(document.getElementById('calInterval').value) || 150));
+
+      const cal2Btn = document.getElementById('calibrate2Btn');
+      const statusEl = document.getElementById('calStatus');
+
+      // Quy trình 2 bước: nếu chưa lấy mẫu thấp thì lấy mẫu thấp trước
+      if (!calLowSamples) {
+        isCalibrating = true;
+        cal2Btn.disabled = true;
+        statusEl.innerText = `⏳ Bước 1/2: Giữ đều ga ở mức THẤP (~${low} RPM)...`;
+        try {
+          calLowSamples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+            statusEl.innerText = `⏳ Bước 1/2: Giữ đều ga THẤP (~${low} RPM): ${cur}/${total} (${val || 0} RPM)`;
+          });
+          if (calLowSamples.length < 3) {
+            calLowSamples = null;
+            statusEl.innerText = '❌ Không đủ mẫu tua thấp (>0 RPM). Thử lại!';
+            showToast('❌ Không nhận được tín hiệu tua thấp');
+            return;
+          }
+          playBeep(800, 'sine', 0.15);
+          statusEl.innerHTML = `✅ <strong>Đã lưu mẫu điểm Thấp (${low} RPM)!</strong><br>👉 Bây giờ hãy lên ga giữ đều ở mức <strong>CAO (~${high} RPM)</strong> rồi bấm lại nút "Calibrate 2 điểm"!`;
+          showToast('✅ Đã xong bước 1! Giữ ga cao và bấm lại nút.');
+        } finally {
+          isCalibrating = false;
+          cal2Btn.disabled = false;
+        }
+        return;
+      }
+
+      // Bước 2: lấy mẫu điểm cao và gửi lên thiết bị
+      isCalibrating = true;
+      cal2Btn.disabled = true;
+      statusEl.innerText = `⏳ Bước 2/2: Giữ đều ga ở mức CAO (~${high} RPM)...`;
+      try {
+        calHighSamples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+          statusEl.innerText = `⏳ Bước 2/2: Giữ đều ga CAO (~${high} RPM): ${cur}/${total} (${val || 0} RPM)`;
+        });
+        if (calHighSamples.length < 3) {
+          calHighSamples = null;
+          statusEl.innerText = '❌ Không đủ mẫu tua cao (>0 RPM). Thử lại!';
+          showToast('❌ Không nhận được tín hiệu tua cao');
+          return;
+        }
+
+        statusEl.innerText = '🔄 Đang gửi mẫu 2 điểm lên thiết bị tính toán Scale & Offset...';
+        const res = await fetch('/calibrate/two-point', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lowTargetRpm: low,
+            highTargetRpm: high,
+            lowMeasuredSamples: calLowSamples,
+            highMeasuredSamples: calHighSamples
+          })
+        });
+
+        if (!res.ok) {
+          const errTxt = await res.text();
+          throw new Error(errTxt || 'Lỗi tính toán từ thiết bị');
+        }
+
+        const data = await res.json();
+        const newFactor = parseFloat(data.newFactor);
+        const newOffset = parseFloat(data.newOffset);
+        if (!isNaN(newFactor)) {
+          document.getElementById('rpmScaleFactor').value = newFactor.toFixed(3);
+          if (!isNaN(newOffset)) {
+            const offEl = document.getElementById('rpmOffset');
+            if (offEl) offEl.value = Math.round(newOffset);
+          }
+          statusEl.innerHTML = `✅ <strong>Calibrate 2 điểm thành công!</strong><br>` +
+            `• Scale mới: <strong style="color:var(--accent-green);">${newFactor.toFixed(3)}</strong> | Offset mới: <strong>${Math.round(newOffset)} RPM</strong><br>` +
+            `• Điểm thấp đo: ${data.lowAvgMeasured ? data.lowAvgMeasured.toFixed(0) : '--'} RPM | Điểm cao đo: ${data.highAvgMeasured ? data.highAvgMeasured.toFixed(0) : '--'} RPM`;
+          playBeep(950, 'triangle', 0.25);
+          showToast(`🎯 Calibrate 2 điểm xong! Scale: ${newFactor.toFixed(3)}, Offset: ${Math.round(newOffset)}`);
+          markDirty();
+        }
+      } catch (err) {
+        statusEl.innerText = `❌ Thất bại 2 điểm: ${err.message}`;
+        showToast(`❌ Calibrate 2 điểm thất bại: ${err.message}`);
+      } finally {
+        calLowSamples = null;
+        calHighSamples = null;
+        isCalibrating = false;
+        cal2Btn.disabled = false;
+      }
+    }
+
+    // WIFI AP LOGIC
+    let wifiShow = false;
+    function toggleWifiPassword() {
+      wifiShow = !wifiShow;
+      const inp = document.getElementById('apPassword');
+      inp.type = wifiShow ? 'text' : 'password';
+      document.getElementById('wifiToggleBtn').innerText = wifiShow ? 'Ẩn mật khẩu' : 'Hiện mật khẩu';
+    }
+
+    async function handleSaveWifi() {
+      const pass = document.getElementById('apPassword').value.trim();
+      const timeout = parseInt(document.getElementById('apTimeoutMs').value) || 120000;
+      document.getElementById('wifiStatus').innerText = pass.length >= 8 ? `AP bảo mật: WPA2 (${pass.length} ký tự)` : 'AP đang mở (không mật khẩu)';
+      try {
+        const res = await fetch('/config/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apPassword: pass, apTimeoutMs: timeout })
+        });
+        if (res.ok) {
+          showToast('📶 Đã lưu cấu hình Wi-Fi AP! (AP sẽ khởi động lại nếu đổi pass)');
+        } else {
+          showToast('📶 Đã lưu Wi-Fi (Mô phỏng cục bộ)');
+        }
+      } catch(e) {
+        showToast('📶 Đã lưu Wi-Fi (Mô phỏng cục bộ)');
+      }
+    }
+
+    async function handleSaveLock() {
+      const enabled = document.getElementById('lockEnabledToggle').checked;
+      const pass = document.getElementById('lockPassInput').value.trim();
+      const shortMaxMs = parseInt(document.getElementById('lockShortMax').value) || 350;
+      const longMinMs = parseInt(document.getElementById('lockLongMin').value) || 600;
+      const resetHoldMs = parseInt(document.getElementById('lockResetHold').value) || 2500;
+      const payload = { enabled, shortMaxMs, longMinMs, resetHoldMs };
+      if (pass) payload.pass = pass;
+      try {
+        const res = await fetch('/lock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast('🔐 Đã lưu mật khẩu và trạng thái Lock Mode vào NVS');
+        } else {
+          showToast('🔐 Đã lưu Lock Mode (Mô phỏng cục bộ)');
+        }
+      } catch(e) {
+        showToast('🔐 Đã lưu Lock Mode (Mô phỏng cục bộ)');
+      }
+    }
+
+    async function refreshLockStatus() {
+      try {
+        const res = await fetch('/lock');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.enabled !== undefined) document.getElementById('lockEnabledToggle').checked = !!data.enabled;
+          if (data.shortMaxMs) document.getElementById('lockShortMax').value = data.shortMaxMs;
+          if (data.longMinMs) document.getElementById('lockLongMin').value = data.longMinMs;
+          if (data.resetHoldMs) document.getElementById('lockResetHold').value = data.resetHoldMs;
+          showToast('🔄 Đã cập nhật trạng thái Lock Mode từ thiết bị');
+        }
+      } catch(e) {}
+    }
+
+    async function triggerTestCut(ms) {
+      playCutSound();
+      showToast(`⚡ Đã kích ngắt Relay: ${ms}ms`);
+      addLogEntry(currentRpm, 'TEST_CUT', 'RELAY_TEST', `Cut ${ms}ms`);
+      try { await fetch(`/test/cut?ms=${ms}`); } catch(e) {}
+    }
+
+    async function startTestPwm() {
+      const rpm = document.getElementById('testRpmInput').value;
+      showToast(`📡 Bắt đầu phát xung PWM trên GPIO8 (${rpm} RPM)...`);
+      addLogEntry(rpm, 'STANDBY', 'PWM_START', `GPIO8 @ ${rpm} RPM`);
+      try { await fetch(`/test/rpm?rpm=${rpm}`); } catch(e) {}
+    }
+
+    async function stopTestPwm() {
+      showToast('🛑 Đã dừng phát xung PWM trên GPIO8');
+      addLogEntry(0, 'STANDBY', 'PWM_STOP', 'GPIO8 Low');
+      try { await fetch('/test/rpm/stop', { method: 'POST' }); } catch(e) {}
+    }
+
+    // OTA FILE PICKERS & REAL UPLOAD
+    function onOtaFileSelected(type, input) {
+      const file = input.files[0];
+      if (file) {
+        document.getElementById(`${type}Status`).innerText = `Đã chọn: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        document.getElementById(`${type}UploadBtn`).removeAttribute('disabled');
+      }
+    }
+
+    function startOtaUpload(type) {
+      const input = document.getElementById(`${type}FileInput`);
+      const file = input && input.files ? input.files[0] : null;
+      if (!file) {
+        showToast('⚠️ Vui lòng chọn file .bin trước khi nạp');
+        return;
+      }
+      showToast(`🚀 Đang nạp OTA ${type === 'fw' ? 'Firmware' : 'Giao Diện UI'}...`);
+      const url = type === 'fw' ? '/ota/firmware' : '/ota/fs';
+      const formData = new FormData();
+      formData.append(type === 'fw' ? 'firmware' : 'filesystem', file);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      const bar = document.getElementById(`${type}ProgressBar`);
+      const txt = document.getElementById(`${type}ProgressText`);
+      const btn = document.getElementById(`${type}UploadBtn`);
+      if (btn) btn.disabled = true;
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          const prg = Math.round((e.loaded / e.total) * 100);
+          bar.style.width = `${prg}%`;
+          txt.innerText = `Tiến trình: ${prg}% (${(e.loaded/1024).toFixed(0)}/${(e.total/1024).toFixed(0)} KB)`;
+        }
+      };
+
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          bar.style.width = '100%';
+          txt.innerText = 'Tiến trình: 100%';
+          document.getElementById(`${type}Status`).innerText = '✅ Nạp hoàn tất! Thiết bị đang khởi động lại...';
+          showToast('🎉 Nạp OTA thành công! Thiết bị đang khởi động lại...');
+        } else {
+          document.getElementById(`${type}Status`).innerText = '❌ Nạp thất bại (Mã lỗi: ' + xhr.status + ')';
+          showToast('❌ Nạp OTA thất bại!');
+          if (btn) btn.disabled = false;
+        }
+      };
+
+      xhr.onerror = function() {
+        let prg = 0;
+        const iv = setInterval(() => {
+          prg += 20;
+          bar.style.width = `${prg}%`;
+          txt.innerText = `Tiến trình: ${prg}% (Mô phỏng demo)`;
+          if (prg >= 100) {
+            clearInterval(iv);
+            document.getElementById(`${type}Status`).innerText = '✅ Mô phỏng OTA hoàn tất!';
+            showToast('🎉 Mô phỏng nạp OTA thành công!');
+            if (btn) btn.disabled = false;
+          }
+        }, 150);
+      };
+
+      xhr.send(formData);
+    }
+
+    // CONFIG SNAPSHOT TABLE
+    function renderConfigSnapshot() {
+      const wrap = document.getElementById('configSummary');
+      if (!wrap) return;
+      const rows = [
+        { label: "Auto map mode", val: document.getElementById('modeAuto').checked },
+        { label: "Shift active LOW", val: document.getElementById('shiftActiveLow').checked },
+        { label: "Relay HIGH = cut", val: document.getElementById('relayPolarityHighToCut').checked },
+        { label: "Cắt IGN", val: document.getElementById('cutIgnEnabled').checked },
+        { label: "Cắt INJ", val: document.getElementById('cutInjEnabled').checked },
+        { label: "Cut Fixed (ms)", val: document.getElementById('cutTimeFixed').value },
+        { label: "Shift debounce (ms)", val: document.getElementById('shiftDebounceMs').value },
+        { label: "Min RPM to cut", val: document.getElementById('minRpm').value },
+        { label: "PPR (PC817)", val: document.getElementById('ppr').value },
+        { label: "RPM scale factor", val: document.getElementById('rpmScaleFactor').value },
+        { label: "RPM offset", val: document.getElementById('rpmOffset').value },
+        { label: "Auto Limiter Enable", val: document.getElementById('limiter_enable').checked },
+        { label: "Double-Click Cần Số", val: document.getElementById('allow_double_click').checked },
+        { label: "Target RPM", val: document.getElementById('target_rpm').value },
+        { label: "RPM Hysteresis", val: document.getElementById('rpm_hysteresis').value },
+        { label: "Hard Cut Time (ms)", val: document.getElementById('hard_cut_ms').value },
+        { label: "Recovery Spark Time", val: document.getElementById('recovery_spark_ms').value },
+        { label: "Manual Backfire", val: document.getElementById('manualBackfireEnabled').checked },
+        { label: "Manual BF Mode", val: document.getElementById('manualBackfireMode').value },
+        { label: "Manual BF Hold (ms)", val: document.getElementById('manualBackfireHoldMs').value },
+        { label: "Manual BF Min RPM", val: document.getElementById('manualMinRpm').value },
+        { label: "Manual IGN only", val: document.getElementById('manualIgnOnly').checked },
+        { label: "AP timeout (ms)", val: document.getElementById('apTimeoutMs').value },
+        { label: "Total Map Bands", val: autoMapEntries.length }
+      ];
+
+      const html = rows.map(r => `
+        <div class="config-row">
+          <span>${r.label}</span>
+          <strong>${r.val}</strong>
+        </div>
+      `).join('');
+      wrap.innerHTML = `<div class="config-grid">${html}</div>`;
+    }
+
+    function exportConfigJson() {
+      const cfg = {
+        shiftActiveLow: document.getElementById('shiftActiveLow').checked,
+        shiftDebounceMs: parseInt(document.getElementById('shiftDebounceMs').value),
+        relayPolarityHighToCut: document.getElementById('relayPolarityHighToCut').checked,
+        ppr: parseFloat(document.getElementById('ppr').value),
+        rpmScaleFactor: parseFloat(document.getElementById('rpmScaleFactor').value),
+        rpmOffset: parseFloat(document.getElementById('rpmOffset').value),
+        modeAuto: document.getElementById('modeAuto').checked,
+        cutTimeFixed: parseInt(document.getElementById('cutTimeFixed').value),
+        minRpm: parseInt(document.getElementById('minRpm').value),
+        cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
+        cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        limiter_enable: document.getElementById('limiter_enable').checked,
+        allow_double_click: document.getElementById('allow_double_click').checked,
+        target_rpm: parseInt(document.getElementById('target_rpm').value),
+        rpm_hysteresis: parseInt(document.getElementById('rpm_hysteresis').value),
+        hard_cut_ms: parseInt(document.getElementById('hard_cut_ms').value),
+        recovery_spark_ms: parseInt(document.getElementById('recovery_spark_ms').value),
+        manualBackfireEnabled: document.getElementById('manualBackfireEnabled').checked,
+        manualBackfireMode: parseInt(document.getElementById('manualBackfireMode').value),
+        manualBackfireHoldMs: parseInt(document.getElementById('manualBackfireHoldMs').value),
+        manualMinRpm: parseInt(document.getElementById('manualMinRpm').value),
+        manualIgnOnly: document.getElementById('manualIgnOnly').checked,
+        manualPulseCutMs: parseInt(document.getElementById('manualPulseCutMs').value),
+        manualPulseFireMs: parseInt(document.getElementById('manualPulseFireMs').value),
+        manualPulseOffMs: parseInt(document.getElementById('manualPulseOffMs').value),
+        manualPulseRepeat: parseInt(document.getElementById('manualPulseRepeat').value),
+        apTimeoutMs: parseInt(document.getElementById('apTimeoutMs').value),
+        autoMap: autoMapEntries
+      };
+      const b = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'quickshifter-config.json';
+      a.click();
+      showToast('💾 Đã xuất file JSON thành công!');
+    }
+
+    function hydrateFormFromConfig(cfg) {
+      if (!cfg) return;
+      const setVal = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+      const setChk = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.checked = !!val; };
+
+      setChk('shiftActiveLow', cfg.shiftActiveLow);
+      setVal('shiftDebounceMs', cfg.shiftDebounceMs);
+      setChk('relayPolarityHighToCut', cfg.relayPolarityHighToCut);
+      setVal('ppr', cfg.ppr);
+      setVal('rpmScaleFactor', cfg.rpmScaleFactor);
+      setVal('rpmOffset', cfg.rpmOffset);
+      setChk('modeAuto', cfg.modeAuto);
+      setVal('cutTimeFixed', cfg.cutTimeFixed);
+      setVal('minRpm', cfg.minRpm);
+      setChk('cutIgnEnabled', cfg.cutIgnEnabled);
+      setChk('cutInjEnabled', cfg.cutInjEnabled);
+
+      setChk('allow_double_click', cfg.allow_double_click);
+      setChk('limiter_enable', cfg.limiter_enable);
+      setVal('target_rpm', cfg.target_rpm);
+      setVal('rpm_hysteresis', cfg.rpm_hysteresis);
+      setVal('hard_cut_ms', cfg.hard_cut_ms);
+      setVal('recovery_spark_ms', cfg.recovery_spark_ms);
+
+      setChk('manualBackfireEnabled', cfg.manualBackfireEnabled);
+      setVal('manualBackfireMode', cfg.manualBackfireMode);
+      setVal('manualBackfireHoldMs', cfg.manualBackfireHoldMs);
+      setVal('manualMinRpm', cfg.manualMinRpm);
+      setChk('manualIgnOnly', cfg.manualIgnOnly);
+      setVal('manualPulseCutMs', cfg.manualPulseCutMs);
+      setVal('manualPulseFireMs', cfg.manualPulseFireMs);
+      setVal('manualPulseOffMs', cfg.manualPulseOffMs);
+      setVal('manualPulseRepeat', cfg.manualPulseRepeat);
+
+      setVal('apTimeoutMs', cfg.apTimeoutMs);
+      if (cfg.apPassword) setVal('apPassword', cfg.apPassword);
+
+      if (Array.isArray(cfg.autoMap) && cfg.autoMap.length > 0) {
+        autoMapEntries = JSON.parse(JSON.stringify(cfg.autoMap));
+        renderAutoMapList();
+        renderDynoChart();
+      }
+      updateCutHint();
+      updateAutoLimiterUi();
+      updateManualPulseCycle();
+      renderConfigSnapshot();
+    }
+
+    function importConfigFile(input) {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            hydrateFormFromConfig(data);
+            showToast(`📥 Đã nạp thành công file: ${file.name}`);
+            markDirty();
+          } catch(err) {
+            showToast('⚠️ File JSON không đúng định dạng!');
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    async function handleSaveConfig() {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      const oldText = btn.innerText;
+      btn.innerText = 'Đang lưu...';
+
+      const payload = {
+        shiftActiveLow: document.getElementById('shiftActiveLow').checked,
+        shiftDebounceMs: parseInt(document.getElementById('shiftDebounceMs').value) || 30,
+        relayPolarityHighToCut: document.getElementById('relayPolarityHighToCut').checked,
+        ppr: parseFloat(document.getElementById('ppr').value) || 1,
+        rpmScaleFactor: parseFloat(document.getElementById('rpmScaleFactor').value) || 1,
+        rpmOffset: parseFloat(document.getElementById('rpmOffset').value) || 0,
+        modeAuto: document.getElementById('modeAuto').checked,
+        cutTimeFixed: parseInt(document.getElementById('cutTimeFixed').value) || 50,
+        minRpm: parseInt(document.getElementById('minRpm').value) || 1500,
+        cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
+        cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        allow_double_click: document.getElementById('allow_double_click').checked,
+        limiter_enable: document.getElementById('limiter_enable').checked,
+        target_rpm: parseInt(document.getElementById('target_rpm').value) || 7000,
+        rpm_hysteresis: parseInt(document.getElementById('rpm_hysteresis').value) || 200,
+        hard_cut_ms: parseInt(document.getElementById('hard_cut_ms').value) || 30,
+        recovery_spark_ms: parseInt(document.getElementById('recovery_spark_ms').value) || 20,
+        manualBackfireEnabled: document.getElementById('manualBackfireEnabled').checked,
+        manualBackfireMode: parseInt(document.getElementById('manualBackfireMode').value) || 1,
+        manualBackfireHoldMs: parseInt(document.getElementById('manualBackfireHoldMs').value) || 3000,
+        manualMinRpm: parseInt(document.getElementById('manualMinRpm').value) || 4000,
+        manualIgnOnly: document.getElementById('manualIgnOnly').checked,
+        manualPulseCutMs: parseInt(document.getElementById('manualPulseCutMs').value) || 200,
+        manualPulseFireMs: parseInt(document.getElementById('manualPulseFireMs').value) || 50,
+        manualPulseOffMs: parseInt(document.getElementById('manualPulseOffMs').value) || 200,
+        manualPulseRepeat: parseInt(document.getElementById('manualPulseRepeat').value) || 3,
+        apTimeoutMs: parseInt(document.getElementById('apTimeoutMs').value) || 120000,
+        apPassword: (document.getElementById('apPassword').value || '').trim(),
+        autoMap: autoMapEntries
+      };
+
+      try {
+        const res = await fetch('/config/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        updateDirtyUi(false, '✅ Đã lưu cấu hình vào bộ nhớ thiết bị');
+        playBeep(950, 'triangle', 0.15);
+        showToast('💾 Đã lưu cấu hình thành công vào bộ nhớ thiết bị!');
+      } catch (err) {
+        // Fallback demo simulation
+        updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
+        playBeep(950, 'triangle', 0.15);
+        showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = oldText;
+        renderConfigSnapshot();
+      }
+    }
+
+    async function handleReloadConfig(silent = false) {
+      const btn = document.getElementById('reloadBtn');
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch('/config/get');
+        if (!res.ok) throw new Error(res.statusText);
+        const cfg = await res.json();
+        hydrateFormFromConfig(cfg);
+        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình từ thiết bị');
+        if (!silent) showToast('🔄 Đã tải cấu hình từ thiết bị!');
+      } catch (err) {
+        if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
+        updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function initRealtimeEvents() {
+      try {
+        const sse = new EventSource('/log/stream');
+        sse.addEventListener('log', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            addLogEntry(data.rpm || currentRpm, data.cut ? 'CUTTING' : 'STANDBY', data.event || 'LOG', data.msg || '');
+            if (typeof data.rpm === 'number') {
+              currentRpm = data.rpm;
+              updateGauge(data.rpm);
+              const bMeta = document.getElementById('bucketMeta');
+              if (bMeta) bMeta.innerText = 'Band: ' + resolveBandLabel(data.rpm);
+            }
+            if (data.shift !== undefined) handleShiftPedalInput(data.shift);
+            if (data.cut !== undefined) updateCutStateDisplay(data.cut);
+          } catch(err) {}
+        });
+        sse.addEventListener('telemetry', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (typeof data.rpm === 'number') {
+              currentRpm = data.rpm;
+              updateGauge(data.rpm);
+              const bMeta = document.getElementById('bucketMeta');
+              if (bMeta) bMeta.innerText = 'Band: ' + resolveBandLabel(data.rpm);
+            }
+            if (data.shift !== undefined) handleShiftPedalInput(data.shift);
+            if (data.cut !== undefined) updateCutStateDisplay(data.cut);
+            if (data.limiter !== undefined || data.limiter_enable !== undefined) {
+              const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
+              const limEl = document.getElementById('limiter_enable');
+              if (limEl && limEl.checked !== limVal) {
+                limEl.checked = limVal;
+                updateAutoLimiterUi();
+              }
+            }
+          } catch(err) {}
+        });
+        sse.onopen = () => {
+          const badge = document.getElementById('statusBadge');
+          if (badge) {
+            badge.innerText = 'Device Online';
+            badge.style.color = 'var(--accent-green)';
+          }
+        };
+        sse.onerror = () => {
+          const badge = document.getElementById('statusBadge');
+          if (badge) {
+            badge.innerText = 'Chế Độ Offline / Demo';
+            badge.style.color = 'var(--accent-amber)';
+          }
+        };
+      } catch(e) {}
+    }
+  </script>
+</body>
+</html>

@@ -24,7 +24,7 @@ static bool shiftCutLatched = false;
 // Shift Lever Multi-Click tracking (3 clicks to Turn ON, 2 clicks to Turn OFF)
 static unsigned long lastShiftPressMs = 0;
 static uint8_t shiftPressCount = 0;
-static const unsigned long MULTI_CLICK_TIMEOUT_MS = 500;
+static const unsigned long MULTI_CLICK_TIMEOUT_MS = 800;
 
 // Manual Backfire State Machine
 enum ShiftState
@@ -216,10 +216,10 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
     break;
 
   case SHIFT_MANUAL_MODE1:
-    // Mode 1: Cắt liên tục cho đến khi nhả
-    if (!shift_is_pressed() || !canActivate())
+    // Mode 1: Cắt liên tục cho đến khi nhả cần số hoặc tua rớt chạm mức garanti (chống tắt máy)
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm)
     {
-      // Nhả hoặc không còn điều kiện
+      // Nhả cần số hoặc chạm ngưỡng garanti an toàn
       cut_trigger_dual(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
     }
@@ -227,9 +227,10 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
 
   case SHIFT_MANUAL_MODE2:
     // Mode 2: A (CUT dài) -> (B FIRE, C CUT ngắn) lặp D lần
-    if (!shift_is_pressed() || !canActivate())
+    // Không ngắt ngang trả lửa khi người lái vẫn đang đè cần số giữ ga (tránh xe vọt lên nguy hiểm)
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm)
     {
-      // Nhả giữa chừng hoặc mất điều kiện
+      // Nhả cần số hoặc chạm ngưỡng garanti an toàn
       cut_trigger_dual(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
       DynamicJsonDocument meta(96);
@@ -340,10 +341,11 @@ void onShiftPressed()
   // 1. Thuật toán điều khiển Auto RPM Limiter qua cần số:
   // - BẬT: Nhấp 3 cái liên tiếp (Triple-Click) khi Limiter đang TẮT
   // - TẮT: Nhấp 2 cái liên tiếp (Double-Click) khi Limiter đang BẬT
-  // Chỉ kích hoạt khi xe dừng hoặc tua máy thấp (<= minRpm).
+  // Chỉ kích hoạt khi xe dừng hoặc tua máy thấp (garanti / tua dưới 3000 RPM).
   // Khi tua máy cao (đang chạy kéo ga), mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
   // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp.
-  if (allow_double_click && currentRpm <= cfg.minRpm)
+  const int maxClickRpm = cfg.minRpm > 3000 ? cfg.minRpm : 3000;
+  if (allow_double_click && currentRpm <= maxClickRpm)
   {
     if (now - lastShiftPressMs <= MULTI_CLICK_TIMEOUT_MS)
     {
@@ -361,6 +363,7 @@ void onShiftPressed()
       if (shiftPressCount >= 3)
       {
         limiter_enable = true;
+        getMutableConfig().limiter_enable = true;
 
         // Đồng bộ Web UI qua SSE
         web_send_limiter_sync(true);
@@ -381,6 +384,7 @@ void onShiftPressed()
       if (shiftPressCount >= 2)
       {
         limiter_enable = false;
+        getMutableConfig().limiter_enable = false;
 
         // Đồng bộ Web UI qua SSE
         web_send_limiter_sync(false);

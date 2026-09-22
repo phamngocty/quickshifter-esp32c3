@@ -174,7 +174,6 @@
       border: 7px solid #1c2536;
       border-radius: 40px;
       box-shadow: 0 0 70px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 240, 255, 0.15);
-      overflow: hidden;
       background: var(--bg-void);
       position: relative;
     }
@@ -311,6 +310,57 @@
     @keyframes pulseGlow {
       from { box-shadow: 0 0 8px rgba(255, 170, 0, 0.4); border-color: var(--accent-amber); }
       to { box-shadow: 0 0 22px rgba(255, 170, 0, 0.8); border-color: #ffe066; }
+    }
+
+    /* Sticky Persistent Action Bar */
+    .sticky-control-bar {
+      position: sticky;
+      top: 8px;
+      z-index: 950;
+      background: rgba(12, 17, 26, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 9px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.75), 0 0 18px rgba(0, 240, 255, 0.18);
+      transition: all 0.25s ease;
+    }
+    .sticky-status-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .badge-dirty-pulse {
+      animation: badgeDirtyPulse 1.4s infinite alternate ease-in-out;
+      border-color: rgba(255, 170, 0, 0.85) !important;
+      box-shadow: 0 0 14px rgba(255, 170, 0, 0.5);
+    }
+    @keyframes badgeDirtyPulse {
+      0% {
+        box-shadow: 0 0 6px rgba(255, 170, 0, 0.3);
+        transform: scale(1);
+      }
+      100% {
+        box-shadow: 0 0 18px rgba(255, 170, 0, 0.85);
+        transform: scale(1.02);
+      }
+    }
+    @media (max-width: 640px) {
+      .sticky-control-bar {
+        padding: 8px 12px;
+        gap: 8px;
+      }
+      .sticky-control-bar .btn {
+        padding: 7px 12px;
+        font-size: 12px;
+      }
     }
 
     /* Tabs Navigation */
@@ -1034,9 +1084,6 @@
         <span class="dot-pulse"></span>
         <span id="txtConnectionStatus">Wi-Fi AP: Quickshifter_AP (192.168.4.1)</span>
       </span>
-      <span class="badge-pill warning" id="badgeDirty" style="display: none;">
-        <span>Chưa lưu cấu hình</span>
-      </span>
       <span class="badge-pill" id="configMeta">LittleFS: config.json v2.4</span>
     </div>
 
@@ -1063,17 +1110,34 @@
         </div>
       </div>
 
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="badge-pill active" style="font-size: 11px;">
+          <span class="dot-pulse"></span>
+          <span>ESP32-C3 ONLINE</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- STICKY PERSISTENT CONTROL BAR: Tải Lại, Lưu Cấu Hình & Trạng Thái Luôn Hiện Không Biến Mất -->
+    <div class="sticky-control-bar" id="stickyControlBar">
+      <div class="sticky-status-wrap">
+        <span class="badge-pill active" id="badgeDirty" style="display: inline-flex;">
+          <span class="dot-pulse" id="dotDirtyStatus"></span>
+          <span id="txtDirtyStatus">✅ Đã đồng bộ cấu hình (ESP32-C3)</span>
+        </span>
+      </div>
+
       <div class="header-actions">
-        <button class="btn btn-secondary" id="reloadBtn" onclick="handleReloadConfig()">
+        <button class="btn btn-secondary" id="reloadBtn" onclick="handleReloadConfig()" title="Tải lại thông số từ ESP32-C3">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
           Tải Lại
         </button>
-        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()">
+        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ Flash LittleFS của ESP32-C3">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
           Lưu Cấu Hình
         </button>
       </div>
-    </header>
+    </div>
 
     <!-- TABS -->
     <nav class="cockpit-tabs">
@@ -1956,6 +2020,8 @@
       if (window.location.protocol.startsWith('http')) {
         handleReloadConfig(true);
         refreshLockStatus();
+      } else {
+        updateDirtyUi(false, '✅ Cấu hình mô phỏng sẵn sàng');
       }
     });
 
@@ -2004,10 +2070,28 @@
       setTimeout(renderDynoChart, 350);
     }
 
+    function updateDirtyUi(dirty, customMsg) {
+      isDirty = dirty;
+      const badge = document.getElementById('badgeDirty');
+      const txt = document.getElementById('txtDirtyStatus');
+      const saveBtn = document.getElementById('saveBtn');
+      if (!badge || !txt) return;
+
+      badge.style.display = 'inline-flex'; // Luôn luôn hiển thị, không bao giờ ẩn
+
+      if (dirty) {
+        badge.className = 'badge-pill warning badge-dirty-pulse';
+        txt.innerText = customMsg || '⚠️ Chưa lưu cấu hình (Chưa ghi vào ESP32)';
+        if (saveBtn) saveBtn.classList.add('btn-save-dirty');
+      } else {
+        badge.className = 'badge-pill active';
+        txt.innerText = customMsg || '✅ Đã lưu cấu hình (Đồng bộ ESP32-C3)';
+        if (saveBtn) saveBtn.classList.remove('btn-save-dirty');
+      }
+    }
+
     function markDirty() {
-      isDirty = true;
-      document.getElementById('badgeDirty').style.display = 'inline-flex';
-      document.getElementById('saveBtn').classList.add('btn-save-dirty');
+      updateDirtyUi(true, '⚠️ Chưa lưu cấu hình');
     }
 
     function showToast(msg) {
@@ -2058,7 +2142,46 @@
       updateGauge(rpm);
     }
 
+    function handleShiftPedalInput(shift) {
+      const isPressed = (shift === 'PRESSED' || shift === true || shift === 1);
+      const valShift = document.getElementById('shiftState');
+      const tickerShift = document.getElementById('tickerShift');
+
+      if (valShift) {
+        valShift.innerText = isPressed ? 'PRESSED' : 'RELEASED';
+        if (isPressed) {
+          valShift.classList.add('shift-active');
+          valShift.style.color = 'var(--accent-red)';
+        } else {
+          valShift.classList.remove('shift-active');
+          valShift.style.color = 'var(--accent-cyan)';
+        }
+      }
+
+      if (tickerShift) {
+        tickerShift.innerText = isPressed ? 'PRESSED' : 'RELEASED';
+        tickerShift.style.color = isPressed ? 'var(--accent-red)' : '#fff';
+      }
+    }
+
+    function updateCutStateDisplay(cut) {
+      const isCutting = (cut === true || cut === 'CUTTING' || cut === 1);
+      const valCut = document.getElementById('cutState');
+      const tickerCut = document.getElementById('tickerCut');
+      if (valCut) {
+        valCut.innerText = isCutting ? 'CUTTING' : 'Standby';
+        valCut.style.color = isCutting ? 'var(--accent-red)' : 'var(--accent-green)';
+        if (isCutting) valCut.classList.add('cut-active');
+        else valCut.classList.remove('cut-active');
+      }
+      if (tickerCut) {
+        tickerCut.innerText = isCutting ? 'CUTTING' : 'Standby';
+        tickerCut.style.color = isCutting ? 'var(--accent-red)' : 'var(--accent-green)';
+      }
+    }
+
     function handleShiftPressSim(isPressed) {
+      handleShiftPedalInput(isPressed);
       const valShift = document.getElementById('shiftState');
       const valCut = document.getElementById('cutState');
       const tickerShift = document.getElementById('tickerShift');
@@ -2730,35 +2853,189 @@
     }
 
     // CALIBRATION WIZARD LOGIC
+    let isCalibrating = false;
+    let calLowSamples = null;
+    let calHighSamples = null;
+
     function sampleCurrentRpm() {
       playBeep(700, 'sine', 0.1);
-      document.getElementById('calStatus').innerText = `Đã lấy mẫu tua máy hiện tại: ${currentRpm} RPM (PPR: ${document.getElementById('ppr').value})`;
-      showToast(`📊 Đã lấy mẫu: ${currentRpm} RPM`);
+      const rpm = currentRpm || 0;
+      if (!document.getElementById('calTarget').value) {
+        document.getElementById('calTarget').value = rpm;
+      }
+      document.getElementById('calStatus').innerText = `📊 Đã lấy mẫu tua máy hiện tại: ${rpm} RPM (PPR: ${document.getElementById('ppr').value || 1})`;
+      showToast(`📊 Đã lấy mẫu: ${rpm} RPM`);
     }
 
-    function runAutoCalibrate() {
-      const target = document.getElementById('calTarget').value;
-      if (!target) {
-        showToast('⚠️ Vui lòng nhập Target RPM');
-        return;
+    async function collectLiveRpmSamples(count, intervalMs, onProgress) {
+      const samples = [];
+      for (let i = 0; i < count; i++) {
+        await new Promise(res => setTimeout(res, intervalMs));
+        const sample = currentRpm;
+        if (typeof sample === 'number' && sample > 0) {
+          samples.push(sample);
+        }
+        if (onProgress) onProgress(i + 1, count, sample);
       }
-      playBeep(900, 'triangle', 0.2);
-      document.getElementById('calStatus').innerText = `✅ Tự động tính toán Scale Factor: 1.025 (Target: ${target} RPM)`;
-      showToast('🎯 Calibrate 1 điểm thành công!');
-      markDirty();
+      return samples;
     }
 
-    function runAutoCalibrate2Point() {
-      const low = document.getElementById('calTargetLow').value;
-      const high = document.getElementById('calTargetHigh').value;
-      if (!low || !high) {
-        showToast('⚠️ Vui lòng nhập cả Target thấp & cao');
+    async function runAutoCalibrate() {
+      if (isCalibrating) return;
+      const target = parseFloat(document.getElementById('calTarget').value);
+      if (!target || target <= 0) {
+        showToast('⚠️ Vui lòng nhập Target RPM hợp lệ (> 0)');
         return;
       }
-      playBeep(950, 'triangle', 0.25);
-      document.getElementById('calStatus').innerText = `✅ Calibrate 2 điểm xong: Scale: 1.018, Offset: -45 RPM (${low} - ${high} RPM)`;
-      showToast('🎯 Calibrate 2 điểm thành công!');
-      markDirty();
+      const samplesCount = Math.min(40, Math.max(3, parseInt(document.getElementById('calSamples').value) || 12));
+      const intervalMs = Math.min(500, Math.max(50, parseInt(document.getElementById('calInterval').value) || 150));
+
+      const calBtn = document.getElementById('calibrateBtn');
+      const statusEl = document.getElementById('calStatus');
+      isCalibrating = true;
+      calBtn.disabled = true;
+      statusEl.innerText = `⏳ Đang lấy mẫu... Vui lòng GIỮ ĐỀU GA ở mức ~${target} RPM (0/${samplesCount})`;
+
+      try {
+        const samples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+          statusEl.innerText = `⏳ Đang lấy mẫu... Vui lòng GIỮ ĐỀU GA (~${target} RPM): ${cur}/${total} (Mẫu: ${val || 0} RPM)`;
+        });
+
+        if (samples.length < 3) {
+          statusEl.innerText = '❌ Không đủ mẫu tua máy hợp lệ (>0 RPM). Hãy nổ máy và thử lại!';
+          showToast('❌ Lỗi: Xe chưa nổ máy hoặc không nhận tín hiệu RPM');
+          return;
+        }
+
+        statusEl.innerText = `🔄 Đang gửi ${samples.length} mẫu lên ESP32 để tính toán...`;
+        const res = await fetch('/calibrate/single', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetRpm: target, measuredSamples: samples })
+        });
+
+        if (!res.ok) {
+          const errTxt = await res.text();
+          throw new Error(errTxt || 'Lỗi từ ESP32');
+        }
+
+        const data = await res.json();
+        const newFactor = parseFloat(data.newFactor);
+        if (!isNaN(newFactor)) {
+          document.getElementById('rpmScaleFactor').value = newFactor.toFixed(3);
+          statusEl.innerHTML = `✅ <strong>Calibrate thành công!</strong><br>` +
+            `• Scale Factor mới: <strong style="color:var(--accent-green);">${newFactor.toFixed(3)}</strong> (cũ: ${data.oldFactor ? data.oldFactor.toFixed(3) : '--'})<br>` +
+            `• Tua máy đo TB: ${data.avgMeasured ? data.avgMeasured.toFixed(0) : '--'} RPM (Target: ${target} RPM, Độ lệch: &plusmn;${data.stdDev ? data.stdDev.toFixed(1) : '0'} RPM)`;
+          playBeep(900, 'triangle', 0.2);
+          showToast(`🎯 Calibrate thành công! Scale: ${newFactor.toFixed(3)}`);
+          markDirty();
+        }
+      } catch (err) {
+        statusEl.innerText = `❌ Thất bại: ${err.message}`;
+        showToast(`❌ Calibrate thất bại: ${err.message}`);
+      } finally {
+        isCalibrating = false;
+        calBtn.disabled = false;
+      }
+    }
+
+    async function runAutoCalibrate2Point() {
+      if (isCalibrating) return;
+      const low = parseFloat(document.getElementById('calTargetLow').value);
+      const high = parseFloat(document.getElementById('calTargetHigh').value);
+      if (!low || !high || high <= low) {
+        showToast('⚠️ Vui lòng nhập Target thấp & Target cao hợp lệ (Cao > Thấp)');
+        return;
+      }
+
+      const samplesCount = Math.min(40, Math.max(3, parseInt(document.getElementById('calSamples').value) || 12));
+      const intervalMs = Math.min(500, Math.max(50, parseInt(document.getElementById('calInterval').value) || 150));
+
+      const cal2Btn = document.getElementById('calibrate2Btn');
+      const statusEl = document.getElementById('calStatus');
+
+      // Quy trình 2 bước: nếu chưa lấy mẫu thấp thì lấy mẫu thấp trước
+      if (!calLowSamples) {
+        isCalibrating = true;
+        cal2Btn.disabled = true;
+        statusEl.innerText = `⏳ Bước 1/2: Giữ đều ga ở mức THẤP (~${low} RPM)...`;
+        try {
+          calLowSamples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+            statusEl.innerText = `⏳ Bước 1/2: Giữ đều ga THẤP (~${low} RPM): ${cur}/${total} (${val || 0} RPM)`;
+          });
+          if (calLowSamples.length < 3) {
+            calLowSamples = null;
+            statusEl.innerText = '❌ Không đủ mẫu tua thấp (>0 RPM). Thử lại!';
+            showToast('❌ Không nhận được tín hiệu tua thấp');
+            return;
+          }
+          playBeep(800, 'sine', 0.15);
+          statusEl.innerHTML = `✅ <strong>Đã lưu mẫu điểm Thấp (${low} RPM)!</strong><br>👉 Bây giờ hãy lên ga giữ đều ở mức <strong>CAO (~${high} RPM)</strong> rồi bấm lại nút "Calibrate 2 điểm"!`;
+          showToast('✅ Đã xong bước 1! Giữ ga cao và bấm lại nút.');
+        } finally {
+          isCalibrating = false;
+          cal2Btn.disabled = false;
+        }
+        return;
+      }
+
+      // Bước 2: lấy mẫu điểm cao và gửi lên ESP32
+      isCalibrating = true;
+      cal2Btn.disabled = true;
+      statusEl.innerText = `⏳ Bước 2/2: Giữ đều ga ở mức CAO (~${high} RPM)...`;
+      try {
+        calHighSamples = await collectLiveRpmSamples(samplesCount, intervalMs, (cur, total, val) => {
+          statusEl.innerText = `⏳ Bước 2/2: Giữ đều ga CAO (~${high} RPM): ${cur}/${total} (${val || 0} RPM)`;
+        });
+        if (calHighSamples.length < 3) {
+          calHighSamples = null;
+          statusEl.innerText = '❌ Không đủ mẫu tua cao (>0 RPM). Thử lại!';
+          showToast('❌ Không nhận được tín hiệu tua cao');
+          return;
+        }
+
+        statusEl.innerText = '🔄 Đang gửi mẫu 2 điểm lên ESP32 tính toán Scale & Offset...';
+        const res = await fetch('/calibrate/two-point', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            lowTargetRpm: low,
+            highTargetRpm: high,
+            lowMeasuredSamples: calLowSamples,
+            highMeasuredSamples: calHighSamples
+          })
+        });
+
+        if (!res.ok) {
+          const errTxt = await res.text();
+          throw new Error(errTxt || 'Lỗi tính toán từ ESP32');
+        }
+
+        const data = await res.json();
+        const newFactor = parseFloat(data.newFactor);
+        const newOffset = parseFloat(data.newOffset);
+        if (!isNaN(newFactor)) {
+          document.getElementById('rpmScaleFactor').value = newFactor.toFixed(3);
+          if (!isNaN(newOffset)) {
+            const offEl = document.getElementById('rpmOffset');
+            if (offEl) offEl.value = Math.round(newOffset);
+          }
+          statusEl.innerHTML = `✅ <strong>Calibrate 2 điểm thành công!</strong><br>` +
+            `• Scale mới: <strong style="color:var(--accent-green);">${newFactor.toFixed(3)}</strong> | Offset mới: <strong>${Math.round(newOffset)} RPM</strong><br>` +
+            `• Điểm thấp đo: ${data.lowAvgMeasured ? data.lowAvgMeasured.toFixed(0) : '--'} RPM | Điểm cao đo: ${data.highAvgMeasured ? data.highAvgMeasured.toFixed(0) : '--'} RPM`;
+          playBeep(950, 'triangle', 0.25);
+          showToast(`🎯 Calibrate 2 điểm xong! Scale: ${newFactor.toFixed(3)}, Offset: ${Math.round(newOffset)}`);
+          markDirty();
+        }
+      } catch (err) {
+        statusEl.innerText = `❌ Thất bại 2 điểm: ${err.message}`;
+        showToast(`❌ Calibrate 2 điểm thất bại: ${err.message}`);
+      } finally {
+        calLowSamples = null;
+        calHighSamples = null;
+        isCalibrating = false;
+        cal2Btn.disabled = false;
+      }
     }
 
     // WIFI AP LOGIC
@@ -3105,16 +3382,12 @@
           body: JSON.stringify(payload)
         });
         if (!res.ok) throw new Error(await res.text());
-        isDirty = false;
-        document.getElementById('badgeDirty').style.display = 'none';
-        btn.classList.remove('btn-save-dirty');
+        updateDirtyUi(false, '✅ Đã lưu cấu hình vào LittleFS (ESP32-C3)');
         playBeep(950, 'triangle', 0.15);
         showToast('💾 Đã lưu cấu hình thành công vào LittleFS của ESP32-C3!');
       } catch (err) {
         // Fallback demo simulation
-        isDirty = false;
-        document.getElementById('badgeDirty').style.display = 'none';
-        btn.classList.remove('btn-save-dirty');
+        updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
         playBeep(950, 'triangle', 0.15);
         showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
       } finally {
@@ -3132,15 +3405,11 @@
         if (!res.ok) throw new Error(res.statusText);
         const cfg = await res.json();
         hydrateFormFromConfig(cfg);
-        isDirty = false;
-        document.getElementById('badgeDirty').style.display = 'none';
-        document.getElementById('saveBtn').classList.remove('btn-save-dirty');
+        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình từ ESP32-C3');
         if (!silent) showToast('🔄 Đã tải cấu hình từ ESP32-C3!');
       } catch (err) {
         if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
-        isDirty = false;
-        document.getElementById('badgeDirty').style.display = 'none';
-        document.getElementById('saveBtn').classList.remove('btn-save-dirty');
+        updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -3153,14 +3422,35 @@
           try {
             const data = JSON.parse(e.data);
             addLogEntry(data.rpm || currentRpm, data.cut ? 'CUTTING' : 'STANDBY', data.event || 'LOG', data.msg || '');
-            if (typeof data.rpm === 'number') updateGauge(data.rpm);
+            if (typeof data.rpm === 'number') {
+              currentRpm = data.rpm;
+              updateGauge(data.rpm);
+              const bMeta = document.getElementById('bucketMeta');
+              if (bMeta) bMeta.innerText = 'Band: ' + resolveBandLabel(data.rpm);
+            }
+            if (data.shift !== undefined) handleShiftPedalInput(data.shift);
+            if (data.cut !== undefined) updateCutStateDisplay(data.cut);
           } catch(err) {}
         });
         sse.addEventListener('telemetry', (e) => {
           try {
             const data = JSON.parse(e.data);
-            if (typeof data.rpm === 'number') updateGauge(data.rpm);
+            if (typeof data.rpm === 'number') {
+              currentRpm = data.rpm;
+              updateGauge(data.rpm);
+              const bMeta = document.getElementById('bucketMeta');
+              if (bMeta) bMeta.innerText = 'Band: ' + resolveBandLabel(data.rpm);
+            }
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
+            if (data.cut !== undefined) updateCutStateDisplay(data.cut);
+            if (data.limiter !== undefined || data.limiter_enable !== undefined) {
+              const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
+              const limEl = document.getElementById('limiter_enable');
+              if (limEl && limEl.checked !== limVal) {
+                limEl.checked = limVal;
+                updateAutoLimiterUi();
+              }
+            }
           } catch(err) {}
         });
         sse.onopen = () => {
