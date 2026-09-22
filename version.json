@@ -8,14 +8,14 @@
   "firmware": {
     "versionCode": 2,
     "versionName": "1.0.1",
-    "binUrl": "",
-    "oledBinUrl": "",
+    "binUrl": "https://alert.nas152.duckdns.org/downloads/firmware.bin",
+    "oledBinUrl": "https://alert.nas152.duckdns.org/downloads/firmware_oled.bin",
     "changelog": ""
   },
   "firmware_oled": {
     "versionCode": 2,
     "versionName": "1.0.1",
-    "binUrl": "",
+    "binUrl": "https://alert.nas152.duckdns.org/downloads/firmware_oled.bin",
     "changelog": ""
   }
 }
