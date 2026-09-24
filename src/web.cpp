@@ -223,7 +223,7 @@ bool startAP()
   {
     Serial.println("SoftAP config failed, using default IP");
   }
-  WiFi.softAPsetHostname("qs-esp32c3");
+  WiFi.softAPsetHostname("quickshifter");
 
   const char *pass = cfg.apPassword;
   bool hasPass = pass && strlen(pass) >= 8;
@@ -298,6 +298,8 @@ static void writeConfigJson(const QSConfig &c, JsonObject obj)
   obj["manualPulseRepeat"] = c.manualPulseRepeat;
   obj["manualMinRpm"] = c.manualMinRpm;
   obj["manualIgnOnly"] = c.manualIgnOnly;
+  obj["softRestoreEnabled"] = c.softRestoreEnabled;
+  obj["softRestoreDampMs"] = c.softRestoreDampMs;
   obj["autoMapCount"] = c.autoMapCount;
   JsonArray arr = obj.createNestedArray("autoMap");
   writeAutoMapJson(c, arr);
@@ -383,6 +385,10 @@ static void collectConfigChanges(const QSConfig &before, const QSConfig &after, 
     EMIT_CHANGE(manualMinRpm);
   if (before.manualIgnOnly != after.manualIgnOnly)
     EMIT_CHANGE(manualIgnOnly);
+  if (before.softRestoreEnabled != after.softRestoreEnabled)
+    EMIT_CHANGE(softRestoreEnabled);
+  if (before.softRestoreDampMs != after.softRestoreDampMs)
+    EMIT_CHANGE(softRestoreDampMs);
   if (strncmp(before.apPassword, after.apPassword, sizeof(before.apPassword)) != 0)
   {
     out["apPasswordChanged"] = true;
@@ -581,6 +587,57 @@ void web_init()
     }
     send_lock_status(r); });
 
+  server.on("/limiter", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
+    if (r->hasParam("enable"))
+    {
+      String val = r->getParam("enable")->value();
+      limiter_enable = (val == "1" || val == "true");
+      getMutableConfig().limiter_enable = limiter_enable;
+      web_send_limiter_sync(limiter_enable);
+    }
+    else if (r->hasParam("toggle"))
+    {
+      limiter_enable = !limiter_enable;
+      getMutableConfig().limiter_enable = limiter_enable;
+      web_send_limiter_sync(limiter_enable);
+    }
+    DynamicJsonDocument doc(128);
+    doc["ok"] = true;
+    doc["limiter_enable"] = limiter_enable;
+    doc["target_rpm"] = target_rpm;
+    String out;
+    serializeJson(doc, out);
+    r->send(200, "application/json", out); });
+
+  server.on("/limiter", HTTP_POST, [](AsyncWebServerRequest *r) {}, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+    DynamicJsonDocument doc(256);
+    DeserializationError err = deserializeJson(doc, (char*)data, len);
+    if (!err)
+    {
+      if (doc.containsKey("enable"))
+      {
+        limiter_enable = doc["enable"].as<bool>();
+      }
+      else if (doc.containsKey("limiter_enable"))
+      {
+        limiter_enable = doc["limiter_enable"].as<bool>();
+      }
+      else
+      {
+        limiter_enable = !limiter_enable;
+      }
+      getMutableConfig().limiter_enable = limiter_enable;
+      web_send_limiter_sync(limiter_enable);
+    }
+    DynamicJsonDocument res(128);
+    res["ok"] = true;
+    res["limiter_enable"] = limiter_enable;
+    String out;
+    serializeJson(res, out);
+    r->send(200, "application/json", out); });
+
   server.on("/config/set", HTTP_POST, [](AsyncWebServerRequest *r)
             {
               // handled in body
@@ -678,6 +735,14 @@ void web_init()
       c.manualMinRpm = clampManualMinRpm(doc["manualMinRpm"].as<int>());
     }
     c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
+    if (doc.containsKey("softRestoreEnabled")) {
+      c.softRestoreEnabled = doc["softRestoreEnabled"].as<bool>();
+    }
+    if (doc.containsKey("softRestoreDampMs")) {
+      c.softRestoreDampMs = doc["softRestoreDampMs"].as<uint8_t>();
+      if (c.softRestoreDampMs < 3) c.softRestoreDampMs = 3;
+      if (c.softRestoreDampMs > 30) c.softRestoreDampMs = 30;
+    }
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();
       pass.trim();
@@ -919,6 +984,35 @@ void web_init()
     meta["source"] = "test-rpm";
     log_push(rpm_get(), false, "SYS", "TEST_PWM_STOP", &meta);
     r->send(200, "application/json", "{\"ok\":true}"); });
+
+  server.on("/test/rpm/sim", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
+    if (r->hasParam("rpm")) {
+      int rpm = r->getParam("rpm")->value().toInt();
+      rpm_set_simulated(rpm);
+    }
+    DynamicJsonDocument doc(128);
+    doc["ok"] = true;
+    doc["simulated_rpm"] = rpm_get_simulated();
+    doc["current_rpm"] = rpm_get();
+    String out;
+    serializeJson(doc, out);
+    r->send(200, "application/json", out); });
+
+  server.on("/test/rpm/sim", HTTP_POST, [](AsyncWebServerRequest *r) {}, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+    DynamicJsonDocument doc(256);
+    DeserializationError err = deserializeJson(doc, (char*)data, len);
+    if (!err && doc.containsKey("rpm")) {
+      rpm_set_simulated(doc["rpm"].as<int>());
+    }
+    DynamicJsonDocument res(128);
+    res["ok"] = true;
+    res["simulated_rpm"] = rpm_get_simulated();
+    res["current_rpm"] = rpm_get();
+    String out;
+    serializeJson(res, out);
+    r->send(200, "application/json", out); });
 
   server.on("/ota/firmware", HTTP_POST, [](AsyncWebServerRequest *r)
             {

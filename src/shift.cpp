@@ -21,6 +21,11 @@ static void refresh_state_from_pin(bool notify) {
   stableState = raw;
   lastRawState = raw;
   lastChangeMs = millis();
+  if (stableState) {
+    pressStartMs = millis();
+  } else {
+    pressStartMs = 0;
+  }
   if (notify && state_cb) {
     state_cb(stableState);
   }
@@ -44,15 +49,19 @@ void shift_init(uint8_t pin, bool activeLowCfg, int debounceMs, shift_callback_t
 void shift_update() {
   bool raw = digitalRead(shiftPin) == (activeLow ? LOW : HIGH);
   unsigned long now = millis();
+
   if (raw != lastRawState) {
     lastRawState = raw;
     lastChangeMs = now;
   }
+
   if (now - lastChangeMs >= (unsigned long)dbMs) {
     if (raw != stableState) {
       stableState = raw;
       if (stableState) {
         pressStartMs = now;  // Lưu thời điểm nhấn
+      } else {
+        pressStartMs = 0;
       }
       if (state_cb) state_cb(stableState);
       if (stableState && press_cb) {

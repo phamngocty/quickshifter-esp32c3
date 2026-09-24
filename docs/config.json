@@ -18,7 +18,7 @@
   "recovery_spark_ms": 20,
   "manualBackfireEnabled": true,
   "manualBackfireMode": 2,
-  "manualBackfireHoldMs": 600,
+  "manualBackfireHoldMs": 1500,
   "manualMinRpm": 4000,
   "manualIgnOnly": true,
   "manualPulseCutMs": 95,

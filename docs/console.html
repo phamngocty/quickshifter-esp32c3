@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quickshifter Racing Cockpit Pro — Bảng Điều Khiển Kỹ Thuật Số</title>
+  <title>Quickshifter Pro — Toàn Bộ Tính Năng &amp; Điều Khiển Racing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1084,7 +1084,7 @@
         <span class="dot-pulse"></span>
         <span id="txtConnectionStatus">Wi-Fi AP: Quickshifter_AP (192.168.4.1)</span>
       </span>
-      <span class="badge-pill" id="configMeta">System Profile v2.4</span>
+      <span class="badge-pill" id="configMeta">LittleFS: config.json v2.4</span>
     </div>
 
     <div class="device-switcher-btns">
@@ -1106,14 +1106,14 @@
         </div>
         <div class="brand-meta">
           <h1>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</h1>
-          <p>Hệ Thống Sang Số Kỹ Thuật Số • Wi-Fi Web Cockpit • Realtime Telemetry</p>
+          <p>SuperMini • LittleFS • SSE Realtime Telemetry</p>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="badge-pill active" style="font-size: 11px;">
           <span class="dot-pulse"></span>
-          <span>DEVICE ONLINE</span>
+          <span>ONLINE</span>
         </span>
       </div>
     </header>
@@ -1132,7 +1132,7 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
           Tải Lại
         </button>
-        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ vĩnh viễn của thiết bị">
+        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ Flash LittleFS">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
           Lưu Cấu Hình
         </button>
@@ -1358,10 +1358,13 @@
             <div class="title">Bật Auto RPM Limiter <span class="tooltip-icon" title="Bật/Tắt tính năng ngắt lửa tại chỗ">ⓘ</span></div>
             <div class="subtitle">Tự động ngắt lửa tuyệt đối khi tua máy vượt ngưỡng Target</div>
           </div>
-          <label class="switch-wrap">
-            <input type="checkbox" id="limiter_enable" class="switch" onchange="updateAutoLimiterUi(); markDirty()">
-            <span class="slider-toggle"></span>
-          </label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn btn-secondary" id="btnLimiterQuickToggle" onclick="handleLimiterToggle(!document.getElementById('limiter_enable').checked)" style="padding: 5px 10px; font-size: 11px;">Bật/Tắt Nhanh</button>
+            <label class="switch-wrap">
+              <input type="checkbox" id="limiter_enable" class="switch" onchange="handleLimiterToggle(this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
         </div>
 
         <div class="toggle-bar">
@@ -1851,18 +1854,18 @@
     <section class="tab-pane" id="pane-config">
       <div class="card-box">
         <div class="card-header-row">
-          <div class="card-title">Cập Nhật Firmware Không Dây (OTA)</div>
+          <div class="card-title">Firmware &amp; LittleFS OTA</div>
         </div>
-        <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Chỉ tải file firmware định dạng chuẩn .bin chính hãng. Thiết bị sẽ tự reboot sau khi nạp thành công.</p>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px;">Chỉ tải file .bin đã build bằng PlatformIO. Thiết bị sẽ tự reboot sau khi nạp thành công.</p>
 
         <div class="grid-2">
           <!-- Firmware OTA -->
           <div class="ota-box">
             <div style="display:flex; justify-content:space-between;">
-              <strong>Firmware Hệ Thống (.bin)</strong>
-              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">SYSTEM SLOT</span>
+              <strong>Firmware (.bin)</strong>
+              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">OTA SLOT</span>
             </div>
-            <p style="color:var(--text-muted); font-size:12px;">Nạp file firmware.bin cập nhật thuật toán xử lý cốt lõi.</p>
+            <p style="color:var(--text-muted); font-size:12px;">Nạp file firmware.bin cập nhật logic cốt lõi.</p>
             <input type="file" id="fwFileInput" hidden accept=".bin" onchange="onOtaFileSelected('fw', this)">
             <div style="display:flex; gap:8px; margin-top:4px;">
               <button class="btn btn-secondary" id="fwPickBtn" onclick="document.getElementById('fwFileInput').click()">Chọn file</button>
@@ -1873,17 +1876,17 @@
             <div style="font-size:12px; color:var(--accent-cyan);" id="fwStatus">Chưa chọn file.</div>
           </div>
 
-          <!-- Web UI OTA -->
+          <!-- LittleFS OTA -->
           <div class="ota-box">
             <div style="display:flex; justify-content:space-between;">
-              <strong>Giao Diện Web UI (.bin)</strong>
-              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">UI SLOT</span>
+              <strong>LittleFS Image (.bin)</strong>
+              <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">FS SLOT</span>
             </div>
-            <p style="color:var(--text-muted); font-size:12px;">Nạp file image để nâng cấp giao diện Web Cockpit mới nhất.</p>
+            <p style="color:var(--text-muted); font-size:12px;">Nạp file LittleFS image để thay thế toàn bộ Web UI.</p>
             <input type="file" id="fsFileInput" hidden accept=".bin" onchange="onOtaFileSelected('fs', this)">
             <div style="display:flex; gap:8px; margin-top:4px;">
               <button class="btn btn-secondary" id="fsPickBtn" onclick="document.getElementById('fsFileInput').click()">Chọn file</button>
-              <button class="btn btn-primary" id="fsUploadBtn" disabled onclick="startOtaUpload('fs')">Upload Web UI</button>
+              <button class="btn btn-primary" id="fsUploadBtn" disabled onclick="startOtaUpload('fs')">Upload LittleFS</button>
             </div>
             <div class="progress"><span id="fsProgressBar"></span></div>
             <div style="font-size:12px; color:var(--text-muted);" id="fsProgressText">Tiến trình: 0%</div>
@@ -2085,7 +2088,7 @@
         if (saveBtn) saveBtn.classList.add('btn-save-dirty');
       } else {
         badge.className = 'badge-pill active';
-        txt.innerText = customMsg || '✅ Đã lưu cấu hình (Đã ghi nhớ)';
+        txt.innerText = customMsg || '✅ Đã lưu cấu hình';
         if (saveBtn) saveBtn.classList.remove('btn-save-dirty');
       }
     }
@@ -2136,10 +2139,16 @@
       return match ? `${match.min}-${match.max} (${match.cut}ms)` : '--';
     }
 
+    let simThrottleTimer = null;
     function handleThrottleInput(val) {
       const rpm = parseInt(val);
       document.getElementById('simRpmDisplay').innerText = `Kéo ga: ${rpm} RPM`;
       updateGauge(rpm);
+      currentRpm = rpm;
+      if (simThrottleTimer) clearTimeout(simThrottleTimer);
+      simThrottleTimer = setTimeout(() => {
+        fetch(`/test/rpm/sim?rpm=${rpm}`).catch(() => {});
+      }, 100);
     }
 
     function handleShiftPedalInput(shift) {
@@ -2655,6 +2664,31 @@
       document.getElementById('cutHint').textContent = label;
     }
 
+    let limiterChanging = false;
+    async function handleLimiterToggle(enabled) {
+      limiterChanging = true;
+      const limEl = document.getElementById('limiter_enable');
+      if (limEl) limEl.checked = enabled;
+      updateAutoLimiterUi();
+      try {
+        const res = await fetch('/limiter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enable: enabled })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const finalVal = (data.limiter_enable !== undefined) ? data.limiter_enable : enabled;
+        if (limEl) limEl.checked = finalVal;
+        updateAutoLimiterUi();
+        showToast(finalVal ? '⚡ Đã BẬT Auto RPM Limiter (Thủ công)' : '🛑 Đã TẮT Auto RPM Limiter (Thủ công)');
+      } catch (e) {
+        showToast('❌ Lỗi bật/tắt Limiter: ' + e.message);
+      } finally {
+        setTimeout(() => { limiterChanging = false; }, 600);
+      }
+    }
+
     function updateAutoLimiterUi() {
       const en = document.getElementById('limiter_enable').checked;
       document.getElementById('autoLimiterFields').style.display = en ? 'block' : 'none';
@@ -2916,7 +2950,7 @@
 
         if (!res.ok) {
           const errTxt = await res.text();
-          throw new Error(errTxt || 'Lỗi phản hồi từ thiết bị');
+          throw new Error(errTxt || 'Lỗi từ thiết bị');
         }
 
         const data = await res.json();
@@ -2979,7 +3013,7 @@
         return;
       }
 
-      // Bước 2: lấy mẫu điểm cao và gửi lên thiết bị
+      // Bước 2: lấy mẫu điểm cao và gửi lên ESP32
       isCalibrating = true;
       cal2Btn.disabled = true;
       statusEl.innerText = `⏳ Bước 2/2: Giữ đều ga ở mức CAO (~${high} RPM)...`;
@@ -3100,7 +3134,7 @@
           if (data.shortMaxMs) document.getElementById('lockShortMax').value = data.shortMaxMs;
           if (data.longMinMs) document.getElementById('lockLongMin').value = data.longMinMs;
           if (data.resetHoldMs) document.getElementById('lockResetHold').value = data.resetHoldMs;
-          showToast('🔄 Đã cập nhật trạng thái Lock Mode từ thiết bị');
+          showToast('🔄 Đã cập nhật trạng thái Lock Mode');
         }
       } catch(e) {}
     }
@@ -3141,7 +3175,7 @@
         showToast('⚠️ Vui lòng chọn file .bin trước khi nạp');
         return;
       }
-      showToast(`🚀 Đang nạp OTA ${type === 'fw' ? 'Firmware' : 'Giao Diện UI'}...`);
+      showToast(`🚀 Đang nạp OTA ${type === 'fw' ? 'Firmware' : 'LittleFS'}...`);
       const url = type === 'fw' ? '/ota/firmware' : '/ota/fs';
       const formData = new FormData();
       formData.append(type === 'fw' ? 'firmware' : 'filesystem', file);
@@ -3381,15 +3415,25 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error(await res.text());
-        updateDirtyUi(false, '✅ Đã lưu cấu hình vào bộ nhớ thiết bị');
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `Lỗi HTTP ${res.status}`);
+        }
+        updateDirtyUi(false, '✅ Đã lưu cấu hình vào LittleFS');
         playBeep(950, 'triangle', 0.15);
-        showToast('💾 Đã lưu cấu hình thành công vào bộ nhớ thiết bị!');
+        showToast('💾 Đã lưu cấu hình thành công vào LittleFS!');
       } catch (err) {
-        // Fallback demo simulation
-        updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
-        playBeep(950, 'triangle', 0.15);
-        showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
+        if (window.location.protocol === 'file:') {
+          // Fallback demo simulation khi xem offline trên máy tính
+          updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
+          playBeep(950, 'triangle', 0.15);
+          showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
+        } else {
+          // Báo lỗi thực tế khi kết nối thiết bị thật
+          updateDirtyUi(true, '❌ Lỗi lưu cấu hình');
+          playBeep(400, 'sawtooth', 0.3);
+          showToast(`❌ Lưu cấu hình thất bại: ${err.message || 'Mất kết nối'}`);
+        }
       } finally {
         btn.disabled = false;
         btn.innerText = oldText;
@@ -3402,14 +3446,18 @@
       if (btn) btn.disabled = true;
       try {
         const res = await fetch('/config/get');
-        if (!res.ok) throw new Error(res.statusText);
+        if (!res.ok) throw new Error(res.statusText || `Lỗi HTTP ${res.status}`);
         const cfg = await res.json();
         hydrateFormFromConfig(cfg);
-        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình từ thiết bị');
+        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình');
         if (!silent) showToast('🔄 Đã tải cấu hình từ thiết bị!');
       } catch (err) {
-        if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
-        updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
+        if (window.location.protocol === 'file:') {
+          if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
+          updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
+        } else {
+          if (!silent) showToast(`❌ Không thể tải cấu hình: ${err.message || 'Mất kết nối'}`);
+        }
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -3443,7 +3491,7 @@
             }
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
             if (data.cut !== undefined) updateCutStateDisplay(data.cut);
-            if (data.limiter !== undefined || data.limiter_enable !== undefined) {
+            if (!limiterChanging && (data.limiter !== undefined || data.limiter_enable !== undefined)) {
               const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
               const limEl = document.getElementById('limiter_enable');
               if (limEl && limEl.checked !== limVal) {
@@ -3456,7 +3504,7 @@
         sse.onopen = () => {
           const badge = document.getElementById('statusBadge');
           if (badge) {
-            badge.innerText = 'Device Online';
+            badge.innerText = 'Online';
             badge.style.color = 'var(--accent-green)';
           }
         };

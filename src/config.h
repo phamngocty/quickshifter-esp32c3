@@ -59,6 +59,10 @@ struct QSConfig {
   uint8_t manualPulseRepeat;        // D: số lần lặp chu kỳ
   int manualMinRpm;                 // RPM tối thiểu để kích
   bool manualIgnOnly;               // Chỉ cắt IGN (không cắt INJ)
+
+  // Soft Restore (Hồi lửa êm dịu chống giật xích tải)
+  bool softRestoreEnabled;
+  uint8_t softRestoreDampMs;        // Thời gian ngắt giảm chấn (5-25ms)
 };
 
 const QSConfig &getConfig();

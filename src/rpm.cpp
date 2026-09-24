@@ -193,12 +193,28 @@ void rpm_update()
   lastRpm = static_cast<int>(rpm_filter_average() + 0.5f);
 }
 
+static int simulatedRpm = 0;
+
+void rpm_set_simulated(int rpm)
+{
+  simulatedRpm = (rpm < 0) ? 0 : rpm;
+}
+
+int rpm_get_simulated()
+{
+  return simulatedRpm;
+}
+
 int rpm_get()
 {
-  return lastRpm;
+  if (lastRpm > 0)
+    return lastRpm;
+  return simulatedRpm;
 }
 
 int rpm_get_raw()
 {
-  return lastRawRpm;
+  if (lastRawRpm > 0)
+    return lastRawRpm;
+  return simulatedRpm;
 }

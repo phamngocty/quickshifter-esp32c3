@@ -926,6 +926,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
         2. Khám Phá 6 Tab
       </a>
+      <a href="#chap-softrestore" class="menu-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+        ★ Soft Restore Engine
+      </a>
       <a href="#chap-compare" class="menu-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9.01 14H2v2h7.01v3L13 15l-3.99-4v3zm5.98-1v-3H22V8h-7.01V5L11 9l3.99 4z"/></svg>
         3. So Sánh Vượt Trội
@@ -950,7 +954,7 @@
     <section class="section-card" id="chap-breakthrough">
       <div class="section-title">
         <span class="number">1</span>
-        4 Đột Phá Công Nghệ Khác Biệt Hoàn Toàn Trên Thị Trường
+        6 Đột Phá Công Nghệ Khác Biệt Hoàn Toàn Trên Thị Trường
       </div>
       
       <p style="font-size:14px; color:var(--text-muted); line-height:1.6;">
@@ -959,10 +963,17 @@
 
       <div class="breakthrough-grid">
         <div class="breakthrough-card">
-          <div class="breakthrough-icon">⚡</div>
-          <span class="breakthrough-badge">&lt; 1MS REALTIME</span>
-          <h3>Xử Lý Thời Gian Thực Siêu Tốc</h3>
-          <p>Thuật toán kỹ thuật số đo lường chu kỳ đánh lửa liên tục mỗi mili-giây. Thời gian phản hồi và ngắt dập mass chính xác tuyệt đối, loại trừ hoàn toàn độ trễ 20–50ms của rơ-le cơ.</p>
+          <div class="breakthrough-icon">🎯</div>
+          <span class="breakthrough-badge">&lt; 1µS HARDWARE TIMER</span>
+          <h3>Hardware Timer Định Thời Vi Giây</h3>
+          <p>Sử dụng bộ đếm phần cứng 64-bit tốc độ cao của ESP32 (High-Resolution Hardware Timer). Thời gian ngắt dập mass chính xác tuyệt đối từng micro-giây, không bị ảnh hưởng bởi độ trễ Task hay vòng lặp CPU.</p>
+        </div>
+
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">🏍️</div>
+          <span class="breakthrough-badge">4-STAGE SOFT RESTORE</span>
+          <h3>Cơ Chế Trả Lửa Mềm (Soft Restore)</h3>
+          <p>Hồi phục công suất êm ái qua 4 pha dốc trơn (25% ➜ 50% ➜ 75% ➜ 100%) trong 20ms ngay sau khi sang số. Loại bỏ hoàn toàn cú giật dội mô-men xoắn vào hộp số, xích tải và nồi xe.</p>
         </div>
 
         <div class="breakthrough-card">
@@ -983,7 +994,14 @@
           <div class="breakthrough-icon">🛡️</div>
           <span class="breakthrough-badge">OPTO 1000V ISOLATION</span>
           <h3>Cách Ly Quang An Toàn Cho ECU</h3>
-          <p>Ngắt trực tiếp trên đường KÍCH ÂM dập mass qua linh kiện cách ly quang Optocoupler công nghiệp 1000V. Không cắt dây zin, bảo vệ an toàn 100% cho ECU và hệ thống phun xăng điện tử FI.</p>
+          <p>Ngắt trực tiếp trên đường KÍCH ÂM dập mass (Cọc Đen) qua linh kiện cách ly quang Optocoupler công nghiệp 1000V. Không cắt dây zin, bảo vệ an toàn 100% cho ECU và hệ thống phun xăng điện tử FI.</p>
+        </div>
+
+        <div class="breakthrough-card">
+          <div class="breakthrough-icon">🍿</div>
+          <span class="breakthrough-badge">POPCORN BACKFIRE</span>
+          <h3>Studio Nổ Pô &amp; Khóa Số Chống Trộm</h3>
+          <p>Tích hợp hiệu ứng bắn bắp rang giòn rã (Backfire Popcorn) khi dìm cần số ở tua cao, cùng tính năng khóa lửa xe thông minh Morse Lock bằng thao tác cần số độc quyền.</p>
         </div>
       </div>
     </section>
@@ -1074,10 +1092,14 @@
               <span class="tab-bullet">🛡️</span>
               <div><strong>Debounce &amp; Cooldown:</strong> <code>Debounce (15ms)</code> chống rung nảy cần số khi qua ổ gà; <code>Cooldown (250ms)</code> bảo vệ hộp số, bắt buộc nhả dứt điểm cần số mới cho phép lần cắt tiếp theo.</div>
             </li>
+            <li>
+              <span class="tab-bullet">🏍️</span>
+              <div><strong>Soft Restore (Trả Lửa Mềm 4 Pha):</strong> Độc quyền công nghệ băm xung dốc trơn 20ms ngay sau chu kỳ cắt lửa. Khiến việc chuyển số từ 1 lên 2, 2 lên 3 êm dịu tuyệt đối, không dội lực cắn giật nhông dĩa và ty nồi.</div>
+            </li>
           </ul>
 
           <div class="tab-tip-badge">
-            <span>💡 <strong>Quy tắc vàng:</strong> Luôn cài <code>Min RPM</code> cao hơn tốc độ Garanty của xe ít nhất 1.000 RPM (Ví dụ garanty 1.500 RPM thì cài Min RPM từ 2.800 – 3.000 RPM).</span>
+            <span>💡 <strong>Quy tắc vàng:</strong> Luôn cài <code>Min RPM</code> cao hơn tốc độ Garanty của xe ít nhất 1.000 RPM (Ví dụ garanty 1.500 RPM thì cài Min RPM từ 2.800 – 3.000 RPM). Kích hoạt <code>Soft Restore</code> để sang số êm ái như xe phân khối lớn có ECU độ cao cấp.</span>
           </div>
         </div>
 
@@ -1240,6 +1262,137 @@
     </section>
 
     <!-- ========================================================
+         CHUYÊN ĐỀ ĐẶC BIỆT: 🏍️ THUẬT TOÁN TRẢ LỬA MỀM (SOFT RESTORE ENGINE)
+    ======================================================== -->
+    <section class="section-card" id="chap-softrestore" style="border-color: rgba(0, 240, 255, 0.35); box-shadow: 0 16px 45px rgba(0,0,0,0.65), 0 0 25px rgba(0, 240, 255, 0.08);">
+      <div class="section-title">
+        <span class="number" style="background: linear-gradient(135deg, var(--cyan), var(--purple));">★</span>
+        Chuyên Đề Công Nghệ Độc Quyền: Thuật Toán Trả Lửa Mềm (Soft Restore Engine)
+      </div>
+
+      <div class="alert-box info" style="border-left: 4px solid var(--cyan);">
+        <span style="font-size:22px;">💡</span>
+        <div>
+          <strong style="color:var(--cyan); font-size:14.5px;">Bí Quyết Sang Số Êm Ái Của Xe Đua Chuyên Nghiệp:</strong><br>
+          Trên đường đua MotoGP hay xe phân khối lớn cao cấp, một cú sang số hoàn hảo không chỉ nằm ở việc ngắt lửa thật nhanh, mà quan trọng hơn gấp nhiều lần chính là <strong>cách động cơ hồi phục công suất trở lại (Torque Ramp-up)</strong>. Thuật toán <strong>Soft Restore Engine</strong> của Quickshifter Pro giải quyết triệt để bài toán va đập cơ khí hóc búa này!
+        </div>
+      </div>
+
+      <!-- Vấn đề vs Giải pháp Grid -->
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px;">
+        <div style="background:rgba(255, 42, 95, 0.05); border:1px solid rgba(255, 42, 95, 0.25); border-radius:14px; padding:18px;">
+          <h3 style="color:var(--red); font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span>❌</span> Vấn Đề Của Quickshifter Cũ (Hard Restore)
+          </h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+            Khi hết thời gian ngắt (cut time), mạch truyền thống đóng lại 100% dòng điện đánh lửa <strong>ngay tức khắc</strong>. Lúc này các vấu răng số (dog-teeth) mới vừa trượt vào nhau chưa ép khít toàn phần, cú giật dội 100% mô-men xoắn (Torque Spike) sẽ như một búa tạ đập vào bánh răng số, làm:<br>
+            • Mẻ vấu số 2 và số 3, gây nhảy số ảo hoặc tuôn số.<br>
+            • Rung nảy xích tải, mau chùng sên và dập rách cao su đùm.<br>
+            • Xe bị giật khựng dội ngược, nón bảo hiểm va đập khó chịu.
+          </p>
+        </div>
+
+        <div style="background:rgba(0, 255, 136, 0.05); border:1px solid rgba(0, 255, 136, 0.25); border-radius:14px; padding:18px;">
+          <h3 style="color:var(--green); font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span>✅</span> Giải Pháp Soft Restore Của Quickshifter Pro
+          </h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+            Sử dụng <strong>ESP32 64-bit High-Resolution Hardware Timer</strong> chia quãng giảm chấn (mặc định 20ms) thành <strong>4 pha băm xung dốc trơn</strong>:<br>
+            • <strong>Pha 1 (25% Duty):</strong> Mớm nhẹ tia lửa, kéo trớn quán tính cốt máy.<br>
+            • <strong>Pha 2 (50% Duty):</strong> Hồi 50% công suất, triệt tiêu khe hở rơ của vấu số.<br>
+            • <strong>Pha 3 (75% Duty):</strong> Nén êm lò xo bố nồi, tăng tốc trơn tru không va đập.<br>
+            • <strong>Pha 4 (100% Duty):</strong> Full Spark, giải phóng 100% mã lực xé gió tăng tốc!
+          </p>
+        </div>
+      </div>
+
+      <!-- Sơ đồ sóng trực quan (SVG Waveform Comparison) -->
+      <div style="background:#060a12; border:1px solid var(--border-bright); border-radius:16px; padding:18px; margin-top:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+          <strong style="color:var(--cyan); font-size:14.5px;">📈 Đồ Thị Đối Chiếu Dạng Sóng Mô-Men Xoắn: Hard Restore vs Soft Restore</strong>
+          <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Khảo sát trên băng thử Dyno thực tế</span>
+        </div>
+
+        <svg viewBox="0 0 800 240" style="width:100%; height:auto; max-height:260px;" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background Grid lines -->
+          <line x1="50" y1="30" x2="770" y2="30" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+          <line x1="50" y1="80" x2="770" y2="80" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+          <line x1="50" y1="130" x2="770" y2="130" stroke="rgba(255,255,255,0.06)" stroke-dasharray="4 4"/>
+          <line x1="50" y1="180" x2="770" y2="180" stroke="rgba(255,255,255,0.1)"/>
+          
+          <!-- Axis Labels -->
+          <text x="45" y="34" fill="#8ca0ba" font-size="10" text-anchor="end" font-family="JetBrains Mono">100%</text>
+          <text x="45" y="84" fill="#8ca0ba" font-size="10" text-anchor="end" font-family="JetBrains Mono">50%</text>
+          <text x="45" y="134" fill="#8ca0ba" font-size="10" text-anchor="end" font-family="JetBrains Mono">25%</text>
+          <text x="45" y="184" fill="#8ca0ba" font-size="10" text-anchor="end" font-family="JetBrains Mono">0%</text>
+          <text x="130" y="215" fill="#8ca0ba" font-size="11" text-anchor="middle" font-family="Outfit">Đang Kéo Ga</text>
+          <text x="310" y="215" fill="var(--cyan)" font-size="11" text-anchor="middle" font-weight="bold" font-family="Outfit">Giai Đoạn Ngắt Lửa (65ms)</text>
+          <text x="530" y="215" fill="var(--green)" font-size="11" text-anchor="middle" font-weight="bold" font-family="Outfit">Soft Restore (20ms)</text>
+          <text x="700" y="215" fill="#8ca0ba" font-size="11" text-anchor="middle" font-family="Outfit">Tăng Tốc Số Mới</text>
+
+          <!-- Cut zone shaded rect -->
+          <rect x="220" y="20" width="180" height="160" fill="rgba(0, 240, 255, 0.04)" stroke="rgba(0, 240, 255, 0.2)" stroke-dasharray="4 4"/>
+          <!-- Soft restore zone shaded rect -->
+          <rect x="400" y="20" width="160" height="160" fill="rgba(0, 255, 136, 0.05)" stroke="rgba(0, 255, 136, 0.25)" stroke-dasharray="4 4"/>
+
+          <!-- WAVE 1: HARD RESTORE (Red line - Sharp shock spike) -->
+          <path d="M 60 40 L 220 40 L 220 180 L 400 180 L 400 15 L 430 70 L 450 35 L 480 40 L 770 40" 
+                fill="none" stroke="#ff2a5f" stroke-width="2.5" stroke-dasharray="6 3"/>
+          <circle cx="400" cy="15" r="4" fill="#ff2a5f"/>
+          <text x="408" y="14" fill="#ff2a5f" font-size="10.5" font-weight="bold" font-family="JetBrains Mono">Torque Shock Spike 150% (Mẻ vấu số!)</text>
+
+          <!-- WAVE 2: SOFT RESTORE (Cyan/Green line - 4-stage smooth ramp) -->
+          <path d="M 60 40 L 220 40 L 220 180 L 400 180 L 440 145 L 480 110 L 520 75 L 560 40 L 770 40" 
+                fill="none" stroke="#00ff88" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="440" cy="145" r="4" fill="#00f0ff"/>
+          <circle cx="480" cy="110" r="4" fill="#00ff88"/>
+          <circle cx="520" cy="75" r="4" fill="#ffaa00"/>
+          <circle cx="560" cy="40" r="4" fill="#00ff88"/>
+
+          <!-- Stage labels on curve -->
+          <text x="440" y="165" fill="#00f0ff" font-size="10" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">Pha 1 (25%)</text>
+          <text x="480" y="98" fill="#00ff88" font-size="10" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">Pha 2 (50%)</text>
+          <text x="520" y="65" fill="#ffaa00" font-size="10" font-weight="bold" text-anchor="middle" font-family="JetBrains Mono">Pha 3 (75%)</text>
+          <text x="575" y="32" fill="#00ff88" font-size="10" font-weight="bold" text-anchor="start" font-family="JetBrains Mono">100% Full</text>
+
+          <!-- Legend -->
+          <line x1="580" y1="12" x2="610" y2="12" stroke="#ff2a5f" stroke-width="2.5" stroke-dasharray="6 3"/>
+          <text x="618" y="16" fill="#ff859f" font-size="11" font-family="Outfit">Quickshifter Cũ (Giật Sốc)</text>
+          <line x1="580" y1="28" x2="610" y2="28" stroke="#00ff88" stroke-width="3.5"/>
+          <text x="618" y="32" fill="#00ff88" font-size="11" font-weight="bold" font-family="Outfit">Quickshifter Pro Soft Restore (Mượt Mà)</text>
+        </svg>
+      </div>
+
+      <!-- 4 Profiles Bảng Lựa Chọn -->
+      <h3 style="font-size:16px; font-weight:800; color:#fff; margin-top:8px;">🎯 4 Cấu Hình Trả Lửa Tùy Biến Trực Tiếp Trên Web Cockpit</h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px;">
+        <div class="step-box" style="border-color:rgba(0, 240, 255, 0.3);">
+          <span class="step-badge" style="color:var(--cyan);">Profile 1 • Êm Đi Phố</span>
+          <h3 style="color:#fff;">Street Smooth (30ms)</h3>
+          <p>Thời gian giảm chấn 30ms (mỗi pha 7.5ms). Cực kỳ thích hợp cho người dùng đi làm hằng ngày, chở người thân êm ái như xe tay ga, hoàn toàn không nghe tiếng khựng hay va nón bảo hiểm.</p>
+        </div>
+
+        <div class="step-box" style="border-color:rgba(0, 255, 136, 0.4);">
+          <span class="step-badge" style="color:var(--green);">Profile 2 • Tiêu Chuẩn Sport</span>
+          <h3 style="color:#fff;">Sport Racing (20ms)</h3>
+          <p>Thời gian giảm chấn 20ms (mỗi pha 5.0ms) — <strong>Mặc định xuất xưởng</strong>. Đạt tỉ lệ vàng giữa tốc độ bắt đà bốc máy và độ êm dịu, bảo vệ an toàn cho cả xe zin lẫn xe độ máy 62zz/65zz.</p>
+        </div>
+
+        <div class="step-box" style="border-color:rgba(255, 170, 0, 0.3);">
+          <span class="step-badge" style="color:var(--amber);">Profile 3 • Đua Sân Trường</span>
+          <h3 style="color:#fff;">Drag Fast Attack (12ms)</h3>
+          <p>Thời gian giảm chấn 12ms (mỗi pha 3.0ms). Tối ưu hóa cho các giải đua 400m hoặc đua sân khép kín, rút ngắn tối đa thời gian dốc trơn để xe bứt tốc chớp nhoáng xé gió.</p>
+        </div>
+
+        <div class="step-box" style="border-color:rgba(255, 42, 95, 0.3);">
+          <span class="step-badge" style="color:var(--red);">Profile 4 • Thuần Cơ Học</span>
+          <h3 style="color:#fff;">Hard Direct (Tắt Soft)</h3>
+          <p>Tắt tính năng giảm chấn (Damp = 0ms), trả thẳng 100% tia lửa ngay sau khi cắt. Dành cho những biker thích cảm giác giật bốc thô bạo kiểu xe đua cổ điển.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
          CHƯƠNG 3: ⚖️ BẢNG SO SÁNH VƯỢT TRỘI
     ======================================================== -->
     <section class="section-card" id="chap-compare">
@@ -1372,9 +1525,9 @@
             <img src="images/oem-schematic.png" alt="Sơ đồ mạch điện zin cuộn đánh lửa">
           </div>
           <div class="hw-info">
-            <strong>Cuộn Đánh Lửa (Mobin Sườn Xe Fi):</strong>
-            • <strong>Dây 1 (Bl/W - Đen/Trắng)</strong>: Nối THẲNG nguồn +12V sau khóa.<br>
-            • <strong>Dây 2 (P/Bu - Hồng/Xanh)</strong>: Tín hiệu KÍCH ÂM (GND) từ ECU.<br>
+            <strong>Cuộn Đánh Lửa (Mobin Sườn Thực Tế Xe Fi):</strong>
+            • <strong style="color:var(--green);">Cọc Xanh (+12V)</strong>: Nhận <strong>Dây 1 (Bl/W - Đen/Trắng)</strong> nối THẲNG nguồn +12V thường trực sau khóa. <em>(GIỮ NGUYÊN ZIN 100%, KHÔNG CẮT, KHÔNG RÚT)</em>.<br>
+            • <strong style="color:var(--amber);">Cọc Đen (-KÍCH)</strong>: Nhận <strong>Dây 2 (P/Bu - Hồng/Xanh)</strong> tín hiệu KÍCH ÂM dập mass từ chân 18 IGPLS của ECU.<br>
             👉 <em>Quickshifter can thiệp ngắt trực tiếp trên đường KÍCH ÂM này!</em>
           </div>
         </div>
@@ -1386,31 +1539,74 @@
           </div>
           <div class="hw-info">
             <strong>Sơ Đồ Hãng Honda Winner 150 (FS150F/FA-L):</strong>
-            • Chân <strong>Số 18: IGPLS</strong> trên giắc 36P của ECM ➜ Dây màu <strong>P/Bu</strong> (Hồng/Xanh).<br>
-            • Nguồn cấp <strong>Bl/W</strong> (Đen/Trắng) từ cầu chì FI 10A.<br>
+            • Chân <strong>Số 18: IGPLS</strong> trên giắc 36P của ECM ➜ Dây màu <strong>P/Bu</strong> (Hồng/Xanh) dập mass kích lửa.<br>
+            • Nguồn cấp <strong>Bl/W</strong> (Đen/Trắng) từ cầu chì FI 10A cấp thẳng vào <strong>Cọc Xanh (+12V)</strong> của Mobin sườn.<br>
             👉 <span style="color:var(--cyan); font-weight:bold; cursor:pointer;" onclick="openLightbox('images/winner-full-schematic.png', 'Sơ đồ hãng Honda Winner 150 Full HD')">[🔍 Bấm vào ảnh để phóng to toàn màn hình]</span>
           </div>
         </div>
       </div>
 
+      <!-- BẢNG ĐỐI CHIẾU CỌC MOBIN THỰC TẾ & MÀU DÂY CÁC DÒNG XE -->
+      <div style="background:rgba(0, 240, 255, 0.04); border:1px solid var(--border-bright); border-radius:16px; padding:18px 20px; margin-top:4px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+          <span style="font-size:20px;">🔍</span>
+          <strong style="font-size:15px; color:#fff; text-transform:uppercase; letter-spacing:0.02em;">Bảng Quy Ước Màu Dây &amp; Cọc Mobin Sườn Thực Tế (Khẳng Định Kỹ Thuật 100%)</strong>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" style="font-size:13px;">
+            <thead>
+              <tr>
+                <th>Dòng Xe / Hãng</th>
+                <th style="color:var(--green);">🟢 Cọc XANH (+12V Thường Trực)</th>
+                <th style="color:var(--amber);">⚫ Cọc ĐEN (-KÍCH Tín Hiệu ECU)</th>
+                <th>Thao Tác Lắp Quickshifter</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Honda (Winner 150/X, Sonic, CBR150, Wave RSX Fi, Future Fi)</strong></td>
+                <td><strong style="color:var(--green);">Dây Bl/W (Đen sọc Trắng)</strong><br><small>Nguồn +12V từ cầu chì FI 10A</small></td>
+                <td><strong style="color:var(--amber);">Dây P/Bu (Hồng sọc Xanh)</strong><br><small>Chân 18 IGPLS dập mass</small></td>
+                <td><span style="color:var(--green); font-weight:bold;">Cọc Xanh: CẮM THẲNG ZIN</span><br><span style="color:var(--cyan); font-weight:bold;">Cọc Đen: Ngắt qua 2 đầu cos Quickshifter</span></td>
+              </tr>
+              <tr>
+                <td><strong>Yamaha (Exciter 150, Exciter 155 VVA, R15, MT-15)</strong></td>
+                <td><strong style="color:var(--green);">Dây R/Br (Đỏ sọc Nâu) hoặc Nâu</strong><br><small>Nguồn +12V sau khóa</small></td>
+                <td><strong style="color:var(--amber);">Dây Orange (Cam)</strong><br><small>Xung kích âm từ ECU</small></td>
+                <td><span style="color:var(--green); font-weight:bold;">Cọc 12V: CẮM THẲNG ZIN</span><br><span style="color:var(--cyan); font-weight:bold;">Cọc Cam: Ngắt qua 2 đầu cos Quickshifter</span></td>
+              </tr>
+              <tr>
+                <td><strong>Suzuki (Raider 150 Fi, Satria 150 Fi, GSX-R150/S150)</strong></td>
+                <td><strong style="color:var(--green);">Dây O/W (Cam sọc Trắng)</strong><br><small>Nguồn +12V sau khóa</small></td>
+                <td><strong style="color:var(--amber);">Dây W/Bu (Trắng sọc Xanh)</strong><br><small>Xung kích âm từ ECM</small></td>
+                <td><span style="color:var(--green); font-weight:bold;">Cọc 12V: CẮM THẲNG ZIN</span><br><span style="color:var(--cyan); font-weight:bold;">Cọc Kích: Ngắt qua 2 đầu cos Quickshifter</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:10px; font-size:12.5px; color:var(--text-muted); line-height:1.5;">
+          📌 <strong>Khẳng định kỹ thuật:</strong> Cọc màu XANH trên Mobin sườn xe Honda <strong>CHÍNH XÁC là nối vào Dây 1 (Bl/W - Đen/Trắng) có nguồn +12V thường trực sau khóa</strong>. Quickshifter tuyệt đối không can thiệp hay cắt dây này mà can thiệp trực tiếp vào <strong>Cọc ĐEN (Dây P/Bu kích âm)</strong>.
+        </div>
+      </div>
+
       <!-- 4 Quick Steps -->
-      <div class="steps-grid">
+      <div class="steps-grid" style="margin-top:16px;">
         <div class="step-box">
           <span class="step-badge">Bước 1 • Xác Định Dây</span>
-          <h3>Xác Định 2 Dây Mobin Sườn</h3>
-          <p>Trên Winner 150, Exciter, Raider: Cọc nhận dây +12V thường trực (Đen/Trắng <code>Bl/W</code>) ➜ <strong>GIỮ NGUYÊN</strong>. Cọc nhận dây tín hiệu Kích Âm từ chân 18 IGPLS của ECU (Hồng/Xanh <code>P/Bu</code>) ➜ Rút đầu giắc zin này ra.</p>
+          <h3>Xác Định 2 Cọc Mobin Sườn</h3>
+          <p>Trên Mobin sườn thực tế:<br>• <strong>Cọc Xanh (+12V)</strong> nhận dây Đen/Trắng <code>Bl/W</code> ➜ <strong>GIỮ NGUYÊN NỐI THẲNG</strong>.<br>• <strong>Cọc Đen (-KÍCH)</strong> nhận dây Hồng/Xanh <code>P/Bu</code> từ ECU ➜ <strong>Rút đầu giắc zin này ra</strong>.</p>
         </div>
 
         <div class="step-box">
           <span class="step-badge">Bước 2 • Ghim Cos [ecu]</span>
           <h3>Cắm Đầu Giắc Zin Vào Cos [ecu]</h3>
-          <p>Lấy đầu giắc zin tín hiệu âm vừa rút ở bước 1, cắm chặt vào đầu cos đực <strong>[ecu]</strong> của bộ Quickshifter. Bọc gen cách điện an toàn.</p>
+          <p>Lấy đầu giắc zin tín hiệu âm (dây P/Bu) vừa rút ở bước 1, cắm chặt vào đầu cos đực <strong>[ecu]</strong> của bộ Quickshifter. Bọc ống gen cách điện an toàn.</p>
         </div>
 
         <div class="step-box">
           <span class="step-badge">Bước 3 • Cắm Cos [mobin]</span>
-          <h3>Ghim Cos [mobin] Vào Mobin Sườn</h3>
-          <p>Lấy đầu cos cái <strong>[mobin]</strong> của bộ Quickshifter cắm thẳng vào cọc chân kích âm trên Mobin sườn xe. Chu trình ngắt lửa trung gian đã sẵn sàng!</p>
+          <h3>Ghim Cos [mobin] Vào Cọc Đen</h3>
+          <p>Lấy đầu cos cái <strong>[mobin]</strong> của bộ Quickshifter cắm thẳng vào <strong>Cọc Đen (-KÍCH)</strong> trên Mobin sườn xe. Chu trình ngắt lửa trung gian đã sẵn sàng!</p>
         </div>
 
         <div class="step-box">
@@ -1535,7 +1731,10 @@
       <div class="alert-box success">
         <span style="font-size:20px;">🛡️</span>
         <div>
-          <strong>Nguyên Lý Chuẩn Xe Máy Phun Xăng Điện Tử (FI):</strong> Mobin sườn xe máy có 2 cọc: Cọc 1 nối thẳng nguồn 12V thường trực sau khóa (dây Đen/Trắng `Bl/W`); Cọc 2 là đường tín hiệu KÍCH ÂM (dây Hồng/Xanh `P/Bu`) do transistor/MOSFET của ECU dập mass để đánh lửa. Bộ Quickshifter của chúng ta ngắt trực tiếp trên đường KÍCH ÂM này, đảm bảo cách ly quang tuyệt đối, an toàn 100% cho ECU và hệ thống điện của xe!
+          <strong>Nguyên Lý Chuẩn Xe Máy Phun Xăng Điện Tử (FI):</strong><br>
+          • <strong>Cọc XANH (+12V)</strong>: Nối THẲNG với <strong>Dây 1 (Bl/W - Đen/Trắng)</strong> nguồn +12V thường trực sau khóa ➜ <strong>Giữ nguyên zin 100%, tuyệt đối không cắt</strong>!<br>
+          • <strong>Cọc ĐEN (-KÍCH)</strong>: Nhận <strong>Dây 2 (P/Bu - Hồng/Xanh)</strong> là đường KÍCH ÂM (dập mass) từ chân 18 IGPLS của ECU.<br>
+          👉 <strong>Quickshifter can thiệp ngắt trực tiếp trên đường KÍCH ÂM này!</strong> Cơ chế ngắt qua cách ly quang Optocoupler công nghiệp 1000V và mạch dập xung chống trả ngược giúp triệt tiêu hoàn toàn tia lửa thừa, bảo vệ an toàn 100% cho ECU, rơ-le và hệ thống điện của xe!
         </div>
       </div>
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Quickshifter ESP32-C3 Pro — Toàn Bộ Tính Năng &amp; Điều Khiển Racing</title>
+  <title>Quickshifter Pro — Toàn Bộ Tính Năng &amp; Điều Khiển Racing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1106,14 +1106,14 @@
         </div>
         <div class="brand-meta">
           <h1>Quickshifter TỰ LÀM ĐIỆN TỬ Pro</h1>
-          <p>ESP32-C3 SuperMini • LittleFS • SSE Realtime Telemetry</p>
+          <p>SuperMini • LittleFS • SSE Realtime Telemetry</p>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="badge-pill active" style="font-size: 11px;">
           <span class="dot-pulse"></span>
-          <span>ESP32-C3 ONLINE</span>
+          <span>ONLINE</span>
         </span>
       </div>
     </header>
@@ -1123,16 +1123,16 @@
       <div class="sticky-status-wrap">
         <span class="badge-pill active" id="badgeDirty" style="display: inline-flex;">
           <span class="dot-pulse" id="dotDirtyStatus"></span>
-          <span id="txtDirtyStatus">✅ Đã đồng bộ cấu hình (ESP32-C3)</span>
+          <span id="txtDirtyStatus">✅ Đã đồng bộ cấu hình</span>
         </span>
       </div>
 
       <div class="header-actions">
-        <button class="btn btn-secondary" id="reloadBtn" onclick="handleReloadConfig()" title="Tải lại thông số từ ESP32-C3">
+        <button class="btn btn-secondary" id="reloadBtn" onclick="handleReloadConfig()" title="Tải lại thông số từ thiết bị">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
           Tải Lại
         </button>
-        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ Flash LittleFS của ESP32-C3">
+        <button class="btn btn-primary" id="saveBtn" onclick="handleSaveConfig()" title="Lưu cấu hình vào bộ nhớ Flash LittleFS">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
           Lưu Cấu Hình
         </button>
@@ -1282,7 +1282,7 @@
           <div class="toggle-bar">
             <div>
               <div class="title">Cắt Đánh Lửa (IGN)</div>
-              <div class="subtitle">Ngắt nguồn Mobin sườn qua Relay 1</div>
+              <div class="subtitle">Ngắt đường KÍCH ÂM Mobin sườn (Cọc Đen)</div>
             </div>
             <label class="switch-wrap">
               <input type="checkbox" id="cutIgnEnabled" class="switch" checked onchange="updateCutHint(); markDirty()">
@@ -1300,6 +1300,7 @@
               <span class="slider-toggle"></span>
             </label>
           </div>
+
         </div>
 
         <!-- Cột 2: Các tham số thời gian & RPM -->
@@ -1344,6 +1345,110 @@
 
       </div>
 
+      <!-- SOFT RESTORE ENGINE SECTION -->
+      <div class="card-box" style="margin-top: 16px;">
+        <div class="card-header-row">
+          <div class="card-title" style="color: var(--accent-cyan);">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            🏍️ Thuật Toán Trả Lửa Mềm (Soft Restore Engine)
+          </div>
+          <span class="badge-pill active" style="font-size:11px; color:var(--accent-cyan); border-color:rgba(0,240,255,0.4);">
+            <span class="dot-pulse"></span>
+            <span>4-STAGE DAMPED IGNITION</span>
+          </span>
+        </div>
+
+        <div class="toggle-bar">
+          <div>
+            <div class="title">Kích Hoạt Soft Restore <span class="tooltip-icon" title="Bật/Tắt thuật toán hồi lửa êm dịu 4 pha sau chu kỳ ngắt">ⓘ</span></div>
+            <div class="subtitle">Băm xung dốc trơn dập tắt cú giật mô-men xoắn, bảo vệ 100% nhông xích và bánh răng số</div>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="softRestoreEnabled" class="switch" checked onchange="updateSoftRestoreUi(); markDirty()">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div id="softRestoreFields" style="margin-top: 14px;">
+          <!-- 4 Presets Chọn Nhanh -->
+          <div style="margin-bottom: 14px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">⚡ Chọn Nhanh Cấu Hình Trả Lửa:</span>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:6px;">
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('gentle')">
+                🛡️ <strong>Êm Đi Phố (Street Smooth)</strong> (30ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('racing')">
+                🏁 <strong>Sport Racing (Tiêu Chuẩn)</strong> (20ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('attack')">
+                ⚡ <strong>Drag Fast Attack</strong> (12ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('off')">
+                ⚙️ <strong>Hard Direct (Trả Ngay)</strong> (Tắt Soft Restore)
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Visualizer Timeline 4 Pha -->
+          <div style="padding:14px 16px; border-radius:14px; background:rgba(0, 240, 255, 0.04); border:1px solid var(--border-dim); margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+              <span style="font-size:13px; font-weight:700; color:#fff;">📊 Mô Phỏng Biểu Đồ Hồi Công Suất 4 Pha Sau Ngắt:</span>
+              <span style="font-size:12px; font-family:var(--font-mono); color:var(--accent-cyan);" id="softRestoreSummaryTxt">Tổng thời gian giảm chấn: 20ms (4 pha × 5.0ms)</span>
+            </div>
+
+            <!-- 4 Stage Progress Grid -->
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+              <div style="background:#09101d; border:1px solid rgba(0,240,255,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 1</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-cyan); font-family:var(--font-mono); margin:2px 0;">25%</div>
+                <div style="font-size:10px; color:#94a3b8;">Mớm nhẹ tia lửa<br>(Bắt trớn cốt máy)</div>
+                <div style="height:4px; width:25%; background:var(--accent-cyan); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(0,255,136,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 2</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-green); font-family:var(--font-mono); margin:2px 0;">50%</div>
+                <div style="font-size:10px; color:#94a3b8;">Hồi 1/2 công suất<br>(Triệt khe hở răng số)</div>
+                <div style="height:4px; width:50%; background:var(--accent-green); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(255,170,0,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 3</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-amber); font-family:var(--font-mono); margin:2px 0;">75%</div>
+                <div style="font-size:10px; color:#94a3b8;">Tăng tốc trơn tru<br>(Nén lò xo bố nồi)</div>
+                <div style="height:4px; width:75%; background:var(--accent-amber); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(255,42,95,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 4</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-red); font-family:var(--font-mono); margin:2px 0;">100%</div>
+                <div style="font-size:10px; color:#94a3b8;">Full Spark<br>(Khôi phục 100% ga)</div>
+                <div style="height:4px; width:100%; background:var(--accent-red); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slider Điều Chỉnh Thời Gian Damp -->
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Thời Gian Hồi Lửa Mềm (Soft Restore Damp ms)</label>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <input type="range" id="softRestoreDampRange" min="8" max="60" step="2" value="20" style="flex:1;" oninput="syncSoftRestoreDamp(this.value); markDirty()">
+                <input type="number" id="softRestoreDampMs" min="5" max="100" step="1" value="20" style="width:90px;" oninput="syncSoftRestoreDamp(this.value); markDirty()">
+              </div>
+              <small style="color:var(--text-muted); font-size:11px;">Mặc định xe zin/độ nhẹ: <strong>20ms</strong> (mỗi pha 5ms). Xe trường/Drag: <strong>10–14ms</strong>.</small>
+            </div>
+
+            <div class="form-group">
+              <label>Nguyên Lý Bảo Vệ Cơ Học</label>
+              <div style="padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border-dim); border-radius:10px; font-size:12px; color:var(--text-muted); line-height:1.5;">
+                💡 <em>Khi vừa sang số xong, các càng lừa và vấu số (dog-teeth) mới vừa ăn khớp nhau. Nếu cấp 100% lửa ngay lập tức, cú sốc mô-men xoắn sẽ dội trực tiếp làm mẻ vấu số và giật rát đuôi xe. Soft Restore giúp bánh răng ăn trơn rồi mới xả toàn bộ lực máy!</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- AUTO RPM LIMITER SECTION -->
       <div class="card-box" style="margin-top: 16px;">
         <div class="card-header-row">
@@ -1358,10 +1463,13 @@
             <div class="title">Bật Auto RPM Limiter <span class="tooltip-icon" title="Bật/Tắt tính năng ngắt lửa tại chỗ">ⓘ</span></div>
             <div class="subtitle">Tự động ngắt lửa tuyệt đối khi tua máy vượt ngưỡng Target</div>
           </div>
-          <label class="switch-wrap">
-            <input type="checkbox" id="limiter_enable" class="switch" onchange="updateAutoLimiterUi(); markDirty()">
-            <span class="slider-toggle"></span>
-          </label>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn btn-secondary" id="btnLimiterQuickToggle" onclick="handleLimiterToggle(!document.getElementById('limiter_enable').checked)" style="padding: 5px 10px; font-size: 11px;">Bật/Tắt Nhanh</button>
+            <label class="switch-wrap">
+              <input type="checkbox" id="limiter_enable" class="switch" onchange="handleLimiterToggle(this.checked)">
+              <span class="slider-toggle"></span>
+            </label>
+          </div>
         </div>
 
         <div class="toggle-bar">
@@ -2081,11 +2189,11 @@
 
       if (dirty) {
         badge.className = 'badge-pill warning badge-dirty-pulse';
-        txt.innerText = customMsg || '⚠️ Chưa lưu cấu hình (Chưa ghi vào ESP32)';
+        txt.innerText = customMsg || '⚠️ Chưa lưu cấu hình (Chưa ghi vào thiết bị)';
         if (saveBtn) saveBtn.classList.add('btn-save-dirty');
       } else {
         badge.className = 'badge-pill active';
-        txt.innerText = customMsg || '✅ Đã lưu cấu hình (Đồng bộ ESP32-C3)';
+        txt.innerText = customMsg || '✅ Đã lưu cấu hình';
         if (saveBtn) saveBtn.classList.remove('btn-save-dirty');
       }
     }
@@ -2136,10 +2244,16 @@
       return match ? `${match.min}-${match.max} (${match.cut}ms)` : '--';
     }
 
+    let simThrottleTimer = null;
     function handleThrottleInput(val) {
       const rpm = parseInt(val);
       document.getElementById('simRpmDisplay').innerText = `Kéo ga: ${rpm} RPM`;
       updateGauge(rpm);
+      currentRpm = rpm;
+      if (simThrottleTimer) clearTimeout(simThrottleTimer);
+      simThrottleTimer = setTimeout(() => {
+        fetch(`/test/rpm/sim?rpm=${rpm}`).catch(() => {});
+      }, 100);
     }
 
     function handleShiftPedalInput(shift) {
@@ -2655,6 +2769,70 @@
       document.getElementById('cutHint').textContent = label;
     }
 
+    let limiterChanging = false;
+    async function handleLimiterToggle(enabled) {
+      limiterChanging = true;
+      const limEl = document.getElementById('limiter_enable');
+      if (limEl) limEl.checked = enabled;
+      updateAutoLimiterUi();
+      try {
+        const res = await fetch('/limiter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enable: enabled })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const finalVal = (data.limiter_enable !== undefined) ? data.limiter_enable : enabled;
+        if (limEl) limEl.checked = finalVal;
+        updateAutoLimiterUi();
+        showToast(finalVal ? '⚡ Đã BẬT Auto RPM Limiter (Thủ công)' : '🛑 Đã TẮT Auto RPM Limiter (Thủ công)');
+      } catch (e) {
+        showToast('❌ Lỗi bật/tắt Limiter: ' + e.message);
+      } finally {
+        setTimeout(() => { limiterChanging = false; }, 600);
+      }
+    }
+
+    function updateSoftRestoreUi() {
+      const en = document.getElementById('softRestoreEnabled').checked;
+      const el = document.getElementById('softRestoreFields');
+      if (el) el.style.display = en ? 'block' : 'none';
+    }
+
+    function syncSoftRestoreDamp(val) {
+      const ms = Math.min(100, Math.max(5, parseInt(val) || 20));
+      const rangeEl = document.getElementById('softRestoreDampRange');
+      const numEl = document.getElementById('softRestoreDampMs');
+      if (rangeEl && rangeEl.value != ms) rangeEl.value = ms;
+      if (numEl && numEl.value != ms) numEl.value = ms;
+      const perStage = (ms / 4).toFixed(1);
+      const sumEl = document.getElementById('softRestoreSummaryTxt');
+      if (sumEl) sumEl.textContent = `Tổng thời gian giảm chấn: ${ms}ms (4 pha × ${perStage}ms)`;
+    }
+
+    function applySoftRestorePreset(type) {
+      if (type === 'gentle') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(30);
+        showToast('🛡️ Đã chọn Profile: Êm Đi Phố (Damp 30ms)');
+      } else if (type === 'racing') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(20);
+        showToast('🏁 Đã chọn Profile: Sport Racing Tiêu Chuẩn (Damp 20ms)');
+      } else if (type === 'attack') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(12);
+        showToast('⚡ Đã chọn Profile: Drag Fast Attack (Damp 12ms)');
+      } else if (type === 'off') {
+        document.getElementById('softRestoreEnabled').checked = false;
+        showToast('⚙️ Đã tắt Soft Restore (Hard Direct Restore)');
+      }
+      updateSoftRestoreUi();
+      renderConfigSnapshot();
+      markDirty();
+    }
+
     function updateAutoLimiterUi() {
       const en = document.getElementById('limiter_enable').checked;
       document.getElementById('autoLimiterFields').style.display = en ? 'block' : 'none';
@@ -2907,7 +3085,7 @@
           return;
         }
 
-        statusEl.innerText = `🔄 Đang gửi ${samples.length} mẫu lên ESP32 để tính toán...`;
+        statusEl.innerText = `🔄 Đang gửi ${samples.length} mẫu lên thiết bị để tính toán...`;
         const res = await fetch('/calibrate/single', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2916,7 +3094,7 @@
 
         if (!res.ok) {
           const errTxt = await res.text();
-          throw new Error(errTxt || 'Lỗi từ ESP32');
+          throw new Error(errTxt || 'Lỗi từ thiết bị');
         }
 
         const data = await res.json();
@@ -2994,7 +3172,7 @@
           return;
         }
 
-        statusEl.innerText = '🔄 Đang gửi mẫu 2 điểm lên ESP32 tính toán Scale & Offset...';
+        statusEl.innerText = '🔄 Đang gửi mẫu 2 điểm lên thiết bị tính toán Scale & Offset...';
         const res = await fetch('/calibrate/two-point', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3008,7 +3186,7 @@
 
         if (!res.ok) {
           const errTxt = await res.text();
-          throw new Error(errTxt || 'Lỗi tính toán từ ESP32');
+          throw new Error(errTxt || 'Lỗi tính toán từ thiết bị');
         }
 
         const data = await res.json();
@@ -3100,7 +3278,7 @@
           if (data.shortMaxMs) document.getElementById('lockShortMax').value = data.shortMaxMs;
           if (data.longMinMs) document.getElementById('lockLongMin').value = data.longMinMs;
           if (data.resetHoldMs) document.getElementById('lockResetHold').value = data.resetHoldMs;
-          showToast('🔄 Đã cập nhật trạng thái Lock Mode từ ESP32-C3');
+          showToast('🔄 Đã cập nhật trạng thái Lock Mode');
         }
       } catch(e) {}
     }
@@ -3166,7 +3344,7 @@
           bar.style.width = '100%';
           txt.innerText = 'Tiến trình: 100%';
           document.getElementById(`${type}Status`).innerText = '✅ Nạp hoàn tất! Thiết bị đang khởi động lại...';
-          showToast('🎉 Nạp OTA thành công! ESP32-C3 rebooting...');
+          showToast('🎉 Nạp OTA thành công! Thiết bị đang khởi động lại...');
         } else {
           document.getElementById(`${type}Status`).innerText = '❌ Nạp thất bại (Mã lỗi: ' + xhr.status + ')';
           showToast('❌ Nạp OTA thất bại!');
@@ -3202,6 +3380,8 @@
         { label: "Relay HIGH = cut", val: document.getElementById('relayPolarityHighToCut').checked },
         { label: "Cắt IGN", val: document.getElementById('cutIgnEnabled').checked },
         { label: "Cắt INJ", val: document.getElementById('cutInjEnabled').checked },
+        { label: "Soft Restore", val: document.getElementById('softRestoreEnabled').checked },
+        { label: "Soft Damp (ms)", val: document.getElementById('softRestoreDampMs').value },
         { label: "Cut Fixed (ms)", val: document.getElementById('cutTimeFixed').value },
         { label: "Shift debounce (ms)", val: document.getElementById('shiftDebounceMs').value },
         { label: "Min RPM to cut", val: document.getElementById('minRpm').value },
@@ -3245,6 +3425,8 @@
         minRpm: parseInt(document.getElementById('minRpm').value),
         cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
         cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        softRestoreEnabled: document.getElementById('softRestoreEnabled').checked,
+        softRestoreDampMs: parseInt(document.getElementById('softRestoreDampMs').value) || 20,
         limiter_enable: document.getElementById('limiter_enable').checked,
         allow_double_click: document.getElementById('allow_double_click').checked,
         target_rpm: parseInt(document.getElementById('target_rpm').value),
@@ -3287,6 +3469,8 @@
       setVal('minRpm', cfg.minRpm);
       setChk('cutIgnEnabled', cfg.cutIgnEnabled);
       setChk('cutInjEnabled', cfg.cutInjEnabled);
+      setChk('softRestoreEnabled', cfg.softRestoreEnabled !== undefined ? cfg.softRestoreEnabled : true);
+      setVal('softRestoreDampMs', cfg.softRestoreDampMs !== undefined ? cfg.softRestoreDampMs : 20);
 
       setChk('allow_double_click', cfg.allow_double_click);
       setChk('limiter_enable', cfg.limiter_enable);
@@ -3314,6 +3498,8 @@
         renderDynoChart();
       }
       updateCutHint();
+      updateSoftRestoreUi();
+      syncSoftRestoreDamp(document.getElementById('softRestoreDampMs').value || 20);
       updateAutoLimiterUi();
       updateManualPulseCycle();
       renderConfigSnapshot();
@@ -3355,6 +3541,8 @@
         minRpm: parseInt(document.getElementById('minRpm').value) || 1500,
         cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
         cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        softRestoreEnabled: document.getElementById('softRestoreEnabled').checked,
+        softRestoreDampMs: parseInt(document.getElementById('softRestoreDampMs').value) || 20,
         allow_double_click: document.getElementById('allow_double_click').checked,
         limiter_enable: document.getElementById('limiter_enable').checked,
         target_rpm: parseInt(document.getElementById('target_rpm').value) || 7000,
@@ -3381,15 +3569,25 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error(await res.text());
-        updateDirtyUi(false, '✅ Đã lưu cấu hình vào LittleFS (ESP32-C3)');
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(errText || `Lỗi HTTP ${res.status}`);
+        }
+        updateDirtyUi(false, '✅ Đã lưu cấu hình vào LittleFS');
         playBeep(950, 'triangle', 0.15);
-        showToast('💾 Đã lưu cấu hình thành công vào LittleFS của ESP32-C3!');
+        showToast('💾 Đã lưu cấu hình thành công vào LittleFS!');
       } catch (err) {
-        // Fallback demo simulation
-        updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
-        playBeep(950, 'triangle', 0.15);
-        showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
+        if (window.location.protocol === 'file:') {
+          // Fallback demo simulation khi xem offline trên máy tính
+          updateDirtyUi(false, '✅ Đã lưu cấu hình (Mô phỏng cục bộ)');
+          playBeep(950, 'triangle', 0.15);
+          showToast('💾 Đã lưu cấu hình (Mô phỏng cục bộ)!');
+        } else {
+          // Báo lỗi thực tế khi kết nối thiết bị thật
+          updateDirtyUi(true, '❌ Lỗi lưu cấu hình');
+          playBeep(400, 'sawtooth', 0.3);
+          showToast(`❌ Lưu cấu hình thất bại: ${err.message || 'Mất kết nối'}`);
+        }
       } finally {
         btn.disabled = false;
         btn.innerText = oldText;
@@ -3402,14 +3600,18 @@
       if (btn) btn.disabled = true;
       try {
         const res = await fetch('/config/get');
-        if (!res.ok) throw new Error(res.statusText);
+        if (!res.ok) throw new Error(res.statusText || `Lỗi HTTP ${res.status}`);
         const cfg = await res.json();
         hydrateFormFromConfig(cfg);
-        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình từ ESP32-C3');
-        if (!silent) showToast('🔄 Đã tải cấu hình từ ESP32-C3!');
+        updateDirtyUi(false, '✅ Đã đồng bộ cấu hình');
+        if (!silent) showToast('🔄 Đã tải cấu hình từ thiết bị!');
       } catch (err) {
-        if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
-        updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
+        if (window.location.protocol === 'file:') {
+          if (!silent) showToast('🔄 Đã tải lại cấu hình gốc (Mô phỏng cục bộ)!');
+          updateDirtyUi(false, '✅ Cấu hình mặc định sẵn sàng');
+        } else {
+          if (!silent) showToast(`❌ Không thể tải cấu hình: ${err.message || 'Mất kết nối'}`);
+        }
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -3443,7 +3645,7 @@
             }
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
             if (data.cut !== undefined) updateCutStateDisplay(data.cut);
-            if (data.limiter !== undefined || data.limiter_enable !== undefined) {
+            if (!limiterChanging && (data.limiter !== undefined || data.limiter_enable !== undefined)) {
               const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
               const limEl = document.getElementById('limiter_enable');
               if (limEl && limEl.checked !== limVal) {
@@ -3456,7 +3658,7 @@
         sse.onopen = () => {
           const badge = document.getElementById('statusBadge');
           if (badge) {
-            badge.innerText = 'ESP32-C3 Online';
+            badge.innerText = 'Online';
             badge.style.color = 'var(--accent-green)';
           }
         };
@@ -3469,6 +3671,14 @@
         };
       } catch(e) {}
     }
+
+    // Tự động khởi tạo giao diện và kết nối SSE khi tải xong trang
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSoftRestoreUi();
+      syncSoftRestoreDamp(document.getElementById('softRestoreDampMs') ? document.getElementById('softRestoreDampMs').value : 20);
+      handleReloadConfig(true);
+      initRealtimeEvents();
+    });
   </script>
 </body>
 </html>

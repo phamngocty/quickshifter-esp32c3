@@ -10,3 +10,5 @@ void rpm_set_scale(float factor);
 void rpm_set_offset(float offsetRpm);
 float rpm_get_scale();
 float rpm_get_offset();
+void rpm_set_simulated(int rpm);
+int rpm_get_simulated();

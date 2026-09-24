@@ -128,7 +128,7 @@ void setDefaults() {
 
   // Manual Backfire defaults (Popcorn Formula)
   cfg.manualBackfireEnabled = true;
-  cfg.manualBackfireHoldMs = 600;
+  cfg.manualBackfireHoldMs = 1500;
   cfg.manualBackfireMode = 2; // 2=Pulse Popcorn A-B-C
   cfg.manualPulseCutMs = 95;  // A: 95ms tích xăng
   cfg.manualPulseFireMs = 35; // B: 35ms đốt lửa
@@ -136,6 +136,10 @@ void setDefaults() {
   cfg.manualPulseRepeat = 4;  // D: 4 tiếng nổ mỗi tràng
   cfg.manualMinRpm = 4000;
   cfg.manualIgnOnly = true;
+
+  // Soft Restore defaults
+  cfg.softRestoreEnabled = true;
+  cfg.softRestoreDampMs = 10;
 }
 
 bool ensureDefaultConfig() {
@@ -253,7 +257,7 @@ bool loadConfig() {
   cfg.cutInjEnabled = doc["cutInjEnabled"] | cfg.cutInjEnabled;
 
   cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | cfg.manualBackfireEnabled;
-  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 600;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 1500;
   cfg.manualBackfireMode = doc["manualBackfireMode"] | 2;
   cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 95;
   cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 35;
@@ -276,6 +280,12 @@ bool loadConfig() {
   if (cfg.manualPulseOffMs > 2000) cfg.manualPulseOffMs = 2000;
   if (cfg.manualPulseRepeat == 0) cfg.manualPulseRepeat = 1;
   if (cfg.manualPulseRepeat > 20) cfg.manualPulseRepeat = 20;
+
+  // Soft Restore load
+  cfg.softRestoreEnabled = doc.containsKey("softRestoreEnabled") ? doc["softRestoreEnabled"].as<bool>() : true;
+  cfg.softRestoreDampMs = doc["softRestoreDampMs"] | 10;
+  if (cfg.softRestoreDampMs < 3) cfg.softRestoreDampMs = 3;
+  if (cfg.softRestoreDampMs > 30) cfg.softRestoreDampMs = 30;
 
   JsonVariant mapVariant = doc["autoMap"];
   if (!mapVariant.isNull()) {
@@ -346,6 +356,10 @@ bool saveConfig() {
   doc["manualPulseRepeat"] = cfg.manualPulseRepeat;
   doc["manualMinRpm"] = cfg.manualMinRpm;
   doc["manualIgnOnly"] = cfg.manualIgnOnly;
+
+  // Save soft restore config
+  doc["softRestoreEnabled"] = cfg.softRestoreEnabled;
+  doc["softRestoreDampMs"] = cfg.softRestoreDampMs;
 
   bool res = (serializeJson(doc, f) > 0);
   f.flush();

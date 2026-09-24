@@ -167,14 +167,16 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
     break;
 
   case SHIFT_WAIT_RELEASE:
+  {
     if (!shift_is_pressed())
     {
       manualBF.state = SHIFT_IDLE;
       break;
     }
 
-    // Kiểm tra đã giữ đủ lâu chưa
-    if (pressDuration >= cfg.manualBackfireHoldMs && canActivate())
+    // Kiểm tra đã giữ đủ lâu chưa (tối thiểu 1500ms để không nhầm lẫn khi người lái móc số giữ chân)
+    unsigned long safeHoldMs = cfg.manualBackfireHoldMs < 1000 ? 1500 : cfg.manualBackfireHoldMs;
+    if (pressDuration >= safeHoldMs && canActivate())
     {
       // Kích hoạt manual backfire
       if (cfg.manualBackfireMode == 1)
@@ -182,11 +184,11 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         manualBF.state = SHIFT_MANUAL_MODE1;
         if (cfg.manualIgnOnly)
         {
-          cut_trigger_dual(999999, 0, currentRpm); // Chỉ IGN
+          cut_trigger_dual(3000, 0, currentRpm); // Failsafe: Cắt tối đa 3s thay vì vô hạn
         }
         else
         {
-          cut_trigger_dual(999999, 999999, currentRpm); // Cả 2
+          cut_trigger_dual(3000, 3000, currentRpm); // Failsafe: Cắt tối đa 3s thay vì vô hạn
         }
       }
       else if (cfg.manualBackfireMode == 2)
@@ -214,28 +216,40 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
       log_push(currentRpm, false, "ACTIVATED", "MANUAL_BF_START", &meta, nullptr);
     }
     break;
+  }
 
   case SHIFT_MANUAL_MODE1:
+  {
     // Mode 1: Cắt liên tục cho đến khi nhả cần số hoặc tua rớt chạm mức garanti (chống tắt máy)
-    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm)
+    // Failsafe: Giới hạn tối đa 3 giây để chống tắt máy và chống kẹt cảm biến
+    bool timeoutReached = (now - manualBF.cutStartMs >= 3000UL);
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm || timeoutReached)
     {
-      // Nhả cần số hoặc chạm ngưỡng garanti an toàn
+      // Nhả cần số hoặc chạm ngưỡng garanti an toàn hoặc hết 3s an toàn
       cut_trigger_dual(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
+      manualBF.phase = 0;
+      manualBF.pulseCount = 0;
     }
     break;
+  }
 
   case SHIFT_MANUAL_MODE2:
+  {
     // Mode 2: A (CUT dài) -> (B FIRE, C CUT ngắn) lặp D lần
-    // Không ngắt ngang trả lửa khi người lái vẫn đang đè cần số giữ ga (tránh xe vọt lên nguy hiểm)
-    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm)
+    // Failsafe: Giới hạn tối đa 3 giây để chống tắt máy và chống kẹt cảm biến
+    bool timeoutReached = (now - manualBF.cutStartMs >= 3000UL);
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm || timeoutReached)
     {
-      // Nhả cần số hoặc chạm ngưỡng garanti an toàn
+      // Nhả cần số hoặc chạm ngưỡng garanti an toàn hoặc hết 3s an toàn
       cut_trigger_dual(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
+      manualBF.phase = 0;
+      manualBF.pulseCount = 0;
       DynamicJsonDocument meta(96);
       meta["source"] = "manual_backfire";
       meta["interrupted"] = true;
+      if (timeoutReached) meta["reason"] = "timeout_failsafe";
       log_push(currentRpm, false, "INTERRUPTED", "MANUAL_BF_MODE2_STOP", &meta, nullptr);
       break;
     }
@@ -304,6 +318,7 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
     break;
   }
 }
+}
 
 void onShiftStateChanged(bool pressed)
 {
@@ -316,6 +331,8 @@ void onShiftStateChanged(bool pressed)
     if (manualBF.state != SHIFT_IDLE)
     {
       manualBF.state = SHIFT_IDLE;
+      manualBF.phase = 0;
+      manualBF.pulseCount = 0;
       cut_trigger_dual(0, 0, rpm_get()); // Tắt relay
       DynamicJsonDocument meta(96);
       meta["source"] = "manual_backfire";
@@ -341,11 +358,10 @@ void onShiftPressed()
   // 1. Thuật toán điều khiển Auto RPM Limiter qua cần số:
   // - BẬT: Nhấp 3 cái liên tiếp (Triple-Click) khi Limiter đang TẮT
   // - TẮT: Nhấp 2 cái liên tiếp (Double-Click) khi Limiter đang BẬT
-  // Chỉ kích hoạt khi xe dừng hoặc tua máy thấp (garanti / tua dưới 3000 RPM).
-  // Khi tua máy cao (đang chạy kéo ga), mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
-  // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp.
-  const int maxClickRpm = cfg.minRpm > 3000 ? cfg.minRpm : 3000;
-  if (allow_double_click && currentRpm <= maxClickRpm)
+  // CHỈ KÍCH HOẠT KHI XE DỪNG HOẶC TUA MÁY THẤP (garanti / tua dưới minRpm).
+  // Khi tua máy cao (>= minRpm, đang chạy kéo ga): Mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
+  // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp (< 800ms).
+  if (allow_double_click && currentRpm < cfg.minRpm)
   {
     if (now - lastShiftPressMs <= MULTI_CLICK_TIMEOUT_MS)
     {
@@ -357,28 +373,7 @@ void onShiftPressed()
     }
     lastShiftPressMs = now;
 
-    if (!limiter_enable)
-    {
-      // Đang TẮT -> Cần nhấp 3 cái để BẬT
-      if (shiftPressCount >= 3)
-      {
-        limiter_enable = true;
-        getMutableConfig().limiter_enable = true;
-
-        // Đồng bộ Web UI qua SSE
-        web_send_limiter_sync(true);
-
-        DynamicJsonDocument meta(128);
-        meta["source"] = "triple_click";
-        meta["limiter_enable"] = true;
-        log_push(currentRpm, false, "TRIPLE_CLICK", "LIMITER_ENABLED", &meta, nullptr);
-
-        shiftPressCount = 0;
-        lastShiftPressMs = 0;
-        return;
-      }
-    }
-    else
+    if (limiter_enable)
     {
       // Đang BẬT -> Cần nhấp 2 cái để TẮT
       if (shiftPressCount >= 2)
@@ -399,13 +394,32 @@ void onShiftPressed()
         return;
       }
     }
+    else
+    {
+      // Đang TẮT -> Cần nhấp 3 cái để BẬT
+      if (shiftPressCount >= 3)
+      {
+        limiter_enable = true;
+        getMutableConfig().limiter_enable = true;
 
-    // Đang trong chuỗi nhấp cần số ở tua thấp, tránh kích hoạt cut ngoài ý muốn
-    return;
+        // Đồng bộ Web UI qua SSE
+        web_send_limiter_sync(true);
+
+        DynamicJsonDocument meta(128);
+        meta["source"] = "triple_click";
+        meta["limiter_enable"] = true;
+        log_push(currentRpm, false, "TRIPLE_CLICK", "LIMITER_ENABLED", &meta, nullptr);
+
+        shiftPressCount = 0;
+        lastShiftPressMs = 0;
+        return;
+      }
+    }
+    return; // Đang trong chuỗi nhấp ở tua thấp, không kích hoạt cut ngoài ý muốn
   }
   else
   {
-    // Nếu tua máy cao, reset bộ đếm
+    // Nếu tua máy cao (>= minRpm), reset bộ đếm nhấp ngay lập tức để không nuốt số
     shiftPressCount = 0;
     lastShiftPressMs = 0;
   }
@@ -512,6 +526,10 @@ void loop()
   handle_auto_rev_limiter(loopRpm);
   handle_manual_backfire(loopRpm, getConfig());
   shift_update();
+  if (shiftCutLatched && shift_get_press_duration() > 3000UL)
+  {
+    shiftCutLatched = false; // Failsafe: Giải phóng cờ chốt nếu cần số bị giữ quá 3s
+  }
   if (shiftPressCount > 0 && (millis() - lastShiftPressMs > MULTI_CLICK_TIMEOUT_MS))
   {
     shiftPressCount = 0;
@@ -520,6 +538,6 @@ void loop()
   lock_loop();
   web_handle();
   ota_manager_loop();
-  delay(1);
+  delay(2);
 }
 
