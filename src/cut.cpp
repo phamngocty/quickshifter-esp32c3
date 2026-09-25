@@ -264,21 +264,8 @@ void cut_poll()
   }
   unsigned long now = millis();
 
-  // Fail-safe Watchdog: Nếu chu trình kéo dài quá thời gian tính toán + 50ms, cưỡng bức hồi lửa
-  if (restorePhase != RESTORE_IDLE)
-  {
-    unsigned long maxAllowMs = ignEndMs + (currentDampMs + 50UL);
-    if ((long)(now - maxAllowMs) >= 0)
-    {
-      if (cut_timer) esp_timer_stop(cut_timer);
-      restorePhase = RESTORE_IDLE;
-      ignActive = false;
-      injActive = false;
-      refresh_outputs();
-      return;
-    }
-  }
-  else
+  // Quản lý hoàn tất ngắt lửa/kim phun khi ở trạng thái RESTORE_IDLE
+  if (restorePhase == RESTORE_IDLE)
   {
     bool changed = false;
     if (ignActive && (long)(now - ignEndMs) >= 0)

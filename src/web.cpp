@@ -150,6 +150,7 @@ static void send_live_telemetry()
   doc["rpmRaw"] = rpm_get_raw();
   doc["cut"] = cut_is_active();
   doc["shift"] = shift_is_pressed() ? "PRESSED" : "RELEASED";
+  doc["shiftRaw"] = shift_get_raw_level();
   doc["lock"] = lock_is_engaged() ? "LOCKED" : (lock_is_enabled() ? "ARMED" : "OFF");
   doc["limiter"] = limiter_enable;
   doc["allowDoubleClick"] = allow_double_click;
@@ -735,6 +736,7 @@ void web_init()
       c.manualMinRpm = clampManualMinRpm(doc["manualMinRpm"].as<int>());
     }
     c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
+    if (c.manualBackfireMode > 2) c.manualBackfireMode = 2;
     if (doc.containsKey("softRestoreEnabled")) {
       c.softRestoreEnabled = doc["softRestoreEnabled"].as<bool>();
     }
@@ -908,6 +910,7 @@ void web_init()
       c.manualMinRpm = clampManualMinRpm(doc["manualMinRpm"].as<int>());
     }
     c.manualIgnOnly = doc["manualIgnOnly"] | c.manualIgnOnly;
+    if (c.manualBackfireMode > 2) c.manualBackfireMode = 2;
     if (doc.containsKey("apPassword")) {
       String pass = doc["apPassword"].as<String>();
       pass.trim();
@@ -949,6 +952,45 @@ void web_init()
     if (duration < 5) duration = 5;
     if (duration > 500) duration = 500; // Kaizen: Poka-Yoke limit
     cut_trigger_ms(duration, rpm_get());
+    DynamicJsonDocument meta(96);
+    meta["durationMs"] = duration;
+    log_push(rpm_get(), true, "UI", "TEST_CUT_TRIGGER", &meta);
+    r->send(200, "application/json", "{\"ok\":true}"); });
+
+  // Realtime Log Circular Buffer Endpoints
+  server.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *r)
+            {
+    int n = log_size();
+    DynamicJsonDocument doc(16384);
+    doc["count"] = n;
+    doc["capacity"] = log_capacity();
+    doc["total"] = log_total_count();
+    JsonArray arr = doc.createNestedArray("logs");
+
+    if (n > 0) {
+      int fetchCount = (n > 60) ? 60 : n;
+      LogEntry *tmp = new LogEntry[fetchCount];
+      if (tmp) {
+        int read = log_read_ordered(tmp, fetchCount);
+        for (int i = 0; i < read; i++) {
+          JsonObject o = arr.createNestedObject();
+          o["t"] = tmp[i].t;
+          o["rpm"] = tmp[i].rpm;
+          o["cut"] = tmp[i].cut;
+          o["shift"] = tmp[i].shift;
+          o["event"] = tmp[i].event;
+        }
+        delete[] tmp;
+      }
+    }
+    String out;
+    serializeJson(doc, out);
+    r->send(200, "application/json", out); });
+
+  server.on("/api/logs/clear", HTTP_POST, [](AsyncWebServerRequest *r)
+            {
+    log_clear();
+    log_push(rpm_get(), false, "UI", "LOGS_CLEARED");
     r->send(200, "application/json", "{\"ok\":true}"); });
 
   server.on("/test/rpm", HTTP_GET, [](AsyncWebServerRequest *r)
@@ -1185,6 +1227,12 @@ void web_init()
     rpm_set_offset(oldOffset);
     saveConfig();
 
+    DynamicJsonDocument calMeta(128);
+    calMeta["targetRpm"] = target;
+    calMeta["oldFactor"] = oldFactor;
+    calMeta["newFactor"] = newFactor;
+    log_push((int)target, false, "CALIB", "CALIBRATE_SINGLE_OK", &calMeta);
+
     DynamicJsonDocument resp(512);
     resp["newFactor"] = newFactor;
     resp["oldFactor"] = oldFactor;
@@ -1273,6 +1321,13 @@ void web_init()
     rpm_set_scale(newScale);
     rpm_set_offset(newOffset);
     saveConfig();
+
+    DynamicJsonDocument calMeta(160);
+    calMeta["lowTarget"] = lowTarget;
+    calMeta["highTarget"] = highTarget;
+    calMeta["newScale"] = newScale;
+    calMeta["newOffset"] = newOffset;
+    log_push((int)highTarget, false, "CALIB", "CALIBRATE_2POINT_OK", &calMeta);
 
     DynamicJsonDocument resp(1024);
     resp["newFactor"] = newScale;

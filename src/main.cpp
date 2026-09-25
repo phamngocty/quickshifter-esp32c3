@@ -94,6 +94,10 @@ static void handle_auto_rev_limiter(int current_rpm)
       cut_trigger_dual_fast(hard_cut_ms, hard_cut_ms, current_rpm);
       limiterStateTimerMs = now;
       limiterState = LIMITER_CUT_STATE;
+      DynamicJsonDocument meta(96);
+      meta["targetRpm"] = target_rpm;
+      meta["cutMs"] = hard_cut_ms;
+      log_push(current_rpm, true, "LIMITER", "HARD_CUT_TRIGGER", &meta);
     }
     break;
 
@@ -123,6 +127,7 @@ static void handle_auto_rev_limiter(int current_rpm)
         // Vòng tua rớt an toàn -> Về STANDBY (Giữ LOW)
         cut_trigger_dual_fast(0, 0, current_rpm);
         limiterState = LIMITER_STANDBY;
+        log_push(current_rpm, false, "LIMITER", "HARD_CUT_RELEASE");
       }
     }
     break;
@@ -174,8 +179,8 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
       break;
     }
 
-    // Kiểm tra đã giữ đủ lâu chưa (tối thiểu 1500ms để không nhầm lẫn khi người lái móc số giữ chân)
-    unsigned long safeHoldMs = cfg.manualBackfireHoldMs < 1000 ? 1500 : cfg.manualBackfireHoldMs;
+    // Kiểm tra đã giữ đủ lâu chưa (tối thiểu 250ms)
+    unsigned long safeHoldMs = cfg.manualBackfireHoldMs < 250 ? 250 : cfg.manualBackfireHoldMs;
     if (pressDuration >= safeHoldMs && canActivate())
     {
       // Kích hoạt manual backfire
@@ -317,7 +322,8 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
     }
     break;
   }
-}
+
+  }
 }
 
 void onShiftStateChanged(bool pressed)
@@ -358,10 +364,8 @@ void onShiftPressed()
   // 1. Thuật toán điều khiển Auto RPM Limiter qua cần số:
   // - BẬT: Nhấp 3 cái liên tiếp (Triple-Click) khi Limiter đang TẮT
   // - TẮT: Nhấp 2 cái liên tiếp (Double-Click) khi Limiter đang BẬT
-  // CHỈ KÍCH HOẠT KHI XE DỪNG HOẶC TUA MÁY THẤP (garanti / tua dưới minRpm).
-  // Khi tua máy cao (>= minRpm, đang chạy kéo ga): Mọi lần nhấn cần số đều ưu tiên 100% cho Quickshifter,
-  // loại bỏ hoàn toàn nguy cơ bị nuốt số khi sang số nhanh liên tiếp (< 800ms).
-  if (allow_double_click && currentRpm < cfg.minRpm)
+  // Nhận lệnh ở mọi dải tua máy (không ràng buộc điều kiện Min RPM).
+  if (allow_double_click)
   {
     if (now - lastShiftPressMs <= MULTI_CLICK_TIMEOUT_MS)
     {
@@ -391,7 +395,7 @@ void onShiftPressed()
 
         shiftPressCount = 0;
         lastShiftPressMs = 0;
-        return;
+        return; // Đã nhận lệnh TẮT thành công -> Thoát
       }
     }
     else
@@ -412,40 +416,57 @@ void onShiftPressed()
 
         shiftPressCount = 0;
         lastShiftPressMs = 0;
-        return;
+        return; // Đã nhận lệnh BẬT thành công -> Thoát
       }
     }
-    return; // Đang trong chuỗi nhấp ở tua thấp, không kích hoạt cut ngoài ý muốn
-  }
-  else
-  {
-    // Nếu tua máy cao (>= minRpm), reset bộ đếm nhấp ngay lập tức để không nuốt số
-    shiftPressCount = 0;
-    lastShiftPressMs = 0;
+
+    // Nếu tua máy dưới minRpm, chặn không cut nhầm vì tua thấp
+    if (currentRpm < cfg.minRpm)
+    {
+      return;
+    }
+    // Nếu tua máy >= minRpm và chưa kích hoạt đủ số nhấp (1 nhấp hoặc 2 nhấp khi đang tắt),
+    // cho phép rơi xuống logic Quickshifter để sang số bình thường!
   }
 
   // 2. Logic Quickshifter gốc
   if (ota_manager_is_active() || fs_updater_is_active())
+  {
+    log_push(currentRpm, false, "QS_BLOCKED", "OTA_ACTIVE");
     return;
+  }
   if (lock_is_engaged())
+  {
+    log_push(currentRpm, false, "QS_BLOCKED", "MORSE_LOCK_ENGAGED");
     return;
+  }
   if (shiftCutLatched)
+  {
+    log_push(currentRpm, false, "QS_BLOCKED", "SHIFT_LATCHED");
     return;
+  }
 
   // Nếu Auto Rev Limiter đang cắt lửa (limiterState != LIMITER_STANDBY),
   // Quickshifter có quyền ưu tiên tuyệt đối (Preemption) ngắt chu kỳ Limiter để thực hiện cắt số.
   if (limiterState != LIMITER_STANDBY)
   {
     limiterState = LIMITER_STANDBY;
+    log_push(currentRpm, false, "LIMITER", "PREEMPTED_BY_QS");
   }
   else if (cut_is_active())
   {
     // Nếu cut đang chạy từ lần đá số trước thì bỏ qua để chống double trigger
+    log_push(currentRpm, false, "QS_BLOCKED", "CUT_IN_PROGRESS");
     return;
   }
 
   if (currentRpm < cfg.minRpm)
+  {
+    DynamicJsonDocument meta(96);
+    meta["minRpm"] = cfg.minRpm;
+    log_push(currentRpm, false, "QS_BLOCKED", "RPM_BELOW_MIN", &meta);
     return;
+  }
   unsigned long baseCut = cfg.modeAuto ? config_resolve_cut_ms(currentRpm) : cfg.cutTimeFixed;
   unsigned long ignCut = baseCut;
   unsigned long injCut = baseCut;
@@ -506,6 +527,11 @@ void setup()
   lock_init();
 
   web_init();
+
+  DynamicJsonDocument bootMeta(128);
+  bootMeta["freeHeap"] = ESP.getFreeHeap();
+  bootMeta["resetReason"] = (int)esp_reset_reason();
+  log_push(0, false, "SYS", "SYS_BOOT_OK", &bootMeta, nullptr);
 
   Serial.println("Initialization complete");
 }

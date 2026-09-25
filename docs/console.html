@@ -984,6 +984,11 @@
       color: var(--accent-red);
       font-weight: 700;
     }
+    .filter-active {
+      background: var(--accent-cyan) !important;
+      color: #0b0f17 !important;
+      font-weight: 700 !important;
+    }
 
     /* PROGRESS & OTA */
     .progress {
@@ -1260,12 +1265,24 @@
           <div class="toggle-bar">
             <div>
               <div class="title">Shift active LOW (GND)</div>
-              <div class="subtitle">Cảm biến NPN kéo GND khi đá số (SN04-N / Switch)</div>
+              <div class="subtitle">
+                Cảm biến kéo mass GND khi đá số (Bật = Active LOW, Tắt = Active HIGH)
+                <div style="margin-top: 4px;">
+                  <span id="shiftRawBadge" class="badge-pill" style="font-size: 11px; padding: 2px 8px; font-weight: 600; background: rgba(255,255,255,0.08);">Chân GPIO 4: Đang đọc...</span>
+                </div>
+              </div>
             </div>
             <label class="switch-wrap">
               <input type="checkbox" id="shiftActiveLow" class="switch" checked onchange="markDirty()">
               <span class="slider-toggle"></span>
             </label>
+          </div>
+
+          <div style="margin-top: -6px; margin-bottom: 12px; font-size: 11px; color: var(--text-dim); line-height: 1.45; background: rgba(0,229,255,0.04); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--accent-cyan);">
+            💡 <b>Hướng Dẫn Chọn Đúng Loại Cảm Biến:</b><br>
+            Khi xe <b>KHÔNG đạp cần số</b>, hãy nhìn vào thẻ <i>Chân GPIO 4</i> ở trên:<br>
+            • Nếu đang đọc <b>LOW (0V / Mass)</b>: Cảm biến của bạn là loại Thường Đóng (NC) hoặc xuất điện áp khi đá ➔ <b>Hãy TẮT công tắc này</b> để xe không bị kẹt trạng thái CUT.<br>
+            • Nếu đang đọc <b>HIGH (3.3V)</b>: Cảm biến thường mở nối mass (NO) ➔ <b>Hãy BẬT công tắc này</b>.
           </div>
 
           <div class="toggle-bar">
@@ -1282,7 +1299,7 @@
           <div class="toggle-bar">
             <div>
               <div class="title">Cắt Đánh Lửa (IGN)</div>
-              <div class="subtitle">Ngắt nguồn Mobin sườn qua Relay 1</div>
+              <div class="subtitle">Ngắt đường KÍCH ÂM Mobin sườn (Cọc Đen)</div>
             </div>
             <label class="switch-wrap">
               <input type="checkbox" id="cutIgnEnabled" class="switch" checked onchange="updateCutHint(); markDirty()">
@@ -1300,6 +1317,7 @@
               <span class="slider-toggle"></span>
             </label>
           </div>
+
         </div>
 
         <!-- Cột 2: Các tham số thời gian & RPM -->
@@ -1344,6 +1362,110 @@
 
       </div>
 
+      <!-- SOFT RESTORE ENGINE SECTION -->
+      <div class="card-box" style="margin-top: 16px;">
+        <div class="card-header-row">
+          <div class="card-title" style="color: var(--accent-cyan);">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            🏍️ Thuật Toán Trả Lửa Mềm (Soft Restore Engine)
+          </div>
+          <span class="badge-pill active" style="font-size:11px; color:var(--accent-cyan); border-color:rgba(0,240,255,0.4);">
+            <span class="dot-pulse"></span>
+            <span>4-STAGE DAMPED IGNITION</span>
+          </span>
+        </div>
+
+        <div class="toggle-bar">
+          <div>
+            <div class="title">Kích Hoạt Soft Restore <span class="tooltip-icon" title="Bật/Tắt thuật toán hồi lửa êm dịu 4 pha sau chu kỳ ngắt">ⓘ</span></div>
+            <div class="subtitle">Băm xung dốc trơn dập tắt cú giật mô-men xoắn, bảo vệ 100% nhông xích và bánh răng số</div>
+          </div>
+          <label class="switch-wrap">
+            <input type="checkbox" id="softRestoreEnabled" class="switch" checked onchange="updateSoftRestoreUi(); markDirty()">
+            <span class="slider-toggle"></span>
+          </label>
+        </div>
+
+        <div id="softRestoreFields" style="margin-top: 14px;">
+          <!-- 4 Presets Chọn Nhanh -->
+          <div style="margin-bottom: 14px;">
+            <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">⚡ Chọn Nhanh Cấu Hình Trả Lửa:</span>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:6px;">
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('gentle')">
+                🛡️ <strong>Êm Đi Phố (Street Smooth)</strong> (30ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('racing')">
+                🏁 <strong>Sport Racing (Tiêu Chuẩn)</strong> (20ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('attack')">
+                ⚡ <strong>Drag Fast Attack</strong> (12ms)
+              </button>
+              <button type="button" class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applySoftRestorePreset('off')">
+                ⚙️ <strong>Hard Direct (Trả Ngay)</strong> (Tắt Soft Restore)
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic Visualizer Timeline 4 Pha -->
+          <div style="padding:14px 16px; border-radius:14px; background:rgba(0, 240, 255, 0.04); border:1px solid var(--border-dim); margin-bottom:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+              <span style="font-size:13px; font-weight:700; color:#fff;">📊 Mô Phỏng Biểu Đồ Hồi Công Suất 4 Pha Sau Ngắt:</span>
+              <span style="font-size:12px; font-family:var(--font-mono); color:var(--accent-cyan);" id="softRestoreSummaryTxt">Tổng thời gian giảm chấn: 20ms (4 pha × 5.0ms)</span>
+            </div>
+
+            <!-- 4 Stage Progress Grid -->
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+              <div style="background:#09101d; border:1px solid rgba(0,240,255,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 1</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-cyan); font-family:var(--font-mono); margin:2px 0;">25%</div>
+                <div style="font-size:10px; color:#94a3b8;">Mớm nhẹ tia lửa<br>(Bắt trớn cốt máy)</div>
+                <div style="height:4px; width:25%; background:var(--accent-cyan); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(0,255,136,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 2</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-green); font-family:var(--font-mono); margin:2px 0;">50%</div>
+                <div style="font-size:10px; color:#94a3b8;">Hồi 1/2 công suất<br>(Triệt khe hở răng số)</div>
+                <div style="height:4px; width:50%; background:var(--accent-green); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(255,170,0,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 3</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-amber); font-family:var(--font-mono); margin:2px 0;">75%</div>
+                <div style="font-size:10px; color:#94a3b8;">Tăng tốc trơn tru<br>(Nén lò xo bố nồi)</div>
+                <div style="height:4px; width:75%; background:var(--accent-amber); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+
+              <div style="background:#09101d; border:1px solid rgba(255,42,95,0.3); border-radius:10px; padding:10px; text-align:center;">
+                <div style="font-size:11px; color:var(--text-muted); font-weight:700;">PHA 4</div>
+                <div style="font-size:17px; font-weight:900; color:var(--accent-red); font-family:var(--font-mono); margin:2px 0;">100%</div>
+                <div style="font-size:10px; color:#94a3b8;">Full Spark<br>(Khôi phục 100% ga)</div>
+                <div style="height:4px; width:100%; background:var(--accent-red); border-radius:2px; margin:8px auto 0;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Slider Điều Chỉnh Thời Gian Damp -->
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Thời Gian Hồi Lửa Mềm (Soft Restore Damp ms)</label>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <input type="range" id="softRestoreDampRange" min="8" max="60" step="2" value="20" style="flex:1;" oninput="syncSoftRestoreDamp(this.value); markDirty()">
+                <input type="number" id="softRestoreDampMs" min="5" max="100" step="1" value="20" style="width:90px;" oninput="syncSoftRestoreDamp(this.value); markDirty()">
+              </div>
+              <small style="color:var(--text-muted); font-size:11px;">Mặc định xe zin/độ nhẹ: <strong>20ms</strong> (mỗi pha 5ms). Xe trường/Drag: <strong>10–14ms</strong>.</small>
+            </div>
+
+            <div class="form-group">
+              <label>Nguyên Lý Bảo Vệ Cơ Học</label>
+              <div style="padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid var(--border-dim); border-radius:10px; font-size:12px; color:var(--text-muted); line-height:1.5;">
+                💡 <em>Khi vừa sang số xong, các càng lừa và vấu số (dog-teeth) mới vừa ăn khớp nhau. Nếu cấp 100% lửa ngay lập tức, cú sốc mô-men xoắn sẽ dội trực tiếp làm mẻ vấu số và giật rát đuôi xe. Soft Restore giúp bánh răng ăn trơn rồi mới xả toàn bộ lực máy!</em>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- AUTO RPM LIMITER SECTION -->
       <div class="card-box" style="margin-top: 16px;">
         <div class="card-header-row">
@@ -1369,8 +1491,8 @@
 
         <div class="toggle-bar">
           <div>
-            <div class="title">Điều Khiển Bằng Cần Số <span class="tooltip-icon" title="Khi dừng/tua thấp: Nhấp cần số 3 lần để BẬT, nhấp 2 lần để TẮT Hard Cut">ⓘ</span></div>
-            <div class="subtitle">Bật: Nhấp 3 cái • Tắt: Nhấp 2 cái (chỉ nhận lệnh khi dừng/tua thấp &le; Min RPM)</div>
+            <div class="title">Điều Khiển Bằng Cần Số <span class="tooltip-icon" title="Nhấp cần số 3 lần để BẬT, nhấp 2 lần để TẮT Hard Cut">ⓘ</span></div>
+            <div class="subtitle">Bật: Nhấp 3 cái • Tắt: Nhấp 2 cái (nhanh trong 800ms, mọi dải tua máy)</div>
           </div>
           <label class="switch-wrap">
             <input type="checkbox" id="allow_double_click" class="switch" checked onchange="markDirty()">
@@ -1428,25 +1550,6 @@
         </div>
 
         <div id="manualBackfireFields" style="margin-top: 14px;">
-          <!-- 4 Preset Chọn Nhanh -->
-          <div style="margin-bottom: 14px;">
-            <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">⚡ Chọn Nhanh Kiểu Nổ Pô Bắp Rang:</span>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:6px;">
-              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('motogp')">
-                🍿 <strong>Bắp Rang MotoGP</strong> (95ms/35ms/55ms)
-              </button>
-              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('cannon')">
-                💣 <strong>Đại Bác Khạc Lửa</strong> (150ms/45ms/75ms)
-              </button>
-              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('ak47')">
-                🔫 <strong>Súng Máy AK47</strong> (75ms/30ms/45ms)
-              </button>
-              <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('gentle')">
-                🛡️ <strong>Êm Dịu / Pô Zin</strong> (85ms/40ms/65ms)
-              </button>
-            </div>
-          </div>
-
           <!-- Cấu hình ngưỡng kích hoạt -->
           <div class="grid-3">
             <div class="form-group">
@@ -1464,8 +1567,8 @@
             <div class="form-group">
               <label>Chế Độ Hoạt Động (Mode)</label>
               <select id="manualBackfireMode" onchange="updateManualBackfireUi(); markDirty()">
-                <option value="2" selected>Băm Xung Popcorn (A-B-C) - Khuyên dùng</option>
-                <option value="1">Continuous (Cắt lửa liên tục đến khi nhả)</option>
+                <option value="1" selected>Continuous (Cắt lửa liên tục đến khi nhả) - Xe Zin nổ đanh</option>
+                <option value="2">Băm Xung Popcorn (A-B-C)</option>
               </select>
             </div>
           </div>
@@ -1483,6 +1586,25 @@
 
           <!-- TIMELINE A-B-C -->
           <div id="manualPulseFields" style="margin-top: 14px;">
+            <!-- 4 Preset Chọn Nhanh cho Mode 2 -->
+            <div style="margin-bottom: 14px;">
+              <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">⚡ Chọn Nhanh Kiểu Nổ Pô Bắp Rang (A-B-C):</span>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:6px;">
+                <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('motogp')">
+                  🍿 <strong>Bắp Rang MotoGP</strong> (95ms/35ms/55ms)
+                </button>
+                <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('cannon')">
+                  💣 <strong>Đại Bác Khạc Lửa</strong> (150ms/45ms/75ms)
+                </button>
+                <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('ak47')">
+                  🔫 <strong>Súng Máy AK47</strong> (75ms/30ms/45ms)
+                </button>
+                <button class="btn btn-secondary" style="padding:8px 10px; font-size:12px; text-align:left; justify-content:flex-start;" onclick="applyBackfirePreset('gentle')">
+                  🛡️ <strong>Êm Dịu / Pô Zin</strong> (85ms/40ms/65ms)
+                </button>
+              </div>
+            </div>
+
             <p style="color:var(--accent-amber); font-weight:700; font-size:13px; margin-bottom:8px;">⚙️ Công Thức Chu Kỳ Băm Xung Bắp Rang (A - B - C):</p>
             <div class="timeline-container">
               <div class="timeline-stage stage-a">
@@ -1765,20 +1887,34 @@
 
         <!-- Cột 2: Realtime Log & Lock Mode -->
         <div class="card-box">
-          <div class="card-header-row">
-            <div class="card-title">Realtime Log Stream</div>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-ghost" onclick="clearLogList()">Xóa Log</button>
-              <button class="btn btn-ghost" onclick="exportLogs()">Xuất Log</button>
+          <div class="card-header-row" style="flex-wrap:wrap; gap:8px;">
+            <div>
+              <div class="card-title">Realtime Log Stream (Hộp Đen Telemetry)</div>
+              <span id="logBufferBadge" style="font-size:11px; color:var(--accent-cyan); font-weight:600;">Ring Buffer: 0 / 100 (xoay vòng thanh ghi)</span>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="fetchRecentLogs()">🔄 Nạp Lại</button>
+              <button class="btn btn-secondary btn-sm" onclick="clearLogList()">🗑️ Xóa</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportLogs()">📥 Xuất CSV</button>
             </div>
           </div>
+
+          <!-- Bộ lọc loại sự kiện -->
+          <div style="display:flex; gap:6px; margin:10px 0 8px; overflow-x:auto; padding-bottom:4px;" id="logFilterBar">
+            <button class="btn btn-secondary btn-sm filter-active" onclick="setLogFilter('ALL')">Tất cả</button>
+            <button class="btn btn-secondary btn-sm" onclick="setLogFilter('QS')">Quickshift</button>
+            <button class="btn btn-secondary btn-sm" onclick="setLogFilter('LIMITER')">Limiter</button>
+            <button class="btn btn-secondary btn-sm" onclick="setLogFilter('BACKFIRE')">Backfire</button>
+            <button class="btn btn-secondary btn-sm" onclick="setLogFilter('SYS')">Hệ Thống</button>
+          </div>
+
           <div class="log-list" id="logList">
             <div class="log-entry">
               <div class="log-line">
                 <span>0.00s</span>
                 <span>0 RPM</span>
                 <span class="cut">STANDBY</span>
-                <span>Hệ thống khởi động</span>
+                <span>Hệ thống khởi động (Ring Buffer sẵn sàng)</span>
                 <span>SYS</span>
               </div>
             </div>
@@ -2023,8 +2159,10 @@
       if (window.location.protocol.startsWith('http')) {
         handleReloadConfig(true);
         refreshLockStatus();
+        fetchRecentLogs();
       } else {
         updateDirtyUi(false, '✅ Cấu hình mô phỏng sẵn sàng');
+        fetchRecentLogs();
       }
     });
 
@@ -2171,6 +2309,15 @@
         tickerShift.innerText = isPressed ? 'PRESSED' : 'RELEASED';
         tickerShift.style.color = isPressed ? 'var(--accent-red)' : '#fff';
       }
+    }
+
+    function updateShiftRawDisplay(raw) {
+      const el = document.getElementById('shiftRawBadge');
+      if (!el) return;
+      const isHigh = (raw === 1 || raw === true);
+      el.innerText = isHigh ? 'Chân GPIO 4: HIGH (3.3V)' : 'Chân GPIO 4: LOW (0V / Mass)';
+      el.style.color = isHigh ? 'var(--accent-green)' : 'var(--accent-cyan)';
+      el.style.borderColor = isHigh ? 'rgba(0,230,118,0.4)' : 'rgba(0,229,255,0.4)';
     }
 
     function updateCutStateDisplay(cut) {
@@ -2689,6 +2836,45 @@
       }
     }
 
+    function updateSoftRestoreUi() {
+      const en = document.getElementById('softRestoreEnabled').checked;
+      const el = document.getElementById('softRestoreFields');
+      if (el) el.style.display = en ? 'block' : 'none';
+    }
+
+    function syncSoftRestoreDamp(val) {
+      const ms = Math.min(100, Math.max(5, parseInt(val) || 20));
+      const rangeEl = document.getElementById('softRestoreDampRange');
+      const numEl = document.getElementById('softRestoreDampMs');
+      if (rangeEl && rangeEl.value != ms) rangeEl.value = ms;
+      if (numEl && numEl.value != ms) numEl.value = ms;
+      const perStage = (ms / 4).toFixed(1);
+      const sumEl = document.getElementById('softRestoreSummaryTxt');
+      if (sumEl) sumEl.textContent = `Tổng thời gian giảm chấn: ${ms}ms (4 pha × ${perStage}ms)`;
+    }
+
+    function applySoftRestorePreset(type) {
+      if (type === 'gentle') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(30);
+        showToast('🛡️ Đã chọn Profile: Êm Đi Phố (Damp 30ms)');
+      } else if (type === 'racing') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(20);
+        showToast('🏁 Đã chọn Profile: Sport Racing Tiêu Chuẩn (Damp 20ms)');
+      } else if (type === 'attack') {
+        document.getElementById('softRestoreEnabled').checked = true;
+        syncSoftRestoreDamp(12);
+        showToast('⚡ Đã chọn Profile: Drag Fast Attack (Damp 12ms)');
+      } else if (type === 'off') {
+        document.getElementById('softRestoreEnabled').checked = false;
+        showToast('⚙️ Đã tắt Soft Restore (Hard Direct Restore)');
+      }
+      updateSoftRestoreUi();
+      renderConfigSnapshot();
+      markDirty();
+    }
+
     function updateAutoLimiterUi() {
       const en = document.getElementById('limiter_enable').checked;
       document.getElementById('autoLimiterFields').style.display = en ? 'block' : 'none';
@@ -2714,7 +2900,7 @@
     function updateManualBackfireUi() {
       const en = document.getElementById('manualBackfireEnabled').checked;
       document.getElementById('manualBackfireFields').style.display = en ? 'block' : 'none';
-      const mode = Number(document.getElementById('manualBackfireMode').value || 2);
+      const mode = Number(document.getElementById('manualBackfireMode').value || 1);
       document.getElementById('manualPulseFields').style.display = (en && mode === 2) ? 'block' : 'none';
     }
 
@@ -2853,37 +3039,199 @@
       feed.prepend(item);
     }
 
-    // LOG STREAM SIMULATOR
-    let logCounter = 1;
-    function addLogEntry(rpm, cutState, event, detail) {
-      const list = document.getElementById('logList');
-      const row = document.createElement('div');
-      row.className = 'log-entry';
-      row.innerHTML = `
-        <div class="log-line">
-          <span>${(Date.now() % 100000 / 1000).toFixed(2)}s</span>
-          <span>${rpm} RPM</span>
-          <span class="${cutState.includes('CUT') ? 'cut' : ''}">${cutState}</span>
-          <span>${detail || event}</span>
-          <span style="color:var(--accent-cyan)">${event}</span>
-        </div>
-      `;
-      list.prepend(row);
-      logCounter++;
-      document.getElementById('logCount').innerText = logCounter;
-      document.getElementById('logSummary').innerText = `${event}: ${detail || ''}`;
-      document.getElementById('tickerEvent').innerText = event;
+    // REALTIME RING BUFFER LOG STREAM (Hộp đen Telemetry)
+    const MAX_UI_LOGS = 100;
+    const MAX_RAW_LOGS = 200;
+    let rawLogs = [];
+    let logFilter = 'ALL';
+    let logCounter = 0;
+
+    function getLogCategory(event, detail) {
+      const ev = (event || '').toUpperCase();
+      const dt = (detail || '').toUpperCase();
+      if (ev.includes('LIMITER') || dt.includes('LIMITER') || ev.includes('HARD_CUT')) return 'LIMITER';
+      if (ev.includes('POPCORN') || ev.includes('BACKFIRE') || dt.includes('POPCORN')) return 'BACKFIRE';
+      if (ev.startsWith('SYS_') || ev.includes('BOOT') || ev.includes('WIFI') || ev.includes('CALIBRATE') || ev.includes('LOCK') || ev.includes('OTA') || ev.includes('CONFIG') || ev.includes('MEM')) return 'SYS';
+      if (ev.startsWith('QS_') || ev.includes('SHIFT') || ev.includes('CUT') || dt.includes('SHIFT')) return 'QS';
+      return 'SYS';
     }
 
-    function clearLogList() {
-      document.getElementById('logList').innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px 0;">Đã xóa log</div>';
+    function shouldDisplayLog(entry) {
+      if (logFilter === 'ALL') return true;
+      return entry.category === logFilter;
+    }
+
+    function setLogFilter(filter) {
+      logFilter = filter;
+      const bar = document.getElementById('logFilterBar');
+      if (bar) {
+        bar.querySelectorAll('button').forEach(btn => {
+          if (btn.getAttribute('onclick')?.includes(`'${filter}'`)) {
+            btn.classList.add('filter-active');
+          } else {
+            btn.classList.remove('filter-active');
+          }
+        });
+      }
+      renderLogsDom();
+    }
+
+    function updateLogBufferBadge(count, capacity) {
+      const badge = document.getElementById('logBufferBadge');
+      if (badge) {
+        badge.innerText = `Ring Buffer: ${count} / ${capacity || MAX_RAW_LOGS} (xoay vòng thanh ghi)`;
+      }
+    }
+
+    function renderSingleLogDom(entry, prepend = true) {
+      const list = document.getElementById('logList');
+      if (!list) return;
+      const row = document.createElement('div');
+      row.className = 'log-entry';
+      const timeStr = typeof entry.t === 'number' ? (entry.t / 1000).toFixed(2) + 's' : (entry.timeStr || '0.00s');
+      const isCut = (entry.cutState && entry.cutState.toString().toUpperCase().includes('CUT'));
+      row.innerHTML = `
+        <div class="log-line">
+          <span>${timeStr}</span>
+          <span>${entry.rpm} RPM</span>
+          <span class="${isCut ? 'cut' : ''}">${entry.cutState || 'STANDBY'}</span>
+          <span>${entry.detail || entry.event}</span>
+          <span style="color:var(--accent-cyan)">${entry.event}</span>
+        </div>
+      `;
+      if (prepend) {
+        list.prepend(row);
+      } else {
+        list.appendChild(row);
+      }
+    }
+
+    function renderLogsDom() {
+      const list = document.getElementById('logList');
+      if (!list) return;
+      list.innerHTML = '';
+      const filtered = rawLogs.filter(shouldDisplayLog).slice(0, MAX_UI_LOGS);
+      if (filtered.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px 0;">Không có log nào phù hợp bộ lọc</div>';
+        return;
+      }
+      filtered.forEach(entry => {
+        renderSingleLogDom(entry, false);
+      });
+    }
+
+    function addLogEntry(rpm, cutState, event, detail, timestamp) {
+      const list = document.getElementById('logList');
+      const entry = {
+        id: ++logCounter,
+        t: typeof timestamp === 'number' ? timestamp : (Date.now() % 100000),
+        rpm: typeof rpm === 'number' ? rpm : (parseInt(rpm, 10) || 0),
+        cutState: cutState || 'STANDBY',
+        event: event || 'LOG',
+        detail: detail || '',
+        category: getLogCategory(event, detail)
+      };
+
+      rawLogs.unshift(entry);
+      if (rawLogs.length > MAX_RAW_LOGS) {
+        rawLogs.pop();
+      }
+
+      if (shouldDisplayLog(entry) && list) {
+        if (list.querySelector('.log-empty') || list.innerText.includes('Không có log') || list.innerText.includes('Đã xóa') || list.innerText.includes('khởi động')) {
+          if (list.children.length === 1 && !list.querySelector('.log-entry span.cut')) {
+            list.innerHTML = '';
+          }
+        }
+        renderSingleLogDom(entry, true);
+        // GIỚI HẠN VÒNG LẶP DOM: Tối đa MAX_UI_LOGS (100) phần tử tránh tràn RAM trình duyệt
+        while (list.children.length > MAX_UI_LOGS) {
+          list.removeChild(list.lastChild);
+        }
+      }
+
+      const counterElem = document.getElementById('logCount');
+      if (counterElem) counterElem.innerText = rawLogs.length;
+      const summaryElem = document.getElementById('logSummary');
+      if (summaryElem) summaryElem.innerText = `${entry.event}: ${entry.detail || ''}`;
+      const ticker = document.getElementById('tickerEvent');
+      if (ticker) ticker.innerText = entry.event;
+      updateLogBufferBadge(rawLogs.length, MAX_RAW_LOGS);
+    }
+
+    async function fetchRecentLogs() {
+      if (!window.location.protocol.startsWith('http')) {
+        if (rawLogs.length === 0) {
+          addLogEntry(0, 'STANDBY', 'SYS_BOOT_OK', 'Mô phỏng cục bộ sẵn sàng', 0);
+        }
+        return;
+      }
+      try {
+        const res = await fetch('/api/logs');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data.logs)) {
+          rawLogs = data.logs.map((item, idx) => ({
+            id: idx + 1,
+            t: item.t || 0,
+            rpm: item.rpm || 0,
+            cutState: item.cut ? 'CUTTING' : 'STANDBY',
+            event: item.event || 'LOG',
+            detail: item.detail || item.shift || '',
+            category: getLogCategory(item.event, item.detail || item.shift)
+          })).reverse();
+          renderLogsDom();
+          updateLogBufferBadge(data.count || rawLogs.length, data.capacity || MAX_RAW_LOGS);
+          const counterElem = document.getElementById('logCount');
+          if (counterElem) counterElem.innerText = rawLogs.length;
+          showToast(`🔄 Đã đồng bộ ${rawLogs.length} bản ghi từ Ring Buffer!`);
+        }
+      } catch (err) {
+        console.warn('fetchRecentLogs error:', err);
+      }
+    }
+
+    async function clearLogList() {
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          await fetch('/api/logs/clear', { method: 'POST' });
+        } catch (e) {
+          console.warn('clearLog API error:', e);
+        }
+      }
+      rawLogs = [];
+      const list = document.getElementById('logList');
+      if (list) list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px 0;">Đã xóa sạch Ring Buffer</div>';
       logCounter = 0;
-      document.getElementById('logCount').innerText = '0';
-      showToast('🗑️ Đã xóa sạch danh sách log');
+      const counterElem = document.getElementById('logCount');
+      if (counterElem) counterElem.innerText = '0';
+      updateLogBufferBadge(0, MAX_RAW_LOGS);
+      showToast('🗑️ Đã xóa sạch thanh ghi Ring Buffer!');
     }
 
     function exportLogs() {
-      showToast('📤 Đang xuất file realtime-log.csv...');
+      if (rawLogs.length === 0) {
+        showToast('⚠️ Không có bản ghi log nào để xuất!');
+        return;
+      }
+      const header = 'Timestamp_ms,Time_sec,RPM,Cut_State,Event,Detail,Category\n';
+      const rows = [...rawLogs].reverse().map(e => {
+        const timeSec = (e.t / 1000).toFixed(3);
+        const safeDetail = `"${(e.detail || '').replace(/"/g, '""')}"`;
+        const safeEvent = `"${(e.event || '').replace(/"/g, '""')}"`;
+        return `${e.t},${timeSec},${e.rpm},${e.cutState},${safeEvent},${safeDetail},${e.category}`;
+      }).join('\n');
+
+      const blob = new Blob([header + rows], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `quickshifter-telemetry-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`📥 Đã xuất thành công ${rawLogs.length} dòng log CSV!`);
     }
 
     // CALIBRATION WIZARD LOGIC
@@ -3236,6 +3584,8 @@
         { label: "Relay HIGH = cut", val: document.getElementById('relayPolarityHighToCut').checked },
         { label: "Cắt IGN", val: document.getElementById('cutIgnEnabled').checked },
         { label: "Cắt INJ", val: document.getElementById('cutInjEnabled').checked },
+        { label: "Soft Restore", val: document.getElementById('softRestoreEnabled').checked },
+        { label: "Soft Damp (ms)", val: document.getElementById('softRestoreDampMs').value },
         { label: "Cut Fixed (ms)", val: document.getElementById('cutTimeFixed').value },
         { label: "Shift debounce (ms)", val: document.getElementById('shiftDebounceMs').value },
         { label: "Min RPM to cut", val: document.getElementById('minRpm').value },
@@ -3279,6 +3629,8 @@
         minRpm: parseInt(document.getElementById('minRpm').value),
         cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
         cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        softRestoreEnabled: document.getElementById('softRestoreEnabled').checked,
+        softRestoreDampMs: parseInt(document.getElementById('softRestoreDampMs').value) || 20,
         limiter_enable: document.getElementById('limiter_enable').checked,
         allow_double_click: document.getElementById('allow_double_click').checked,
         target_rpm: parseInt(document.getElementById('target_rpm').value),
@@ -3321,6 +3673,8 @@
       setVal('minRpm', cfg.minRpm);
       setChk('cutIgnEnabled', cfg.cutIgnEnabled);
       setChk('cutInjEnabled', cfg.cutInjEnabled);
+      setChk('softRestoreEnabled', cfg.softRestoreEnabled !== undefined ? cfg.softRestoreEnabled : true);
+      setVal('softRestoreDampMs', cfg.softRestoreDampMs !== undefined ? cfg.softRestoreDampMs : 20);
 
       setChk('allow_double_click', cfg.allow_double_click);
       setChk('limiter_enable', cfg.limiter_enable);
@@ -3330,15 +3684,14 @@
       setVal('recovery_spark_ms', cfg.recovery_spark_ms);
 
       setChk('manualBackfireEnabled', cfg.manualBackfireEnabled);
-      setVal('manualBackfireMode', cfg.manualBackfireMode);
-      setVal('manualBackfireHoldMs', cfg.manualBackfireHoldMs);
+      setVal('manualBackfireMode', cfg.manualBackfireMode !== undefined ? cfg.manualBackfireMode : 1);
+      setVal('manualBackfireHoldMs', cfg.manualBackfireHoldMs !== undefined ? cfg.manualBackfireHoldMs : 600);
       setVal('manualMinRpm', cfg.manualMinRpm);
       setChk('manualIgnOnly', cfg.manualIgnOnly);
       setVal('manualPulseCutMs', cfg.manualPulseCutMs);
       setVal('manualPulseFireMs', cfg.manualPulseFireMs);
       setVal('manualPulseOffMs', cfg.manualPulseOffMs);
       setVal('manualPulseRepeat', cfg.manualPulseRepeat);
-
       setVal('apTimeoutMs', cfg.apTimeoutMs);
       if (cfg.apPassword) setVal('apPassword', cfg.apPassword);
 
@@ -3348,7 +3701,10 @@
         renderDynoChart();
       }
       updateCutHint();
+      updateSoftRestoreUi();
+      syncSoftRestoreDamp(document.getElementById('softRestoreDampMs').value || 20);
       updateAutoLimiterUi();
+      updateManualBackfireUi();
       updateManualPulseCycle();
       renderConfigSnapshot();
     }
@@ -3389,6 +3745,8 @@
         minRpm: parseInt(document.getElementById('minRpm').value) || 1500,
         cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
         cutInjEnabled: document.getElementById('cutInjEnabled').checked,
+        softRestoreEnabled: document.getElementById('softRestoreEnabled').checked,
+        softRestoreDampMs: parseInt(document.getElementById('softRestoreDampMs').value) || 20,
         allow_double_click: document.getElementById('allow_double_click').checked,
         limiter_enable: document.getElementById('limiter_enable').checked,
         target_rpm: parseInt(document.getElementById('target_rpm').value) || 7000,
@@ -3397,13 +3755,13 @@
         recovery_spark_ms: parseInt(document.getElementById('recovery_spark_ms').value) || 20,
         manualBackfireEnabled: document.getElementById('manualBackfireEnabled').checked,
         manualBackfireMode: parseInt(document.getElementById('manualBackfireMode').value) || 1,
-        manualBackfireHoldMs: parseInt(document.getElementById('manualBackfireHoldMs').value) || 3000,
+        manualBackfireHoldMs: parseInt(document.getElementById('manualBackfireHoldMs').value) || 600,
         manualMinRpm: parseInt(document.getElementById('manualMinRpm').value) || 4000,
         manualIgnOnly: document.getElementById('manualIgnOnly').checked,
-        manualPulseCutMs: parseInt(document.getElementById('manualPulseCutMs').value) || 200,
-        manualPulseFireMs: parseInt(document.getElementById('manualPulseFireMs').value) || 50,
-        manualPulseOffMs: parseInt(document.getElementById('manualPulseOffMs').value) || 200,
-        manualPulseRepeat: parseInt(document.getElementById('manualPulseRepeat').value) || 3,
+        manualPulseCutMs: parseInt(document.getElementById('manualPulseCutMs').value) || 95,
+        manualPulseFireMs: parseInt(document.getElementById('manualPulseFireMs').value) || 35,
+        manualPulseOffMs: parseInt(document.getElementById('manualPulseOffMs').value) || 55,
+        manualPulseRepeat: parseInt(document.getElementById('manualPulseRepeat').value) || 4,
         apTimeoutMs: parseInt(document.getElementById('apTimeoutMs').value) || 120000,
         apPassword: (document.getElementById('apPassword').value || '').trim(),
         autoMap: autoMapEntries
@@ -3469,7 +3827,7 @@
         sse.addEventListener('log', (e) => {
           try {
             const data = JSON.parse(e.data);
-            addLogEntry(data.rpm || currentRpm, data.cut ? 'CUTTING' : 'STANDBY', data.event || 'LOG', data.msg || '');
+            addLogEntry(data.rpm || currentRpm, data.cut ? 'CUTTING' : 'STANDBY', data.event || 'LOG', data.detail || data.shift || data.msg || '', data.t);
             if (typeof data.rpm === 'number') {
               currentRpm = data.rpm;
               updateGauge(data.rpm);
@@ -3490,6 +3848,7 @@
               if (bMeta) bMeta.innerText = 'Band: ' + resolveBandLabel(data.rpm);
             }
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
+            if (data.shiftRaw !== undefined) updateShiftRawDisplay(data.shiftRaw);
             if (data.cut !== undefined) updateCutStateDisplay(data.cut);
             if (!limiterChanging && (data.limiter !== undefined || data.limiter_enable !== undefined)) {
               const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
@@ -3517,6 +3876,14 @@
         };
       } catch(e) {}
     }
+
+    // Tự động khởi tạo giao diện và kết nối SSE khi tải xong trang
+    window.addEventListener('DOMContentLoaded', () => {
+      updateSoftRestoreUi();
+      syncSoftRestoreDamp(document.getElementById('softRestoreDampMs') ? document.getElementById('softRestoreDampMs').value : 20);
+      handleReloadConfig(true);
+      initRealtimeEvents();
+    });
   </script>
 </body>
 </html>

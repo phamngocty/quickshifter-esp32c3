@@ -998,10 +998,10 @@
         </div>
 
         <div class="breakthrough-card">
-          <div class="breakthrough-icon">🍿</div>
-          <span class="breakthrough-badge">POPCORN BACKFIRE</span>
-          <h3>Studio Nổ Pô &amp; Khóa Số Chống Trộm</h3>
-          <p>Tích hợp hiệu ứng bắn bắp rang giòn rã (Backfire Popcorn) khi dìm cần số ở tua cao, cùng tính năng khóa lửa xe thông minh Morse Lock bằng thao tác cần số độc quyền.</p>
+          <div class="breakthrough-icon">🔥</div>
+          <span class="breakthrough-badge">2-STEP &amp; BACKFIRE</span>
+          <h3>Studio Nổ Pô 2-Step &amp; Khóa Số Chống Trộm</h3>
+          <p>Tích hợp công nghệ 2-Step Launch Control khạc lửa liên thanh uy lực số 1 thế giới và Backfire Continuous cực đanh trên xe zin khi giữ cần số ở tua cao, cùng tính năng khóa lửa Morse Lock độc quyền.</p>
         </div>
       </div>
     </section>
@@ -1208,7 +1208,12 @@
             </li>
             <li>
               <span class="tab-bullet">💥</span>
-              <div><strong>Launch Control &amp; Popcorn Backfire Studio:</strong> Cài đặt vòng tua đề-pa xuất phát không bị bốc đầu; tùy chọn thuật toán băm tia lửa ngắt quãng tạo âm thanh nổ pô bắp rang giòn tan uy lực.</div>
+              <div><strong>Studio Bắn Bắp Rang / Nổ Pô (Backfire Studio):</strong>
+                • <em>Mode 1 (Continuous):</em> Cắt lửa dồn xăng liên tục khi giữ cần số, nhả chân số ra nổ phát đại bác vang trời cực đanh ngay trên xe zin.<br>
+                • <em>Mode 2 (Popcorn A-B-C):</em> Băm xung nhịp nhàng tích xăng và đốt lửa theo chu kỳ.<br>
+                • <em>IGN Only:</em> Chỉ ngắt tia lửa buồng đốt, giữ nguyên kim phun xăng nạp thẳng vào cổ pô nóng.<br>
+                <em>(Lưu ý: Cơ chế 2-Step Launch Control / Hard Cut đã được tích hợp hoàn chỉnh tại mục Auto RPM Limiter, kích hoạt nhanh qua cần số).</em>
+              </div>
             </li>
             <li>
               <span class="tab-bullet">📋</span>
@@ -1813,14 +1818,23 @@
           <tr>
             <td><strong style="color:var(--green);">BẬT Launch Limiter</strong></td>
             <td>Nhấp cần số <strong>3 cái liên tiếp</strong> (Triple-Click)</td>
-            <td>Xe đang đứng yên hoặc tua máy dưới 3000 RPM (thao tác trong 0.8s)</td>
+            <td>Bất kỳ lúc nào, mọi dải tua máy (thao tác nhanh trong 0.8s)</td>
             <td>Tiếng bíp bíp xác nhận. Vặn hết ga xe hãm đúng tua mục tiêu (ví dụ 7000 RPM)</td>
           </tr>
           <tr>
             <td><strong style="color:var(--amber);">TẮT Launch Limiter</strong></td>
             <td>Nhấp cần số <strong>2 cái liên tiếp</strong> (Double-Click)</td>
-            <td>Sau khi xe đã đề-pa xuất phát xong</td>
+            <td>Bất kỳ lúc nào sau khi xuất phát xong (thao tác nhanh trong 0.8s)</td>
             <td>Xe trở về trạng thái vòng tua tự do bình thường</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#ff4d4d;">Bắn Bắp Rang Pô Xe (Manual Backfire)</strong></td>
+            <td>Đạp/móc <strong>giữ cần số trên 0.5s</strong> khi đang kéo ga</td>
+            <td>Vòng tua máy lớn hơn <code>Min RPM</code> (&ge; 4000 RPM) và đang bật Manual Backfire</td>
+            <td>
+              • <em>Mode 1 (Continuous):</em> Cắt lửa nạp xăng vào pô, nhả cần số ra nổ phát đại bác vang trời cực đanh ngay trên xe zin.<br>
+              • <em>Mode 2 (Popcorn A-B-C):</em> Nổ bắp rang giòn tan theo từng nhịp ngắt/đốt.
+            </td>
           </tr>
           <tr>
             <td><strong style="color:var(--red);">Khóa Xe Chống Trộm (Morse Lock)</strong></td>
@@ -1941,7 +1955,7 @@
             • Chế độ: <strong>Auto-Map / Fixed 50ms</strong><br>
             • Preset: <strong>Drag 400m</strong><br>
             • Launch Limiter: <strong>Cài 7500 RPM</strong><br>
-            • Nổ pô Popcorn: <strong>Chế độ băm xung thể thao</strong><br>
+            • Nổ pô Backfire: <strong>2-Step Launch Control (6500 RPM, Cut 35ms / Rec 20ms) hoặc Continuous cực đanh</strong><br>
             • Tăng tốc xé gió không hẫng vòng tua
           </p>
         </div>
