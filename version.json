@@ -1,21 +1,21 @@
 {
   "app": {
-    "versionCode": 2,
-    "versionName": "1.0.1",
+    "versionCode": 3,
+    "versionName": "1.0.3",
     "apkUrl": "",
-    "changelog": ""
+    "changelog": "phiên bannr cut mềm"
   },
   "firmware": {
-    "versionCode": 2,
-    "versionName": "1.0.1",
-    "binUrl": "https://alert.nas152.duckdns.org/downloads/firmware.bin",
-    "oledBinUrl": "https://alert.nas152.duckdns.org/downloads/firmware_oled.bin",
-    "changelog": ""
+    "versionCode": 3,
+    "versionName": "1.0.3",
+    "binUrl": "",
+    "oledBinUrl": "",
+    "changelog": "phiên bannr cut mềm"
   },
   "firmware_oled": {
-    "versionCode": 2,
-    "versionName": "1.0.1",
-    "binUrl": "https://alert.nas152.duckdns.org/downloads/firmware_oled.bin",
-    "changelog": ""
+    "versionCode": 3,
+    "versionName": "1.0.3",
+    "binUrl": "",
+    "changelog": "phiên bannr cut mềm"
   }
 }
