@@ -249,7 +249,11 @@ bool loadConfig() {
   apPassStr.trim();
   apPassStr.toCharArray(cfg.apPassword, sizeof(cfg.apPassword));
   cfg.apPassword[sizeof(cfg.apPassword)-1] = '\0';
-  cfg.minRpm = doc["minRpm"] | 1500;
+  if (doc.containsKey("minRpm")) {
+    cfg.minRpm = doc["minRpm"].as<int>();
+  } else {
+    cfg.minRpm = 1500;
+  }
   if (cfg.minRpm < 0) cfg.minRpm = 0;
   if (cfg.minRpm > 18000) cfg.minRpm = 18000;
 
@@ -263,7 +267,11 @@ bool loadConfig() {
   cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 35;
   cfg.manualPulseOffMs = doc["manualPulseOffMs"] | 55;
   cfg.manualPulseRepeat = doc["manualPulseRepeat"] | 4;
-  cfg.manualMinRpm = doc["manualMinRpm"] | 4000;
+  if (doc.containsKey("manualMinRpm")) {
+    cfg.manualMinRpm = doc["manualMinRpm"].as<int>();
+  } else {
+    cfg.manualMinRpm = 4000;
+  }
   cfg.manualIgnOnly = doc["manualIgnOnly"] | true;
 
   if (cfg.manualMinRpm < 0) cfg.manualMinRpm = 0;

@@ -1560,7 +1560,7 @@
 
             <div class="form-group">
               <label>Vòng Tua Tối Thiểu (Min RPM)</label>
-              <input type="number" id="manualMinRpm" min="2000" max="10000" step="100" value="4000" onchange="markDirty()">
+              <input type="number" id="manualMinRpm" min="0" max="10000" step="100" value="4000" onchange="markDirty()">
               <small style="color:var(--text-muted); font-size:11px;">Khuyên dùng: ≥ 4,000 RPM (pô đủ nóng)</small>
             </div>
 
@@ -1936,7 +1936,7 @@
 
           <div class="form-group">
             <label>PASS (4 ký tự 0/1)</label>
-            <input type="text" id="lockPassInput" maxlength="4" pattern="[01]{4}" value="1001" style="letter-spacing:0.2em; font-size:18px; text-align:center;" onchange="markDirty()">
+            <input type="text" id="lockPassInput" maxlength="4" pattern="[01]{4}" value="1001" style="letter-spacing:0.2em; font-size:18px; text-align:center;" onchange="markDirty()" oninput="onLockPassInput(this.value)">
           </div>
 
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
@@ -2155,6 +2155,7 @@
       updateAutoLimiterHints();
       updateManualPulseCycle();
       updateGauge(0);
+      renderMorseTargetBoxes();
       initRealtimeEvents();
       if (window.location.protocol.startsWith('http')) {
         handleReloadConfig(true);
@@ -2348,7 +2349,8 @@
         valShift.classList.add('shift-active');
         tickerShift.innerText = 'PRESSED';
 
-        const minRpm = parseInt(document.getElementById('minRpm').value) || 1500;
+        const minRpmRaw = parseInt(document.getElementById('minRpm').value, 10);
+        const minRpm = isNaN(minRpmRaw) ? 1500 : minRpmRaw;
         if (currentRpm >= minRpm) {
           playCutSound();
           valCut.innerText = 'CUTTING';
@@ -2964,6 +2966,38 @@
     // MORSE LEVER TAP TRAINER
     let morseStart = 0;
     let morseBuf = [];
+
+    function onLockPassInput(val) {
+      val = (val || '').replace(/[^01]/g, '').slice(0, 4);
+      document.getElementById('lockPassInput').value = val;
+      markDirty();
+      if (morseBuf.length === 0) {
+        renderMorseTargetBoxes(val);
+      }
+    }
+
+    function renderMorseTargetBoxes(val) {
+      const passStr = val !== undefined ? String(val) : (document.getElementById('lockPassInput').value.trim() || '1001');
+      for (let i = 0; i < 4; i++) {
+        const box = document.getElementById(`morseBox${i}`);
+        if (box) {
+          if (i < passStr.length) {
+            box.innerText = passStr[i];
+            box.classList.add('filled');
+            box.style.borderColor = 'var(--accent-green)';
+            box.style.color = 'var(--accent-green)';
+            box.style.background = 'rgba(0, 255, 136, 0.1)';
+          } else {
+            box.innerText = '-';
+            box.classList.remove('filled');
+            box.style.borderColor = 'var(--border-dim)';
+            box.style.color = 'var(--text-muted)';
+            box.style.background = 'var(--bg-panel-alt)';
+          }
+        }
+      }
+    }
+
     function handleMorseLeverPress(isDown) {
       if (isDown) {
         morseStart = Date.now();
@@ -3000,25 +3034,56 @@
       for (let i = 0; i < 4; i++) {
         const box = document.getElementById(`morseBox${i}`);
         if (box) {
-          box.innerText = morseBuf[i] !== undefined ? morseBuf[i] : '-';
-          box.classList.toggle('filled', morseBuf[i] !== undefined);
+          if (morseBuf[i] !== undefined) {
+            box.innerText = morseBuf[i];
+            box.classList.add('filled');
+            box.style.borderColor = 'var(--accent-cyan)';
+            box.style.color = 'var(--accent-cyan)';
+            box.style.background = 'rgba(0, 240, 255, 0.12)';
+          } else {
+            box.innerText = '-';
+            box.classList.remove('filled');
+            box.style.borderColor = 'var(--border-dim)';
+            box.style.color = 'var(--text-muted)';
+            box.style.background = 'var(--bg-panel-alt)';
+          }
         }
       }
       if (morseBuf.length === 4) {
         const entered = morseBuf.join('');
-        const actual = document.getElementById('lockPassInput').value;
+        const actual = document.getElementById('lockPassInput').value.trim();
         if (entered === actual) {
           playBeep(880, 'sine', 0.3);
           showToast(`🔓 [KHỚP MÃ] Đã nhập đúng: ${entered}! Xe mở khóa.`);
           document.getElementById('lockStatusLabel').innerText = 'Trạng thái: UNLOCKED';
           document.getElementById('lockStatusLabel').style.color = 'var(--accent-green)';
+          for (let i = 0; i < 4; i++) {
+            const b = document.getElementById(`morseBox${i}`);
+            if (b) {
+              b.style.borderColor = 'var(--accent-green)';
+              b.style.color = 'var(--accent-green)';
+              b.style.background = 'rgba(0, 255, 136, 0.15)';
+            }
+          }
           addLockFeed(entered, true);
         } else {
           playBeep(200, 'sawtooth', 0.4);
           showToast(`❌ [SAI MẬT KHẨU] Nhập: ${entered} (Đúng: ${actual})`);
+          for (let i = 0; i < 4; i++) {
+            const b = document.getElementById(`morseBox${i}`);
+            if (b) {
+              b.style.borderColor = 'var(--accent-red)';
+              b.style.color = 'var(--accent-red)';
+              b.style.background = 'rgba(255, 42, 95, 0.15)';
+            }
+          }
           addLockFeed(entered, false);
         }
-        setTimeout(() => { morseBuf = []; updateMorseBoxes(); }, 1800);
+        setTimeout(() => {
+          morseBuf = [];
+          renderMorseTargetBoxes();
+          document.getElementById('txtMorseDuration').innerText = 'Nhấn giữ để đo thời gian nhịp tay...';
+        }, 1800);
       }
     }
 
@@ -3479,6 +3544,10 @@
         if (res.ok) {
           const data = await res.json();
           if (data.enabled !== undefined) document.getElementById('lockEnabledToggle').checked = !!data.enabled;
+          if (data.pass) {
+            document.getElementById('lockPassInput').value = data.pass;
+            renderMorseTargetBoxes(data.pass);
+          }
           if (data.shortMaxMs) document.getElementById('lockShortMax').value = data.shortMaxMs;
           if (data.longMinMs) document.getElementById('lockLongMin').value = data.longMinMs;
           if (data.resetHoldMs) document.getElementById('lockResetHold').value = data.resetHoldMs;
@@ -3742,7 +3811,7 @@
         rpmOffset: parseFloat(document.getElementById('rpmOffset').value) || 0,
         modeAuto: document.getElementById('modeAuto').checked,
         cutTimeFixed: parseInt(document.getElementById('cutTimeFixed').value) || 50,
-        minRpm: parseInt(document.getElementById('minRpm').value) || 1500,
+        minRpm: isNaN(parseInt(document.getElementById('minRpm').value, 10)) ? 1500 : Math.max(0, parseInt(document.getElementById('minRpm').value, 10)),
         cutIgnEnabled: document.getElementById('cutIgnEnabled').checked,
         cutInjEnabled: document.getElementById('cutInjEnabled').checked,
         softRestoreEnabled: document.getElementById('softRestoreEnabled').checked,
@@ -3756,7 +3825,7 @@
         manualBackfireEnabled: document.getElementById('manualBackfireEnabled').checked,
         manualBackfireMode: parseInt(document.getElementById('manualBackfireMode').value) || 1,
         manualBackfireHoldMs: parseInt(document.getElementById('manualBackfireHoldMs').value) || 600,
-        manualMinRpm: parseInt(document.getElementById('manualMinRpm').value) || 4000,
+        manualMinRpm: isNaN(parseInt(document.getElementById('manualMinRpm').value, 10)) ? 4000 : Math.max(0, parseInt(document.getElementById('manualMinRpm').value, 10)),
         manualIgnOnly: document.getElementById('manualIgnOnly').checked,
         manualPulseCutMs: parseInt(document.getElementById('manualPulseCutMs').value) || 95,
         manualPulseFireMs: parseInt(document.getElementById('manualPulseFireMs').value) || 35,
@@ -3850,6 +3919,28 @@
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
             if (data.shiftRaw !== undefined) updateShiftRawDisplay(data.shiftRaw);
             if (data.cut !== undefined) updateCutStateDisplay(data.cut);
+            if (data.lockBuf !== undefined && morseBuf.length === 0) {
+              if (data.lockBuf.length > 0) {
+                for (let i = 0; i < 4; i++) {
+                  const box = document.getElementById(`morseBox${i}`);
+                  if (box) {
+                    if (i < data.lockBuf.length) {
+                      box.innerText = data.lockBuf[i];
+                      box.classList.add('filled');
+                      box.style.borderColor = 'var(--accent-cyan)';
+                      box.style.color = 'var(--accent-cyan)';
+                      box.style.background = 'rgba(0, 240, 255, 0.12)';
+                    } else {
+                      box.innerText = '-';
+                      box.classList.remove('filled');
+                      box.style.borderColor = 'var(--border-dim)';
+                      box.style.color = 'var(--text-muted)';
+                      box.style.background = 'var(--bg-panel-alt)';
+                    }
+                  }
+                }
+              }
+            }
             if (!limiterChanging && (data.limiter !== undefined || data.limiter_enable !== undefined)) {
               const limVal = (data.limiter !== undefined) ? !!data.limiter : !!data.limiter_enable;
               const limEl = document.getElementById('limiter_enable');

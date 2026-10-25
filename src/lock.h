@@ -25,3 +25,6 @@ bool lock_is_unlocked();
 void lock_get_status(LockStatus &status);
 bool lock_update(bool enabled, const char *pass, int shortMaxOverride = -1, int longMinOverride = -1, int resetHoldOverride = -1);
 void lock_reset_fail_window();
+const char* lock_get_input_buffer();
+uint8_t lock_get_buf_len();
+bool lock_try_unlock(const char *pass);

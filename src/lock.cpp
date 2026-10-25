@@ -304,3 +304,25 @@ void lock_reset_fail_window() {
   reset_fail_counter();
   reset_input(false);
 }
+
+const char* lock_get_input_buffer() {
+  return inputBuffer;
+}
+
+uint8_t lock_get_buf_len() {
+  return bufLen;
+}
+
+bool lock_try_unlock(const char *pass) {
+  if (!lock_is_engaged()) return true;
+  if (!pass || strlen(pass) != 4) return false;
+  if (strncmp(pass, lockPass, 4) == 0) {
+    log_event("PASS_OK", "web_unlocked");
+    set_lock_state(false, false, "Web PASS unlock (volatile)");
+    reset_fail_counter();
+    reset_input(false);
+    return true;
+  }
+  log_event("PASS_FAIL", "web_invalid");
+  return false;
+}

@@ -152,6 +152,7 @@ static void send_live_telemetry()
   doc["shift"] = shift_is_pressed() ? "PRESSED" : "RELEASED";
   doc["shiftRaw"] = shift_get_raw_level();
   doc["lock"] = lock_is_engaged() ? "LOCKED" : (lock_is_enabled() ? "ARMED" : "OFF");
+  doc["lockBuf"] = lock_get_input_buffer();
   doc["limiter"] = limiter_enable;
   doc["allowDoubleClick"] = allow_double_click;
   String out;
@@ -168,6 +169,7 @@ static void send_lock_status(AsyncWebServerRequest *r)
   doc["unlocked"] = st.unlocked;
   doc["engaged"] = st.engaged;
   doc["hasPass"] = (strlen(st.pass) == 4);
+  doc["pass"] = st.pass;
   doc["retryHold"] = st.retryHold;
   doc["retryMs"] = st.retryMs;
   doc["spamHold"] = st.spamHold;
@@ -587,6 +589,20 @@ void web_init()
       return;
     }
     send_lock_status(r); });
+
+  server.on("/lock/unlock", HTTP_POST, [](AsyncWebServerRequest *r) {}, NULL, [](AsyncWebServerRequest *r, uint8_t *data, size_t len, size_t index, size_t total)
+            {
+    DynamicJsonDocument doc(256);
+    DeserializationError err = deserializeJson(doc, (char*)data, len);
+    if (err) { r->send(400, "text/plain", "invalid json"); return; }
+    String pass = doc["pass"] | "";
+    bool ok = lock_try_unlock(pass.c_str());
+    DynamicJsonDocument res(128);
+    res["ok"] = ok;
+    res["engaged"] = lock_is_engaged();
+    String out;
+    serializeJson(res, out);
+    r->send(ok ? 200 : 403, "application/json", out); });
 
   server.on("/limiter", HTTP_GET, [](AsyncWebServerRequest *r)
             {
