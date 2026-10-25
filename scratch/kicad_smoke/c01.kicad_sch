@@ -1,0 +1,752 @@
+(
+kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "b1c3d0e1-0001-4a00-9000-000000000001")
+	(paper "A3")
+	(
+title_block
+		(title "t")
+		(date "2026-10-10")
+		(rev "1")
+	)
+	(
+lib_symbols
+		(
+symbol
+"Connector_Generic:Conn_01x03"
+			(
+pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(
+symbol
+"Conn_01x03_1_1"
+				(
+rectangle
+					(start -1.27 3.81)
+					(end 1.27 -3.81)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type background)
+					)
+				)
+				(
+rectangle
+					(start -1.27 2.667)
+					(end 0 2.413)
+					(
+stroke
+						(width 0.1524)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+rectangle
+					(start -1.27 0.127)
+					(end 0 -0.127)
+					(
+stroke
+						(width 0.1524)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+rectangle
+					(start -1.27 -2.413)
+					(end 0 -2.667)
+					(
+stroke
+						(width 0.1524)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+pin
+passive
+line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(
+name
+"Pin_1"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"1"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(
+pin
+passive
+line
+					(at -5.08 0 0)
+					(length 3.81)
+					(
+name
+"Pin_2"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"2"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(
+pin
+passive
+line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(
+name
+"Pin_3"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"3"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+			(
+property
+"Reference"
+"J"
+				(at 0 5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Value"
+"Conn_01x03"
+				(at 0 -5.08 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Footprint"
+""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Datasheet"
+""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Description"
+"Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"ki_keywords"
+"connector"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"ki_fp_filters"
+"Connector*:*_1x??_*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+		)
+		(
+symbol
+"power:GND"
+			(power global)
+			(
+pin_numbers
+				(hide yes)
+			)
+			(
+pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(
+symbol
+"GND_0_1"
+				(
+polyline
+					(
+pts
+						(xy 0 0)
+						(xy 0 -1.27)
+						(xy 1.27 -1.27)
+						(xy 0 -2.54)
+						(xy -1.27 -1.27)
+						(xy 0 -1.27)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+			)
+			(
+symbol
+"GND_1_1"
+				(
+pin
+power_in
+line
+					(at 0 0 270)
+					(length 0)
+					(
+name
+""
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"1"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+			(
+property
+"Reference"
+"#PWR"
+				(at 0 -6.35 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Value"
+"GND"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Footprint"
+""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Datasheet"
+""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"Description"
+"Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"ki_keywords"
+"global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+		)
+	)
+	(
+wire
+		(
+pts
+			(xy 38.08 46.54)
+			(xy 40.62 46.54)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67eaabcd-8cd5-54ed-85ad-391a340f0e22")
+	)
+	(
+wire
+		(
+pts
+			(xy 38.08 44)
+			(xy 40.62 44)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "517475db-ff4a-5767-81fd-78270363874c")
+	)
+	(
+wire
+		(
+pts
+			(xy 38.08 41.46)
+			(xy 40.62 41.46)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b92eecfa-8904-5bf4-a5a0-412e8b164d8f")
+	)
+	(
+label
+"+12V_IN"
+		(at 40.62 46.54 0)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8a6a07eb-b9f6-52f9-93bb-c631df3148b4")
+	)
+	(
+label
+"RPM_IN"
+		(at 40.62 41.46 0)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d02b726d-8368-5004-aa42-bf79dc450fcb")
+	)
+	(
+symbol
+		(lib_id "Connector_Generic:Conn_01x03")
+		(at 33 44 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "a7bc4cad-0016-5996-9b75-2a95862a5300")
+		(
+property
+"Reference"
+"J1"
+			(at 35.54 42.73 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Value"
+"BIKE 12V/GND/RPM"
+			(at 35.54 45.27 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Footprint"
+"TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-3-3.5-H_1x03_P3.50mm_Horizontal"
+			(at 33 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Datasheet"
+"~"
+			(at 33 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Description"
+""
+			(at 33 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+pin
+"1"
+			(uuid "7947023b-a59e-5c62-b35a-9cfd922986b5")
+		)
+		(
+pin
+"2"
+			(uuid "57f27eed-236a-5681-928a-245e1c053a7c")
+		)
+		(
+pin
+"3"
+			(uuid "a2d5db94-cd03-5594-815b-3c8c5d3b42dc")
+		)
+		(
+instances
+			(
+project
+"quickshifter-c3-ign"
+				(
+path
+"/b1c3d0e1-0001-4a00-9000-000000000001"
+					(reference "J1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(
+symbol
+		(lib_id "power:GND")
+		(at 40.62 44 90)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "7032592a-ba0f-5d6c-b3e8-854f4745dff8")
+		(
+property
+"Reference"
+"#PWR01"
+			(at 43.16 42.73 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Value"
+"GND"
+			(at 43.16 45.27 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Footprint"
+""
+			(at 40.62 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Datasheet"
+"~"
+			(at 40.62 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Description"
+""
+			(at 40.62 44 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+pin
+"1"
+			(uuid "7a168c18-664b-540b-b2e4-56809331d9d1")
+		)
+		(
+instances
+			(
+project
+"quickshifter-c3-ign"
+				(
+path
+"/b1c3d0e1-0001-4a00-9000-000000000001"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(
+sheet_instances
+		(
+path
+"/"
+			(page "1")
+		)
+	)
+)

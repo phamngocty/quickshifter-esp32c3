@@ -128,7 +128,7 @@ void setDefaults() {
 
   // Manual Backfire defaults (Popcorn Formula)
   cfg.manualBackfireEnabled = true;
-  cfg.manualBackfireHoldMs = 1500;
+  cfg.manualBackfireHoldMs = 600;
   cfg.manualBackfireMode = 2; // 2=Pulse Popcorn A-B-C
   cfg.manualPulseCutMs = 95;  // A: 95ms tích xăng
   cfg.manualPulseFireMs = 35; // B: 35ms đốt lửa
@@ -257,7 +257,7 @@ bool loadConfig() {
   cfg.cutInjEnabled = doc["cutInjEnabled"] | cfg.cutInjEnabled;
 
   cfg.manualBackfireEnabled = doc["manualBackfireEnabled"] | cfg.manualBackfireEnabled;
-  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 1500;
+  cfg.manualBackfireHoldMs = doc["manualBackfireHoldMs"] | 600;
   cfg.manualBackfireMode = doc["manualBackfireMode"] | 2;
   cfg.manualPulseCutMs = doc["manualPulseCutMs"] | 95;
   cfg.manualPulseFireMs = doc["manualPulseFireMs"] | 35;

@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "QS")(type "KiCad")(uri "${KIPRJMOD}/quickshifter.kicad_sym")(options "")(descr "Quickshifter custom symbols"))
+)

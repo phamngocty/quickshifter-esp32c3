@@ -1,0 +1,184 @@
+(
+kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "b1c3d0e1-0001-4a00-9000-000000000001")
+	(paper "A3")
+	(
+title_block
+		(title "t")
+		(date "2026-10-10")
+		(rev "1")
+	)
+	(
+wire
+		(
+pts
+			(xy 100 96.19)
+			(xy 100 93.65)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67eaabcd-8cd5-54ed-85ad-391a340f0e22")
+	)
+	(
+wire
+		(
+pts
+			(xy 100 103.81)
+			(xy 100 106.35)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "517475db-ff4a-5767-81fd-78270363874c")
+	)
+	(
+label
+"A"
+		(at 100 93.65 90)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8a6a07eb-b9f6-52f9-93bb-c631df3148b4")
+	)
+	(
+label
+"B"
+		(at 100 106.35 90)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d02b726d-8368-5004-aa42-bf79dc450fcb")
+	)
+	(
+symbol
+		(lib_id "Device:R")
+		(at 100 100 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "e9ac4f8c-fe45-5ffe-a092-8441ecad5bb2")
+		(
+property
+"Reference"
+"R1"
+			(at 102.54 98.73 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Value"
+"10k"
+			(at 102.54 101.27 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Footprint"
+"Resistor_SMD:R_0805_2012Metric"
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Datasheet"
+"~"
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Description"
+""
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+pin
+"1"
+			(uuid "98740995-107a-5005-8bad-011b47a18ffd")
+		)
+		(
+pin
+"2"
+			(uuid "fce59fdc-260c-5d4e-8d23-515c98e50c1c")
+		)
+		(
+instances
+			(
+project
+"quickshifter-c3-ign"
+				(
+path
+"/b1c3d0e1-0001-4a00-9000-000000000001"
+					(reference "R1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(
+sheet_instances
+		(
+path
+"/"
+			(page 1)
+		)
+	)
+)

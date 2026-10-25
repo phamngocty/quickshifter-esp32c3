@@ -1,0 +1,635 @@
+(
+kicad_sch
+	(version 20260306)
+	(generator "eeschema")
+	(generator_version "10.0")
+	(uuid "b1c3d0e1-0001-4a00-9000-000000000001")
+	(paper "A3")
+	(
+title_block
+		(title "t")
+		(date "2026-10-10")
+		(rev "1")
+	)
+	(
+lib_symbols
+		(
+symbol
+"QS:IGBT_Ignition"
+			(
+pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(
+symbol
+"IRG4PF50W_0_1"
+				(
+polyline
+					(
+pts
+						(xy 0 0)
+						(xy 0.254 0)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 0.254 1.905)
+						(xy 0.254 -1.905)
+						(xy 0.254 -1.905)
+					)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 0.762 2.032)
+						(xy 0.762 1.016)
+					)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 0.762 0.508)
+						(xy 0.762 -0.508)
+					)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 0.762 -1.016)
+						(xy 0.762 -2.032)
+					)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+circle
+					(center 1.27 0)
+					(radius 2.8194)
+					(
+stroke
+						(width 0.254)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 1.397 -2.159)
+						(xy 1.651 -1.651)
+						(xy 2.54 -2.413)
+						(xy 1.397 -2.159)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type outline)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 2.159 1.905)
+						(xy 1.905 2.413)
+						(xy 1.016 1.651)
+						(xy 2.159 1.905)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type outline)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 2.54 2.413)
+						(xy 0.762 1.524)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 2.54 -0.889)
+						(xy 0.762 0)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+				(
+polyline
+					(
+pts
+						(xy 2.54 -2.413)
+						(xy 0.762 -1.524)
+					)
+					(
+stroke
+						(width 0)
+						(type default)
+					)
+					(
+fill
+						(type none)
+					)
+				)
+			)
+			(
+symbol
+"IRG4PF50W_1_1"
+				(
+pin
+input
+line
+					(at -5.08 0 0)
+					(length 5.08)
+					(
+name
+"G"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"1"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(
+pin
+passive
+line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(
+name
+"C"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"2"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(
+pin
+passive
+line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(
+name
+"E"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(
+number
+"3"
+						(
+effects
+							(
+font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+			(
+property
+"Reference"
+"Q"
+				(at 5.08 1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(
+property
+"Value"
+"IRGB14C40L"
+				(at 5.08 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(
+property
+"Footprint"
+"Package_TO_SOT_THT:TO-220-3_Horizontal_TabDown"
+				(at 5.08 -1.905 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(justify left)
+				)
+			)
+			(
+property
+"Datasheet"
+"http://www.irf.com/product-info/datasheets/data/irg4pf50w.pdf"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(
+property
+"Description"
+"28A, 900V, N-Channel IGBT"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"ki_keywords"
+"N-Channel IGBT Power Transistor"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(
+property
+"ki_fp_filters"
+"TO?247*"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(
+effects
+					(
+font
+						(size 1.27 1.27)
+					)
+				)
+			)
+		)
+	)
+	(
+wire
+		(
+pts
+			(xy 94.92 100)
+			(xy 92.38 100)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67eaabcd-8cd5-54ed-85ad-391a340f0e22")
+	)
+	(
+wire
+		(
+pts
+			(xy 102.54 94.92)
+			(xy 102.54 92.38)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "517475db-ff4a-5767-81fd-78270363874c")
+	)
+	(
+wire
+		(
+pts
+			(xy 102.54 105.08)
+			(xy 102.54 107.62)
+		)
+		(
+stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b92eecfa-8904-5bf4-a5a0-412e8b164d8f")
+	)
+	(
+label
+"A"
+		(at 92.38 100 0)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8a6a07eb-b9f6-52f9-93bb-c631df3148b4")
+	)
+	(
+label
+"B"
+		(at 102.54 92.38 90)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "d02b726d-8368-5004-aa42-bf79dc450fcb")
+	)
+	(
+label
+"C"
+		(at 102.54 107.62 90)
+		(fields_autoplaced yes)
+		(
+effects
+			(
+font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "34184b13-842d-5c3f-bc07-d4b23f70d983")
+	)
+	(
+symbol
+		(lib_id "QS:IGBT_Ignition")
+		(at 100 100 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "d95e9b18-ce0d-584d-9e67-2af9f3bb4492")
+		(
+property
+"Reference"
+"Q1"
+			(at 102.54 98.73 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Value"
+"IRGB14C40L"
+			(at 102.54 101.27 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(
+property
+"Footprint"
+""
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Datasheet"
+"~"
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+property
+"Description"
+""
+			(at 100 100 0)
+			(
+effects
+				(
+font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(
+pin
+"1"
+			(uuid "bbb78257-aa39-5194-a96b-02fdc189e073")
+		)
+		(
+pin
+"2"
+			(uuid "82cfdbba-79a5-553d-be75-7752a0d49f9a")
+		)
+		(
+pin
+"3"
+			(uuid "276d46fd-9a76-5c8d-b097-33a1b83c7b79")
+		)
+		(
+instances
+			(
+project
+"quickshifter-c3-ign"
+				(
+path
+"/b1c3d0e1-0001-4a00-9000-000000000001"
+					(reference "Q1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(
+sheet_instances
+		(
+path
+"/"
+			(page "1")
+		)
+	)
+)

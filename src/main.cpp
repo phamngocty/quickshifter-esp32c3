@@ -189,11 +189,11 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
         manualBF.state = SHIFT_MANUAL_MODE1;
         if (cfg.manualIgnOnly)
         {
-          cut_trigger_dual(3000, 0, currentRpm); // Failsafe: Cắt tối đa 3s thay vì vô hạn
+          cut_trigger_dual_fast(999999, 0, currentRpm); // Cắt liên tục đến khi nhả
         }
         else
         {
-          cut_trigger_dual(3000, 3000, currentRpm); // Failsafe: Cắt tối đa 3s thay vì vô hạn
+          cut_trigger_dual_fast(999999, 999999, currentRpm); // Cắt liên tục đến khi nhả
         }
       }
       else if (cfg.manualBackfireMode == 2)
@@ -225,13 +225,11 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
 
   case SHIFT_MANUAL_MODE1:
   {
-    // Mode 1: Cắt liên tục cho đến khi nhả cần số hoặc tua rớt chạm mức garanti (chống tắt máy)
-    // Failsafe: Giới hạn tối đa 3 giây để chống tắt máy và chống kẹt cảm biến
-    bool timeoutReached = (now - manualBF.cutStartMs >= 3000UL);
-    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm || timeoutReached)
+    // Mode 1: Cắt liên tục cho đến khi nhả cần số (không giới hạn timeout)
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged())
     {
-      // Nhả cần số hoặc chạm ngưỡng garanti an toàn hoặc hết 3s an toàn
-      cut_trigger_dual(0, 0, currentRpm);
+      // Nhả cần số: trả lửa ngay lập tức
+      cut_trigger_dual_fast(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
       manualBF.phase = 0;
       manualBF.pulseCount = 0;
@@ -244,10 +242,10 @@ static void handle_manual_backfire(int currentRpm, const QSConfig &cfg)
     // Mode 2: A (CUT dài) -> (B FIRE, C CUT ngắn) lặp D lần
     // Failsafe: Giới hạn tối đa 3 giây để chống tắt máy và chống kẹt cảm biến
     bool timeoutReached = (now - manualBF.cutStartMs >= 3000UL);
-    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || currentRpm < cfg.minRpm || timeoutReached)
+    if (!shift_is_pressed() || !cfg.manualBackfireEnabled || lock_is_engaged() || (currentRpm > 0 && currentRpm < cfg.minRpm) || timeoutReached)
     {
       // Nhả cần số hoặc chạm ngưỡng garanti an toàn hoặc hết 3s an toàn
-      cut_trigger_dual(0, 0, currentRpm);
+      cut_trigger_dual_fast(0, 0, currentRpm);
       manualBF.state = SHIFT_IDLE;
       manualBF.phase = 0;
       manualBF.pulseCount = 0;
@@ -339,7 +337,7 @@ void onShiftStateChanged(bool pressed)
       manualBF.state = SHIFT_IDLE;
       manualBF.phase = 0;
       manualBF.pulseCount = 0;
-      cut_trigger_dual(0, 0, rpm_get()); // Tắt relay
+      cut_trigger_dual_fast(0, 0, rpm_get()); // Tắt relay
       DynamicJsonDocument meta(96);
       meta["source"] = "manual_backfire";
       meta["event"] = "released";
