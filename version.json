@@ -1,20 +1,20 @@
 {
   "app": {
-    "versionCode": 4,
-    "versionName": "1.0.4",
+    "versionCode": 5,
+    "versionName": "1.0.5",
     "apkUrl": "",
     "changelog": "phiên bannr cut mềm"
   },
   "firmware": {
-    "versionCode": 4,
-    "versionName": "1.0.4",
+    "versionCode": 5,
+    "versionName": "1.0.5",
     "binUrl": "",
     "oledBinUrl": "",
     "changelog": "phiên bannr cut mềm"
   },
   "firmware_oled": {
-    "versionCode": 4,
-    "versionName": "1.0.4",
+    "versionCode": 5,
+    "versionName": "1.0.5",
     "binUrl": "",
     "changelog": "phiên bannr cut mềm"
   }
