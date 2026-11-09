@@ -1,6 +1,7 @@
 {
 	"folders": [
 		{
+			"name": "quickshifter-esp32c3",
 			"path": "."
 		}
 	],

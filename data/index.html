@@ -1947,7 +1947,7 @@
           <!-- BÀN TẬP NHẤN MORSE -->
           <div class="morse-tap-trainer">
             <div style="font-size:13px; font-weight:700; color:var(--accent-cyan);">🖐️ Bàn Thử Nghiệm Nhịp Bấm Cần Số:</div>
-            <button class="btn-big-lever" id="btnMorseLever" onmousedown="handleMorseLeverPress(true)" onmouseup="handleMorseLeverPress(false)" ontouchstart="handleMorseLeverPress(true)" ontouchend="handleMorseLeverPress(false)">
+            <button class="btn-big-lever" id="btnMorseLever" style="touch-action:manipulation; user-select:none;" onpointerdown="handleMorseLeverPress(true)" onpointerup="handleMorseLeverPress(false)" onpointercancel="handleMorseLeverPress(false)" oncontextmenu="return false;">
               GIỮ CẦN SỐ
             </button>
             <div style="font-size:12px; color:var(--text-muted);" id="txtMorseDuration">Nhấn giữ để đo thời gian nhịp tay...</div>
@@ -2963,21 +2963,26 @@
       }
     }
 
-    // MORSE LEVER TAP TRAINER
+    // MORSE LEVER TAP TRAINER & PASS VISUALIZER
     let morseStart = 0;
     let morseBuf = [];
+    let morseResetTimer = null;
 
     function onLockPassInput(val) {
       val = (val || '').replace(/[^01]/g, '').slice(0, 4);
-      document.getElementById('lockPassInput').value = val;
-      markDirty();
-      if (morseBuf.length === 0) {
-        renderMorseTargetBoxes(val);
+      const inputEl = document.getElementById('lockPassInput');
+      if (inputEl && inputEl.value !== val) {
+        inputEl.value = val;
       }
+      morseBuf = [];
+      clearTimeout(morseResetTimer);
+      if (typeof markDirty === 'function') markDirty();
+      renderMorseTargetBoxes(val);
     }
 
     function renderMorseTargetBoxes(val) {
-      const passStr = val !== undefined ? String(val) : (document.getElementById('lockPassInput').value.trim() || '1001');
+      const inputEl = document.getElementById('lockPassInput');
+      const passStr = (val !== undefined ? String(val) : (inputEl ? inputEl.value : '1001')).trim();
       for (let i = 0; i < 4; i++) {
         const box = document.getElementById(`morseBox${i}`);
         if (box) {
@@ -2986,26 +2991,49 @@
             box.classList.add('filled');
             box.style.borderColor = 'var(--accent-green)';
             box.style.color = 'var(--accent-green)';
-            box.style.background = 'rgba(0, 255, 136, 0.1)';
+            box.style.background = 'rgba(0, 255, 136, 0.15)';
+            box.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.3)';
           } else {
             box.innerText = '-';
             box.classList.remove('filled');
             box.style.borderColor = 'var(--border-dim)';
             box.style.color = 'var(--text-muted)';
             box.style.background = 'var(--bg-panel-alt)';
+            box.style.boxShadow = 'none';
           }
         }
+      }
+    }
+
+    function updateLockStatusDisplay(engaged, enabled) {
+      const lbl = document.getElementById('lockStatusLabel');
+      const hint = document.getElementById('lockHint');
+      if (!lbl) return;
+      if (engaged) {
+        lbl.innerText = 'Trạng thái: 🔒 LOCKED (Đang khóa động cơ)';
+        lbl.style.color = 'var(--accent-red)';
+        if (hint) hint.innerText = 'Xe đang khóa ngắt lửa. Hãy nhập mật khẩu Morse 4 nhịp trên cần số để mở khóa.';
+      } else if (enabled) {
+        lbl.innerText = 'Trạng thái: 🔓 UNLOCKED (Đã mở khóa)';
+        lbl.style.color = 'var(--accent-green)';
+        if (hint) hint.innerText = 'Đã mở khóa. Động cơ sẵn sàng khởi động và sang số.';
+      } else {
+        lbl.innerText = 'Trạng thái: ⚪ TẮT (Chế độ Lock đang tắt)';
+        lbl.style.color = 'var(--text-muted)';
+        if (hint) hint.innerText = 'Tính năng Lock Mode đang tắt. Xe hoạt động bình thường.';
       }
     }
 
     function handleMorseLeverPress(isDown) {
       if (isDown) {
         morseStart = Date.now();
-        document.getElementById('txtMorseDuration').innerText = 'Đang giữ cần số...';
+        const txt = document.getElementById('txtMorseDuration');
+        if (txt) txt.innerText = 'Đang giữ cần số...';
         playBeep(440, 'sine', 0.8);
       } else {
         if (!morseStart) return;
         const dur = Date.now() - morseStart;
+        morseStart = 0;
         const shortMax = parseInt(document.getElementById('lockShortMax').value) || 280;
         const longMin = parseInt(document.getElementById('lockLongMin').value) || 550;
 
@@ -3023,10 +3051,20 @@
         if (bit !== null) {
           morseBuf.push(bit);
           if (morseBuf.length > 4) morseBuf = [bit];
-          document.getElementById('txtMorseDuration').innerText = `Nhịp vừa bấm: ${dur}ms → Bit [${bit}] (${bit === '0' ? 'Ngắn' : 'Dài'})`;
+          const txt = document.getElementById('txtMorseDuration');
+          if (txt) txt.innerText = `Nhịp vừa bấm: ${dur}ms → Bit [${bit}] (${bit === '0' ? 'Ngắn' : 'Dài'})`;
           updateMorseBoxes();
+
+          clearTimeout(morseResetTimer);
+          if (morseBuf.length < 4) {
+            morseResetTimer = setTimeout(() => {
+              morseBuf = [];
+              renderMorseTargetBoxes();
+              const t = document.getElementById('txtMorseDuration');
+              if (t) t.innerText = 'Nhấn giữ để đo thời gian nhịp tay...';
+            }, 3500);
+          }
         }
-        morseStart = 0;
       }
     }
 
@@ -3039,33 +3077,42 @@
             box.classList.add('filled');
             box.style.borderColor = 'var(--accent-cyan)';
             box.style.color = 'var(--accent-cyan)';
-            box.style.background = 'rgba(0, 240, 255, 0.12)';
+            box.style.background = 'rgba(0, 240, 255, 0.15)';
+            box.style.boxShadow = '0 0 10px rgba(0, 240, 255, 0.4)';
           } else {
             box.innerText = '-';
             box.classList.remove('filled');
             box.style.borderColor = 'var(--border-dim)';
             box.style.color = 'var(--text-muted)';
             box.style.background = 'var(--bg-panel-alt)';
+            box.style.boxShadow = 'none';
           }
         }
       }
       if (morseBuf.length === 4) {
         const entered = morseBuf.join('');
-        const actual = document.getElementById('lockPassInput').value.trim();
+        const actual = (document.getElementById('lockPassInput').value || '').trim();
         if (entered === actual) {
           playBeep(880, 'sine', 0.3);
           showToast(`🔓 [KHỚP MÃ] Đã nhập đúng: ${entered}! Xe mở khóa.`);
-          document.getElementById('lockStatusLabel').innerText = 'Trạng thái: UNLOCKED';
-          document.getElementById('lockStatusLabel').style.color = 'var(--accent-green)';
+          updateLockStatusDisplay(false, true);
           for (let i = 0; i < 4; i++) {
             const b = document.getElementById(`morseBox${i}`);
             if (b) {
               b.style.borderColor = 'var(--accent-green)';
               b.style.color = 'var(--accent-green)';
-              b.style.background = 'rgba(0, 255, 136, 0.15)';
+              b.style.background = 'rgba(0, 255, 136, 0.2)';
+              b.style.boxShadow = '0 0 14px rgba(0, 255, 136, 0.6)';
             }
           }
           addLockFeed(entered, true);
+          if (window.location.protocol.startsWith('http')) {
+            fetch('/lock/unlock', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pass: entered })
+            }).catch(() => {});
+          }
         } else {
           playBeep(200, 'sawtooth', 0.4);
           showToast(`❌ [SAI MẬT KHẨU] Nhập: ${entered} (Đúng: ${actual})`);
@@ -3074,16 +3121,19 @@
             if (b) {
               b.style.borderColor = 'var(--accent-red)';
               b.style.color = 'var(--accent-red)';
-              b.style.background = 'rgba(255, 42, 95, 0.15)';
+              b.style.background = 'rgba(255, 42, 95, 0.2)';
+              b.style.boxShadow = '0 0 14px rgba(255, 42, 95, 0.6)';
             }
           }
           addLockFeed(entered, false);
         }
-        setTimeout(() => {
+        clearTimeout(morseResetTimer);
+        morseResetTimer = setTimeout(() => {
           morseBuf = [];
           renderMorseTargetBoxes();
-          document.getElementById('txtMorseDuration').innerText = 'Nhấn giữ để đo thời gian nhịp tay...';
-        }, 1800);
+          const t = document.getElementById('txtMorseDuration');
+          if (t) t.innerText = 'Nhấn giữ để đo thời gian nhịp tay...';
+        }, 2200);
       }
     }
 
@@ -3517,9 +3567,9 @@
     async function handleSaveLock() {
       const enabled = document.getElementById('lockEnabledToggle').checked;
       const pass = document.getElementById('lockPassInput').value.trim();
-      const shortMaxMs = parseInt(document.getElementById('lockShortMax').value) || 350;
-      const longMinMs = parseInt(document.getElementById('lockLongMin').value) || 600;
-      const resetHoldMs = parseInt(document.getElementById('lockResetHold').value) || 2500;
+      const shortMaxMs = parseInt(document.getElementById('lockShortMax').value) || 280;
+      const longMinMs = parseInt(document.getElementById('lockLongMin').value) || 550;
+      const resetHoldMs = parseInt(document.getElementById('lockResetHold').value) || 2000;
       const payload = { enabled, shortMaxMs, longMinMs, resetHoldMs };
       if (pass) payload.pass = pass;
       try {
@@ -3529,11 +3579,15 @@
           body: JSON.stringify(payload)
         });
         if (res.ok) {
+          const data = await res.json();
+          updateLockStatusDisplay(data.engaged, data.enabled);
           showToast('🔐 Đã lưu mật khẩu và trạng thái Lock Mode vào NVS');
         } else {
+          updateLockStatusDisplay(enabled, enabled);
           showToast('🔐 Đã lưu Lock Mode (Mô phỏng cục bộ)');
         }
       } catch(e) {
+        updateLockStatusDisplay(enabled, enabled);
         showToast('🔐 Đã lưu Lock Mode (Mô phỏng cục bộ)');
       }
     }
@@ -3551,6 +3605,7 @@
           if (data.shortMaxMs) document.getElementById('lockShortMax').value = data.shortMaxMs;
           if (data.longMinMs) document.getElementById('lockLongMin').value = data.longMinMs;
           if (data.resetHoldMs) document.getElementById('lockResetHold').value = data.resetHoldMs;
+          updateLockStatusDisplay(data.engaged, data.enabled);
           showToast('🔄 Đã cập nhật trạng thái Lock Mode');
         }
       } catch(e) {}
@@ -3918,7 +3973,11 @@
             }
             if (data.shift !== undefined) handleShiftPedalInput(data.shift);
             if (data.shiftRaw !== undefined) updateShiftRawDisplay(data.shiftRaw);
-            if (data.cut !== undefined) updateCutStateDisplay(data.cut);
+            if (data.lock !== undefined) {
+              const isEngaged = (data.lock === 'LOCKED');
+              const isArmed = (data.lock === 'ARMED' || data.lock === 'LOCKED');
+              updateLockStatusDisplay(isEngaged, isArmed);
+            }
             if (data.lockBuf !== undefined && morseBuf.length === 0) {
               if (data.lockBuf.length > 0) {
                 for (let i = 0; i < 4; i++) {
@@ -3929,7 +3988,7 @@
                       box.classList.add('filled');
                       box.style.borderColor = 'var(--accent-cyan)';
                       box.style.color = 'var(--accent-cyan)';
-                      box.style.background = 'rgba(0, 240, 255, 0.12)';
+                      box.style.background = 'rgba(0, 240, 255, 0.15)';
                     } else {
                       box.innerText = '-';
                       box.classList.remove('filled');
@@ -3939,6 +3998,8 @@
                     }
                   }
                 }
+              } else {
+                renderMorseTargetBoxes();
               }
             }
             if (!limiterChanging && (data.limiter !== undefined || data.limiter_enable !== undefined)) {
