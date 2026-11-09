@@ -111,6 +111,7 @@ static void stop_test_pwm_output()
 
 void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfgSnapshot)
 {
+  if (events.count() == 0) return;
   DynamicJsonDocument doc(4096);
   doc["t"] = e.t;
   doc["rpm"] = e.rpm;
@@ -133,6 +134,7 @@ void on_new_log(const LogEntry &e, const JsonDocument *meta, const QSConfig *cfg
 
 void web_send_limiter_sync(bool enabled)
 {
+  if (events.count() == 0) return;
   DynamicJsonDocument doc(128);
   doc["type"] = "limiter_sync";
   doc["limiter"] = enabled;
@@ -144,6 +146,7 @@ void web_send_limiter_sync(bool enabled)
 
 static void send_live_telemetry()
 {
+  if (events.count() == 0) return;
   DynamicJsonDocument doc(256);
   doc["t"] = millis();
   doc["rpm"] = rpm_get();
@@ -977,7 +980,7 @@ void web_init()
   server.on("/api/logs", HTTP_GET, [](AsyncWebServerRequest *r)
             {
     int n = log_size();
-    DynamicJsonDocument doc(16384);
+    DynamicJsonDocument doc(8192);
     doc["count"] = n;
     doc["capacity"] = log_capacity();
     doc["total"] = log_total_count();

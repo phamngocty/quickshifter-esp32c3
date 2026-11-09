@@ -30,6 +30,25 @@ enum SoftRestorePhase : uint8_t {
 static volatile SoftRestorePhase restorePhase = RESTORE_IDLE;
 static esp_timer_handle_t cut_timer = nullptr;
 static uint32_t currentDampMs = 10;
+static uint64_t currentInitialSparkUs = 12000ULL;
+
+static uint32_t resolve_adaptive_damp_ms(uint32_t baseDampMs, int rpm)
+{
+  if (baseDampMs == 0) return 0;
+  if (rpm <= 0) return baseDampMs;
+  float factor = 1.0f;
+  if (rpm <= 3000) {
+    factor = 1.4f;
+  } else if (rpm >= 13000) {
+    factor = 0.65f;
+  } else {
+    factor = 1.4f - ((float)(rpm - 3000) / 10000.0f) * 0.75f;
+  }
+  uint32_t adapted = static_cast<uint32_t>(baseDampMs * factor + 0.5f);
+  if (adapted < 3) adapted = 3;
+  if (adapted > 35) adapted = 35;
+  return adapted;
+}
 
 static void refresh_outputs();
 
@@ -46,12 +65,12 @@ static void IRAM_ATTR on_cut_timer(void *arg)
     // Kết thúc cắt chính:
     if (cfg.softRestoreEnabled && cfg.cutIgnEnabled && currentDampMs > 0)
     {
-      // Pha 2 (Initial Spark Restore): Trả lửa nhịp 1 trong 12ms để đốt hòa khí mồi
+      // Pha 2 (Initial Spark Restore): Trả lửa mồi thích ứng 1 chu kỳ động cơ (currentInitialSparkUs)
       ignActive = false;
       injActive = false;
       refresh_outputs();
       restorePhase = RESTORE_INITIAL_SPARK;
-      esp_timer_start_once(cut_timer, 12000ULL); // 12ms = 12,000us
+      esp_timer_start_once(cut_timer, currentInitialSparkUs);
     }
     else
     {
@@ -216,17 +235,25 @@ static bool cut_trigger_internal(unsigned long ignMs, unsigned long injMs, int c
   refresh_outputs();
 
   // Thiết lập Hardware Timer & Soft Restore
-  if (cut_timer && ignMs > 0)
+  if (cut_timer && ignMs > 0 && enableSoftRestore && cfg.softRestoreEnabled)
   {
-    if (enableSoftRestore && cfg.softRestoreEnabled)
+    // Đề xuất 2: Giảm chấn mô-men xoắn thích ứng tải theo RPM (Adaptive Dampening)
+    currentDampMs = resolve_adaptive_damp_ms(cfg.softRestoreDampMs, currentRpm);
+
+    // Đề xuất 1: Thời gian trả lửa mồi thích ứng 1 chu kỳ động cơ 4 thì theo RPM (RPM-Adaptive Spark)
+    if (currentRpm >= 2000)
     {
-      currentDampMs = cfg.softRestoreDampMs;
-      restorePhase = RESTORE_MAIN_CUT;
+      uint64_t calcUs = 120000000ULL / (uint64_t)currentRpm;
+      if (calcUs < 8000ULL) calcUs = 8000ULL;
+      if (calcUs > 20000ULL) calcUs = 20000ULL;
+      currentInitialSparkUs = calcUs;
     }
     else
     {
-      restorePhase = RESTORE_IDLE;
+      currentInitialSparkUs = 12000ULL;
     }
+
+    restorePhase = RESTORE_MAIN_CUT;
     esp_timer_start_once(cut_timer, (uint64_t)ignMs * 1000ULL);
   }
   else
