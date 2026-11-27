@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Bộ Test Bench Quickshifter ESP32-C3 (12V)</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --pwr: #ef4444;
+            --dut: #10b981;
+            --test: #3b82f6;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --border: #334155;
+            --accent: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 16px; line-height: 1.5; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 1.4rem; color: #38bdf8; margin-bottom: 6px; }
+        .header p { font-size: 0.85rem; color: var(--muted); }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 0.75rem; font-weight: 600; margin-top: 6px; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        
+        .module { border-radius: 10px; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .mod-pwr { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); }
+        .mod-dut { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.4); }
+        .mod-test { background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.4); }
+        
+        .mod-header { font-weight: bold; font-size: 0.95rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .pin-list { display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; }
+        .pin-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 6px; }
+        .pin-name { font-weight: 600; }
+        .pin-wire { font-family: monospace; font-size: 0.8rem; color: #fbbf24; }
+
+        .wire-diagram {
+            background: #020617;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #38bdf8;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.35;
+            border: 1px dashed var(--border);
+        }
+
+        .step-list { counter-reset: step; }
+        .step-item { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+        .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--test); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; }
+        .step-content { font-size: 0.85rem; }
+        .step-content strong { color: #f8fafc; }
+        
+        .highlight { color: #34d399; font-weight: 600; }
+        .alert { background: rgba(245, 158, 11, 0.15); border-left: 4px solid var(--accent); padding: 10px; border-radius: 0 8px 8px 0; font-size: 0.8rem; color: #fde68a; margin-top: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>SƠ ĐỒ TEST BENCH QUICKSHIFTER 12V</h1>
+        <p>Mạch đo kiểm kỹ thuật & phát xung tua máy bằng ESP32-C3</p>
+        <span class="badge">CHUYÊN DỤNG CHO ĐIỆN THOẠI 4G</span>
+    </div>
+
+    <!-- KHỐI 1: TỔNG QUAN CÁC MODULE -->
+    <div class="card">
+        <div class="card-title">📦 3 Thành Phần Chính Trên Bàn Test</div>
+        
+        <div class="module mod-pwr">
+            <div class="mod-header" style="color: #f87171;">
+                <span>1. NGUỒN CẤP (12V DC)</span>
+                <span>Adapter / Ắc quy</span>
+            </div>
+            <div class="pin-list">
+                <div class="pin-item"><span class="pin-name">+12V Dương</span><span class="pin-wire">Dây Đỏ ➔ Cấp QS & Tải giả</span></div>
+                <div class="pin-item"><span class="pin-name">GND Âm</span><span class="pin-wire">Dây Đen ➔ Mass chung toàn bộ</span></div>
+            </div>
+        </div>
+
+        <div class="module mod-dut">
+            <div class="mod-header" style="color: #34d399;">
+                <span>2. QUICKSHIFTER (CẦN ĐO)</span>
+                <span>ESP32-C3 DUT</span>
+            </div>
+            <div class="pin-list">
+                <div class="pin-item"><span class="pin-name">Dây IN (Tín hiệu ECU)</span><span class="pin-wire">Nhận xung từ Transistor Tester</span></div>
+                <div class="pin-item"><span class="pin-name">Dây OUT (Ra Mobin)</span><span class="pin-wire">Dập mass qua Tải LED + Opto</span></div>
+                <div class="pin-item"><span class="pin-name">Cảm Biến Cần Số</span><span class="pin-wire">Kẹp que đo song song vào GPIO 4</span></div>
+            </div>
+        </div>
+
+        <div class="module mod-test">
+            <div class="mod-header" style="color: #60a5fa;">
+                <span>3. BỘ TEST BENCH (THIẾT BỊ ĐO)</span>
+                <span>ESP32-C3 Tester</span>
+            </div>
+            <div class="pin-list">
+                <div class="pin-item"><span class="pin-name">GPIO 2 (Xung Tua RPM)</span><span class="pin-wire">Qua trở 1k ➔ Kích Transistor dập mass</span></div>
+                <div class="pin-item"><span class="pin-name">GPIO 3 (Đo Ngắt Lửa)</span><span class="pin-wire">Nối chân 4 Opto PC817 (Bắt thời gian μs)</span></div>
+                <div class="pin-item"><span class="pin-name">GPIO 4 (Đo Cần Số)</span><span class="pin-wire">Kẹp thẳng vào dây công tắc số</span></div>
+                <div class="pin-item"><span class="pin-name">Cổng USB Type-C</span><span class="pin-wire">Cắm vào máy tính (Web Dashboard)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHỐI 2: SƠ ĐỒ MẠCH NGUYÊN LÝ CHI TIẾT -->
+    <div class="card">
+        <div class="card-title">🔌 Sơ Đồ Nguyên Lý Nối Chân (Schematic)</div>
+        <div class="wire-diagram">
+           [+12V NGUỒN]
+                │
+         ┌──────┴────────────────────────┐
+         │                               │
+    +12V Nuôi Quickshifter       [Điện trở 1kΩ 2W]
+                                         │
+                                   [LED Báo Lửa] (Anode +)
+                                         │ (Cathode -)
+                                         ├─── Chân 1 (Anode) Opto PC817
+                                         │
+Dây OUT Mobin Quickshifter ──────────────┴─── Chân 2 (Cathode) Opto PC817
+(Ngõ ra dập mass)
+
+═══════════════════════════════════════════════════════════════
+Phía ESP32-C3 TESTER (Mức 3.3V An Toàn 100%):
+
+         3.3V Tester
+              │
+         [Trở 10kΩ]
+              │
+ GPIO 3 ──────┴───── Chân 4 (Collector) Opto PC817
+ 
+ GND    ──────────── Chân 3 (Emitter)   Opto PC817
+
+───────────────────────────────────────────────────────────────
+Khối Phát Xung ECU Giả Lập:
+
+ GPIO 2 ──[Trở 1kΩ]── Base (B) Transistor 2N2222
+                              │
+ GND    ───────────── Emitter (E)
+                              │
+ Dây IN ECU của QS ── Collector (C)
+        </div>
+
+        <div class="alert">
+            🛡️ <strong>Bảo Vệ Kép:</strong> Nhờ cách ly quang qua Opto PC817, đường điện áp cao 12V hoàn toàn tách biệt với chân 3.3V của ESP32-C3 Tester và cổng USB máy tính.
+        </div>
+    </div>
+
+    <!-- KHỐI 3: QUY TRÌNH HOẠT ĐỘNG THỰC TẾ -->
+    <div class="card">
+        <div class="card-title">🎯 Cách Hoạt Động Khi Bạn Test</div>
+        <div class="step-list">
+            <div class="step-item">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <strong>Bật nguồn 12V:</strong> ESP32-C3 Tester phát xung mô phỏng vòng tua (ví dụ 6.000 RPM) vào dây IN của Quickshifter.
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <strong>Trạng thái bình thường:</strong> Dây OUT dẫn mass làm <span class="highlight">LED Báo Lửa chớp nháy liên tục</span> theo tua máy. Chân GPIO 3 ở mức LOW (0V).
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <strong>Bạn đạp cần số:</strong> Chân GPIO 4 bắt mốc thời gian đạp T₀. Quickshifter lập tức ngắt dây OUT ➔ <span style="color:#f87171; font-weight:600;">LED tắt lịm</span> ➔ Chân GPIO 3 nhảy lên HIGH (3.3V).
+                </div>
+            </div>
+            <div class="step-item">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <strong>Hết chu kỳ cắt:</strong> Quickshifter đóng mass trở lại ➔ LED chớp lại ➔ GPIO 3 tụt về LOW. Tester đo chính xác độ rộng xung ngắt và gửi lên máy tính hiển thị ngay: <em>"RPM: 6000 | Cut Time: 45.2ms | Độ trễ: 2.8ms"</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
